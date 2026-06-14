@@ -48,8 +48,6 @@ const STAFF = [
   { fullName: "Бухгалтер",             login: "accountant",      password: "EcoVoyage08!", role: "accountant" },
   { fullName: "Диспетчер",             login: "dispatcher",      password: "EcoVoyage09!", role: "dispatcher" },
   { fullName: "Диспетчер броней",      login: "booking.dispatcher", password: "EcoVoyage10!", role: "booking_dispatcher" },
-  // Тестовый аккаунт (только для демо — потенциальные покупатели)
-  { fullName: "Тест (демо)",           login: "test",           password: "EcoVoyage_Demo!", role: "guide", _isTest: true },
 ];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
