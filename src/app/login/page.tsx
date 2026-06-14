@@ -29,7 +29,7 @@ export default async function LoginPage({
         <div className="mb-6 flex flex-col items-center gap-3">
           <AppLogo size={72} priority />
           <div>
-            <h1 className="page-title">Asia Mix</h1>
+            <h1 className="page-title">EcoVoyage</h1>
             <p className="page-sub mx-auto max-w-[280px]">{t("subtitle")}</p>
           </div>
         </div>

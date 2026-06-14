@@ -65,10 +65,10 @@ export function PortraitLock() {
     >
       {/* Иконка телефона с поворотом */}
       <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden>
-        <rect x="20" y="8" width="24" height="40" rx="4" stroke="#e9492d" strokeWidth="2.5" />
-        <circle cx="32" cy="43" r="2" fill="#e9492d" />
-        <path d="M44 28 Q54 28 54 38" stroke="#e9492d" strokeWidth="2" fill="none" strokeLinecap="round" />
-        <path d="M50 34 L54 38 L58 34" stroke="#e9492d" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="20" y="8" width="24" height="40" rx="4" stroke="#a8ce40" strokeWidth="2.5" />
+        <circle cx="32" cy="43" r="2" fill="#a8ce40" />
+        <path d="M44 28 Q54 28 54 38" stroke="#a8ce40" strokeWidth="2" fill="none" strokeLinecap="round" />
+        <path d="M50 34 L54 38 L58 34" stroke="#a8ce40" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       <p style={{ fontSize: "17px", fontWeight: 600, margin: 0, textAlign: "center", padding: "0 32px" }}>
         {t("rotatePhone")}

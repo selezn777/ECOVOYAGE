@@ -124,7 +124,7 @@ export function TopNav({ user }: { user?: SessionUser }) {
         <div className="flex min-w-0 items-center justify-between gap-2">
           <Link href={homeHref} className="flex min-w-0 items-center gap-2.5 touch-manipulation">
             <AppLogo size={32} />
-            <span className="truncate text-[13px] font-bold tracking-[-0.03em] text-[var(--text)]">Asia Mix</span>
+            <span className="truncate text-[13px] font-bold tracking-[-0.03em] text-[var(--text)]">EcoVoyage</span>
           </Link>
           <div className="relative shrink-0" ref={menuRef}>
             <div className="flex items-center gap-1">

@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
-const appId = process.env.CAP_APP_ID || "com.asiamix.crm";
-const appName = process.env.CAP_APP_NAME || "Asia Mix CRM";
+const appId = process.env.CAP_APP_ID || "com.ecovoyage.crm";
+const appName = process.env.CAP_APP_NAME || "EcoVoyage CRM";
 const serverUrl = (process.env.CAP_SERVER_URL || "").trim();
 
 const config: CapacitorConfig = {

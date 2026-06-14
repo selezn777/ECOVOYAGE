@@ -58,7 +58,7 @@ export async function buildWhiteReportWorkbook(args: {
   taxEmployees: AccountingTaxEmployeeRow[];
 }): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Asia Mix CRM";
+  wb.creator = "EcoVoyage CRM";
   wb.created = new Date();
 
   const meta = wb.addWorksheet("О_отчёте", { views: [{ state: "frozen", ySplit: 1 }] });
@@ -200,7 +200,7 @@ export async function buildRedReportWorkbook(args: {
   bankVndRows: RedFileManualLedgerRow[];
 }): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Asia Mix CRM";
+  wb.creator = "EcoVoyage CRM";
   wb.created = new Date();
 
   const meta = wb.addWorksheet("О_красном_файле", { views: [{ state: "frozen", ySplit: 1 }] });

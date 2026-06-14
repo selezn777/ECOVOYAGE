@@ -1,15 +1,15 @@
-# ATLAS — ASIAMIXXX CRM · Мастер-контекст
-*Обновлено: 2026-05-10 | v2.1 — рефреш аккаунтов, migration rules*
+# ATLAS — ECOVOYAGE CRM · Мастер-контекст
+*Обновлено: 2026-06-14 | форк Asia Mix CRM (ASIAMIXXX) — новый бренд EcoVoyage*
 
 ---
 
 ## 🏗️ Стек и инфраструктура
 - **Framework:** Next.js 15 (App Router, Server Components by default)
-- **DB:** Supabase (PostgreSQL + Row Level Security)
+- **DB:** Supabase (PostgreSQL + Row Level Security) — отдельный проект для EcoVoyage (Phase B, пока не создан)
 - **Стили:** Tailwind CSS v4 (кастомные токены через CSS vars в `globals.css`)
-- **Deploy:** Vercel (auto-deploy из `main` ветки GitHub) → **asiamix.vercel.app**
-- **Repo:** `selezn777/ASIAMIXXX` | Local: `/Users/topzonevithanh/Downloads/666/crm-app`
-- **Second Brain:** `selezn777/second-brain` | Local: `~/Documents/SecondBrain`
+- **Deploy:** Vercel (auto-deploy из `main` ветки GitHub) → **eco.vercel.app** (Phase B, пока не настроен)
+- **Repo:** TBD (`selezn777/ECOVOYAGE`?) | Local: `/Users/topzonevithanh/Downloads/ecovoyage-app`
+- **Second Brain:** `~/second-brain/Projects/ecovoyage-crm.md` + `ecovoyage-crm-log.md`
 
 ---
 
@@ -92,7 +92,7 @@
 
 ---
 
-## ✅ История завершённых задач
+## ✅ История завершённых задач (до форка, в Asia Mix CRM)
 
 | Дата | Задача | Коммит |
 |---|---|---|
@@ -103,6 +103,7 @@
 | 2026-05-10 | Полный сброс БД + 40 аккаунтов сотрудников | `8ef1881` |
 | 2026-05-10 | Ротация cookie сессий (`amx_session_v2`) | `213c2da` |
 | 2026-05-11 | fix: аватар-кроп — portal + EXIF ручное чтение | `3b5e12f` |
+| 2026-06-14 | Форк в EcoVoyage CRM (новый бренд, лого, палитра, минимальный seed) | `274447d` |
 
 ---
 
@@ -122,18 +123,19 @@
 
 ---
 
-## 👥 Текущий состав команды (2026-05-10)
+## 👥 Текущий состав команды (минимальный старт EcoVoyage, 2026-06-14)
 
 | Роль | Имя | Логин |
 |------|-----|-------|
-| `director` | Эля | `director` / `AsiaMix00!` |
-| `chief_manager` | Ушмодина Александра | `aleksandra` |
-| `chief_guide` | Верховодов Руслан | `ruslan.v` |
-| `accountant` | Сыдыкова Мария | `maria.s` |
-| `dispatcher` | Le Viet Vong (старший офиса) | `le.vong` |
-| `booking_dispatcher` | Бин (подчинённый) | `bin` |
-| `manager` | 19 менеджеров | `katerina.t` … `aiya` |
-| `guide` | 15 гидов + тест | `artur.a` … `test` |
+| `director` | Директор | `director` |
+| `chief_manager` | Старший менеджер | `chief.manager` |
+| `manager` | Менеджер 1, Менеджер 2 | `manager1`, `manager2` |
+| `chief_guide` | Старший гид | `chief.guide` |
+| `guide` | Гид 1, Гид 2 + тест | `guide1`, `guide2`, `test` |
+| `accountant` | Бухгалтер | `accountant` |
+| `dispatcher` | Диспетчер | `dispatcher` |
+| `booking_dispatcher` | Диспетчер броней | `booking.dispatcher` |
 
-Полные пароли: `~/Desktop/asia-mix-crm-accounts.txt`
+Полные пароли (генерируются после `--create-accounts`): `~/Desktop/ecovoyage-crm-accounts.txt`
 Скрипт пересоздания: `scripts/reset-and-seed.mjs`
+Реальный состав сотрудников EcoVoyage заполняется директором через UI (Phase C).

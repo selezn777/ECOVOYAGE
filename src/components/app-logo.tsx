@@ -9,8 +9,8 @@ type Props = {
 export function AppLogo({ size = 40, className = "", priority = false }: Props) {
   return (
     <Image
-      src="/asiamix-logo.svg"
-      alt="Asia Mix"
+      src="/ecovoyage-mark.png"
+      alt="EcoVoyage"
       width={size}
       height={size}
       className={`shrink-0 object-contain ${className}`}

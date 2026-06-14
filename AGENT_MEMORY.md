@@ -4,7 +4,7 @@
 
 ## 1) Где реальный git-репозиторий
 
-- Рабочий репозиторий: `/Users/topzonevithanh/Downloads/666/crm-app`
+- Рабочий репозиторий: `/Users/topzonevithanh/Downloads/ecovoyage-app`
 - git-операции всегда из этой папки.
 
 ## 2) Правило перед commit/push
@@ -27,21 +27,19 @@ git log -8 --oneline
 npx supabase migration repair --status applied <версия> --db-url "<pooler_url>"
 ```
 
-Pooler URL: `postgresql://postgres.stqmwtwztkiqbtjrnent:<пароль>@aws-1-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require`
-
-### Переменные в `.env.local`
-- `SUPABASE_PROJECT_REF=stqmwtwztkiqbtjrnent`
-- `SUPABASE_POOLER_HOST=aws-1-us-east-1.pooler.supabase.com`
+### Переменные в `.env.local` (заполняются в Phase B после создания Supabase-проекта EcoVoyage)
+- `SUPABASE_PROJECT_REF=<project_ref>`
+- `SUPABASE_POOLER_HOST=<host>.pooler.supabase.com`
 - `SUPABASE_POOLER_PORT=6543`
 - `SUPABASE_DB_PASSWORD=<пароль>`
 
-## 4) Что уже в БД (не трогать, не пытаться пересоздавать)
+## 4) Что появится в БД после прогона миграций (не трогать, не пытаться пересоздавать)
 
 - `match_user_by_login_password(p_login, p_password)` — RPC для логина, использует pgcrypto
 - `update_user_password(p_user_id, p_new_password)` — обновление пароля с хешем
 - `hash_user_password()` — триггер BEFORE INSERT/UPDATE, автохеширует пароли через bcrypt
 - `booking_dispatcher` — есть в enum `app_role`
-- Миграция `20260509000000_hash_passwords` — применена, помечена в CLI history
+- Все 80 миграций из `supabase/migrations` применяются на новый Supabase-проект EcoVoyage за один прогон (Phase B)
 
 ## 5) Диагностика ошибок
 
@@ -50,17 +48,6 @@ Pooler URL: `postgresql://postgres.stqmwtwztkiqbtjrnent:<пароль>@aws-1-us-
 - `password authentication failed` → неверный `SUPABASE_DB_PASSWORD`
 - `prepared statement already exists` → pgbouncer конфликт, **НЕ использовать** `--include-all`; вместо этого `migration repair`
 
-## 6) Роли сотрудников (текущая иерархия)
+## 6) Роли сотрудников (структура, из role-policy.ts)
 
-| Роль | Кто |
-|------|-----|
-| `director` | Эля (логин: `director`) |
-| `chief_manager` | Ушмодина Александра |
-| `manager` | 19 менеджеров (включая онлайн) |
-| `chief_guide` | Верховодов Руслан |
-| `guide` | 15 гидов + тест-демо |
-| `accountant` | Сыдыкова Мария |
-| `dispatcher` | Le Viet Vong (старший, руководство) |
-| `booking_dispatcher` | Бин (подчинённый) |
-
-Документ с паролями: `~/Desktop/asia-mix-crm-accounts.txt`
+Иерархия ролей (`director`, `chief_manager`, `manager`, `chief_guide`, `guide`, `accountant`, `dispatcher`, `booking_dispatcher`) — общая для всех инстансов на этой кодовой базе. Конкретный список сотрудников EcoVoyage заполняется через UI после старта (Phase C), минимальный seed — см. `scripts/reset-and-seed.mjs`.

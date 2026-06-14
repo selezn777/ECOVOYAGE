@@ -36,55 +36,20 @@ const SHOW_USERS = args.includes("--show-users");
 const DO_RESET = args.includes("--do-reset");
 const CREATE_ACCOUNTS = args.includes("--create-accounts");
 
-// ─── STAFF LIST ───────────────────────────────────────────────────────────────
+// ─── STAFF LIST (минимальный стартовый набор EcoVoyage) ────────────────────────
 const STAFF = [
-  // Chief manager
-  { fullName: "Ушмодина Александра",   login: "aleksandra",     password: "AsiaMix01!", role: "chief_manager" },
-  // Managers
-  { fullName: "Торкайло Катерина",     login: "katerina.t",     password: "AsiaMix02!", role: "manager" },
-  { fullName: "Иванькова Анастасия",   login: "anastasia.i",    password: "AsiaMix03!", role: "manager" },
-  { fullName: "Никулин Данила",        login: "danila.n",       password: "AsiaMix04!", role: "manager" },
-  { fullName: "Сулейманов Рустам",     login: "rustam.s",       password: "AsiaMix05!", role: "manager" },
-  { fullName: "Брайчевская Наталья",   login: "natalia.b",      password: "AsiaMix06!", role: "manager" },
-  { fullName: "Ковярова Юлия",         login: "julia.k",        password: "AsiaMix07!", role: "manager" },
-  { fullName: "Федорова Светлана",     login: "svetlana.f",     password: "AsiaMix08!", role: "manager" },
-  { fullName: "Бак Александр",         login: "aleksander.b",   password: "AsiaMix09!", role: "manager" },
-  { fullName: "Просветов Илья",        login: "ilya.p",         password: "AsiaMix10!", role: "manager" },
-  { fullName: "Смоляков Захар",        login: "zakhar.s",       password: "AsiaMix11!", role: "manager" },
-  { fullName: "Иванькова Станислава",  login: "stanislava.i",   password: "AsiaMix12!", role: "manager" },
-  { fullName: "Агеева Дарья",          login: "darya.a",        password: "AsiaMix13!", role: "manager" },
-  { fullName: "Дильмурат Камал",       login: "dilmurad.k",     password: "AsiaMix14!", role: "manager" },
-  { fullName: "Миллер Иван",           login: "ivan.m",         password: "AsiaMix15!", role: "manager" },
-  // Online managers
-  { fullName: "Лубягина Дарья",        login: "darya.l",        password: "AsiaMix16!", role: "manager" },
-  { fullName: "Масловский Владлен",    login: "vladlen.m",      password: "AsiaMix17!", role: "manager" },
-  { fullName: "Татьяна (TianaTours)", login: "tatiana.tt",     password: "AsiaMix18!", role: "manager" },
-  { fullName: "Верещагина Анастасия",  login: "anastasiia.v",   password: "AsiaMix19!", role: "manager" },
-  { fullName: "Айя",                   login: "aiya",           password: "AsiaMix20!", role: "manager" },
-  // Chief guide
-  { fullName: "Верховодов Руслан",     login: "ruslan.v",       password: "AsiaMix21!", role: "chief_guide" },
-  // Guides
-  { fullName: "Антонов Артур",         login: "artur.a",        password: "AsiaMix22!", role: "guide" },
-  { fullName: "Котков Вячеслав",       login: "viacheslav.k",   password: "AsiaMix23!", role: "guide" },
-  { fullName: "Хамов Роман",           login: "roman.kh",       password: "AsiaMix24!", role: "guide" },
-  { fullName: "Ознобихин Ярослав",     login: "yaroslav.o",     password: "AsiaMix25!", role: "guide" },
-  { fullName: "Васильева Анна",        login: "anna.v",         password: "AsiaMix26!", role: "guide" },
-  { fullName: "Грешнов Валерий",       login: "valery.g",       password: "AsiaMix27!", role: "guide" },
-  { fullName: "Дубровский Александр",  login: "aleksander.d",   password: "AsiaMix28!", role: "guide" },
-  { fullName: "Селезнев Виктор",       login: "viktor.s",       password: "AsiaMix29!", role: "guide" },
-  { fullName: "Васильченко Юрий",      login: "yury.v",         password: "AsiaMix30!", role: "guide" },
-  { fullName: "Singaevskii Ivan",      login: "ivan.sg",        password: "AsiaMix31!", role: "guide" },
-  { fullName: "Илья (гид)",            login: "ilya.g",         password: "AsiaMix32!", role: "guide" },
-  { fullName: "Бакиева Елена",         login: "elena.b",        password: "AsiaMix33!", role: "guide" },
-  { fullName: "Кандаурова Анна",       login: "anna.k",         password: "AsiaMix34!", role: "guide" },
-  { fullName: "София",                 login: "sofia",          password: "AsiaMix35!", role: "guide" },
-  // Accountant
-  { fullName: "Сыдыкова Мария",        login: "maria.s",        password: "AsiaMix36!", role: "accountant" },
-  // Operations / dispatcher
-  { fullName: "Le Viet Vong",          login: "le.vong",        password: "AsiaMix37!", role: "dispatcher" },
-  { fullName: "Бин (операционка)",     login: "bin",            password: "AsiaMix38!", role: "dispatcher" },
+  { fullName: "Директор",              login: "director",       password: "EcoVoyage01!", role: "director" },
+  { fullName: "Старший менеджер",      login: "chief.manager",   password: "EcoVoyage02!", role: "chief_manager" },
+  { fullName: "Менеджер 1",            login: "manager1",        password: "EcoVoyage03!", role: "manager" },
+  { fullName: "Менеджер 2",            login: "manager2",        password: "EcoVoyage04!", role: "manager" },
+  { fullName: "Старший гид",           login: "chief.guide",     password: "EcoVoyage05!", role: "chief_guide" },
+  { fullName: "Гид 1",                 login: "guide1",          password: "EcoVoyage06!", role: "guide" },
+  { fullName: "Гид 2",                 login: "guide2",          password: "EcoVoyage07!", role: "guide" },
+  { fullName: "Бухгалтер",             login: "accountant",      password: "EcoVoyage08!", role: "accountant" },
+  { fullName: "Диспетчер",             login: "dispatcher",      password: "EcoVoyage09!", role: "dispatcher" },
+  { fullName: "Диспетчер броней",      login: "booking.dispatcher", password: "EcoVoyage10!", role: "booking_dispatcher" },
   // Тестовый аккаунт (только для демо — потенциальные покупатели)
-  { fullName: "Тест (демо)",           login: "test",           password: "AsiaMix_Demo!", role: "guide", _isTest: true },
+  { fullName: "Тест (демо)",           login: "test",           password: "EcoVoyage_Demo!", role: "guide", _isTest: true },
 ];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -197,12 +162,14 @@ if (CREATE_ACCOUNTS) {
 
   // ─── GENERATE CREDENTIALS DOCUMENT ─────────────────────────────────────────
   const roleLabels = {
-    chief_manager: "Старший менеджер",
-    manager:       "Менеджер",
-    chief_guide:   "Старший гид",
-    guide:         "Гид",
-    accountant:    "Бухгалтер",
-    dispatcher:    "Операционка",
+    director:          "Директор",
+    chief_manager:     "Старший менеджер",
+    manager:           "Менеджер",
+    chief_guide:       "Старший гид",
+    guide:             "Гид",
+    accountant:        "Бухгалтер",
+    dispatcher:        "Операционка",
+    booking_dispatcher: "Диспетчер броней",
   };
 
   const byRole = {};
@@ -212,11 +179,11 @@ if (CREATE_ACCOUNTS) {
     byRole[label].push(r);
   }
 
-  let doc = `ASIA MIX CRM — АККАУНТЫ СОТРУДНИКОВ
+  let doc = `ECOVOYAGE CRM — АККАУНТЫ СОТРУДНИКОВ
 Сгенерировано: ${new Date().toLocaleString("ru-RU")}
 ${"═".repeat(60)}
 
-АДРЕС СИСТЕМЫ: https://asiamixxx-1.vercel.app
+АДРЕС СИСТЕМЫ: https://eco.vercel.app (уточнить после настройки Vercel)
 ВХОД: логин + пароль (латинскими буквами)
 
 ${"═".repeat(60)}
@@ -235,7 +202,7 @@ ${"═".repeat(60)}
   doc += `ВАЖНО: После первого входа попросите сотрудников\n`;
   doc += `сменить пароль в настройках профиля.\n`;
 
-  const outPath = resolve(homedir(), "Desktop", "asia-mix-crm-accounts.txt");
+  const outPath = resolve(homedir(), "Desktop", "ecovoyage-crm-accounts.txt");
   writeFileSync(outPath, doc, "utf8");
   console.log(`\n📄 Документ с аккаунтами сохранён:\n   ${outPath}\n`);
   console.log(`✅ Создано ${results.filter((r) => r.status === "ok").length} аккаунтов\n`);

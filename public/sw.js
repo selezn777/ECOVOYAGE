@@ -6,11 +6,11 @@ self.addEventListener("push", (event) => {
     payload = { title: "Уведомление", body: event.data ? event.data.text() : "" };
   }
 
-  const title = payload && payload.title ? String(payload.title) : "Asia Mix";
+  const title = payload && payload.title ? String(payload.title) : "EcoVoyage";
   const options = {
     body: payload && payload.body ? String(payload.body) : "",
-    icon: "/asiamix-logo.svg",
-    badge: "/asiamix-logo.svg",
+    icon: "/ecovoyage-mark.png",
+    badge: "/ecovoyage-mark.png",
     data: {
       url: payload && payload.url ? String(payload.url) : "/dashboard",
     },

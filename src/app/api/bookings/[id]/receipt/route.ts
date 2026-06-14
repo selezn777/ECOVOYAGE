@@ -192,7 +192,7 @@ export async function POST(
     // Assets (logo + fonts + optional paid stamp)
     let logoPngBytes: Uint8Array;
     try {
-      logoPngBytes = await readFile(join(process.cwd(), "public", "asiamix-logo.png"));
+      logoPngBytes = await readFile(join(process.cwd(), "public", "ecovoyage-mark.png"));
     } catch {
       logoPngBytes = new Uint8Array();
     }

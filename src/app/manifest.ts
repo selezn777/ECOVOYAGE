@@ -4,8 +4,8 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Asia Mix — туры и CRM",
-    short_name: "Asia Mix",
+    name: "EcoVoyage — туры и CRM",
+    short_name: "EcoVoyage",
     description: "Туры, брони, финансы и команда",
     start_url: "/",
     scope: "/",
@@ -13,7 +13,7 @@ export default function manifest(): MetadataRoute.Manifest {
     display_override: ["standalone", "browser"],
     orientation: "portrait",
     background_color: "#f4f5f8",
-    theme_color: "#e9492d",
+    theme_color: "#a8ce40",
     lang: "ru",
     icons: [
       {
@@ -29,9 +29,9 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "any",
       },
       {
-        src: "/asiamix-logo.svg",
-        type: "image/svg+xml",
-        sizes: "any",
+        src: "/ecovoyage-mark.png",
+        type: "image/png",
+        sizes: "187x201",
         purpose: "any",
       },
     ],

@@ -1,4 +1,4 @@
--- Asia Mix CRM core schema (MVP)
+-- EcoVoyage CRM core schema (MVP)
 -- Run in Supabase SQL editor.
 
 create extension if not exists "pgcrypto";

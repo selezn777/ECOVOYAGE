@@ -1,4 +1,4 @@
-# Asia Mix CRM
+# EcoVoyage CRM
 
 Next.js (App Router) + Supabase: туры, брони, оплаты, гиды, выходные, квитанции PDF.
 

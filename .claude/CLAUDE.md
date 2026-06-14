@@ -1,4 +1,4 @@
-# Asia Mix CRM — Claude Code Context
+# EcoVoyage CRM — Claude Code Context
 
 ## ⚠️ ОБЯЗАТЕЛЬНО ПЕРЕД ЛЮБЫМ ДЕЙСТВИЕМ
 
@@ -6,7 +6,7 @@
 1. Write ~/second-brain/Tasks/YYYY-MM-DD-название.md  ← ДО кода
 2. Реализовать
 3. Дописать результат + коммиты в тот же файл         ← ПОСЛЕ кода
-4. Добавить запись в ~/second-brain/Projects/asia-mix-crm-log.md
+4. Добавить запись в ~/second-brain/Projects/ecovoyage-crm-log.md
 ```
 **ВСЕГДА. Даже для мелких правок. Даже после резета сессии. Без исключений.**
 
@@ -15,26 +15,43 @@
 ---
 
 ## Проект
-CRM для турагентства Asia Mix (Вьетнам).
-- **Local:** `/Users/topzonevithanh/Downloads/666/crm-app`
-- **GitHub:** `selezn777/ASIAMIXXX`
-- **Deploy:** `asiamix.vercel.app` (Vercel, auto-deploy из `main`)
-- **Second Brain:** GitHub: `selezn777/second-brain`, локальная копия: `~/second-brain`
+CRM для турагентства EcoVoyage (Вьетнам) — форк Asia Mix CRM с новым брендом.
+- **Local:** `/Users/topzonevithanh/Downloads/ecovoyage-app`
+- **GitHub:** ещё не создан (Phase B)
+- **Deploy:** `eco.vercel.app` — ещё не настроен (Phase B, нужен `vercel login`)
+- **Supabase:** отдельный проект, ещё не создан (Phase B) — `.env.local` содержит placeholder-значения
+- **Second Brain:** `~/second-brain/Projects/ecovoyage-crm.md` + `ecovoyage-crm-log.md`
+- **Источник форка:** `/Users/topzonevithanh/Downloads/666/crm-app` (Asia Mix CRM, `asiamix.vercel.app`) — **НЕ трогать**, законсервирован тегом `pre-ecovoyage-fork-2026-06-14`
+
+## Брендинг
+- Лого: `public/ecovoyage-mark.png` (силуэт цапли, салатовый зелёный)
+- PWA-иконки: `public/pwa-icon-{192,512,180}.png` (из `~/Desktop/ecovoyage-ptica-logo.webp`, жёлто-зелёный градиент)
+- Палитра (light): `--accent: #a8ce40`, `--accent-dark: #8dab3b`, `--accent-soft: #f8fcee`
+- Палитра (dark): `--accent: #bbe250`, `--accent-dark: #a7d133`, `--accent-soft: rgba(187,226,80,0.14)`
+- Остальные токены (`--success`, `--danger` и т.д.) не менялись
 
 ## Стек
 - Next.js 15 (App Router, Server Components by default)
 - Supabase (PostgreSQL + RLS)
 - Tailwind CSS v4
-- Capacitor (Android + iOS)
+- Capacitor (Android + iOS) — appId `com.ecovoyage.crm` (rebrand Android/iOS — Phase C)
 
 ## Supabase миграции
 
 Только через pooler (не direct DB):
 ```bash
-npm run db:push:auto
+npm run db:push:env
 ```
 
-Переменные: `SUPABASE_PROJECT_REF`, `SUPABASE_POOLER_HOST`, `SUPABASE_POOLER_PORT`, `SUPABASE_DB_PASSWORD`
+Переменные: `SUPABASE_PROJECT_REF`, `SUPABASE_POOLER_HOST`, `SUPABASE_POOLER_PORT`, `SUPABASE_DB_PASSWORD` — заполняются в Phase B.
+
+## Стартовый seed (минимальный)
+
+```bash
+node scripts/reset-and-seed.mjs --create-accounts   # 1 директор + малый placeholder-состав
+node scripts/seed-tour-templates.mjs                # 3 placeholder-шаблона туров
+```
+Реальные туры и сотрудники добавляются директором через UI (Phase C).
 
 ## Поиск в коде
 
@@ -56,5 +73,5 @@ grep -r "ПАТТЕРН" src/ --include="*.ts" -l
 ## Диагностика Supabase
 
 - `no route to host` → неверный host, нужен pooler
-- `zsh: event not found` → `!` в пароле, использовать `npm run db:push:auto`
+- `zsh: event not found` → `!` в пароле, использовать `npm run db:push:env`
 - `password authentication failed` → неверный `SUPABASE_DB_PASSWORD`

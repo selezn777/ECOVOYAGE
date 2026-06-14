@@ -21,12 +21,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Asia Mix",
+  title: "EcoVoyage",
   description: "Туры, брони, финансы и команда",
-  applicationName: "Asia Mix",
+  applicationName: "EcoVoyage",
   appleWebApp: {
     capable: true,
-    title: "Asia Mix",
+    title: "EcoVoyage",
     statusBarStyle: "black-translucent",
   },
   formatDetection: {
@@ -45,7 +45,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#e9492d",
+  themeColor: "#a8ce40",
   viewportFit: "cover",
 };
 

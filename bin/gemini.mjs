@@ -19,8 +19,8 @@ const QUESTION = process.argv.slice(2).join(" ");
 if (!QUESTION) { console.error("Использование: node bin/gemini.mjs \"вопрос\""); process.exit(1); }
 
 const SYSTEM = `Ты — эксперт по UI/UX дизайну мобильных приложений.
-Контекст: Asia Mix CRM для турагентства. Тёмная тема, мобильный first, Tailwind CSS v4, Next.js 15.
-Цветовая система: CSS-переменные (--accent оранжевый, --surface, --text, --muted, --border).
+Контекст: EcoVoyage CRM для турагентства. Тёмная тема, мобильный first, Tailwind CSS v4, Next.js 15.
+Цветовая система: CSS-переменные (--accent салатовый зелёный, --surface, --text, --muted, --border).
 Отвечай конкретно: компоненты, Tailwind-классы, примеры кода если нужно. Без воды.`;
 
 const body = {

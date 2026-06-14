@@ -1,4 +1,4 @@
-# Asia Mix CRM - Implementation Notes
+# EcoVoyage CRM - Implementation Notes
 
 **Схема запуска и env:** см. [docs/LAUNCH.md](./docs/LAUNCH.md).
 
