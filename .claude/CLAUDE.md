@@ -66,7 +66,7 @@ grep -r "ПАТТЕРН" src/ --include="*.ts" -l
 - Системные cash entries — через getSupabaseAdmin() напрямую
 - `TourStatus` = `"active" | "completed" | "deleted"` (нет `"closed"`)
 - Mobile keyboard: `padding-bottom: 35vh` в `.app-wrap` — не убирать
-- 8+ вкладок на mobile → `<select>` на mobile, tabs на desktop (md+)
+- Навигация: mobile (< md) — fixed bottom tab bar (`src/components/bottom-nav.tsx`, иконки из `src/components/nav-icons.tsx`), desktop (md+) — ряд вкладок наверху. Конфиг ролей — `src/lib/nav-items.ts` (`navAll`/`navForRole`/`navItemIsActive`), общий для top-nav и bottom-nav
 - Серверные компоненты → `getSupabaseAdmin()`, клиентские → отдельный клиент
 - Права доступа: `src/lib/role-policy.ts` и `src/lib/booking-privacy.ts`
 
