@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AppLogo } from "@/components/app-logo";
+import { BottomNav } from "@/components/bottom-nav";
 import { HeaderAvatar } from "@/components/header-avatar";
 import { NavHeaderPerformance } from "@/components/nav-header-performance";
 import { ReportIssueButton } from "@/components/report-issue-button";
@@ -13,86 +14,13 @@ import { DirectorViewAsControl } from "@/components/director-view-as-control";
 import { StaffNotificationsModalTrigger } from "@/components/staff-notifications-modal";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import {
-  ACCOUNTING_PANEL_ROLES,
-  CASH_VIEW_ROLES,
-  ACCOUNTING_REPORTS_ACCESS_ROLES,
-  defaultHomePathForRole,
-  DISPATCHER_PAGE_ROLES,
-  FINANCE_PAGE_ROLES,
-  RENTALS_PAGE_ROLES,
-  SALES_POINT_LEADERSHIP_ROLES,
-  TEAM_PAGE_ROLES,
-  TICKETS_PAGE_ROLES,
-} from "@/lib/role-policy";
+import { defaultHomePathForRole } from "@/lib/role-policy";
+import { navAll, navForRole, navItemIsActive } from "@/lib/nav-items";
 import { roleLabel } from "@/lib/role-labels";
-import type { Role, SessionUser } from "@/lib/types";
-
-type NavItem = { href: string; labelKey: string; roles: readonly Role[] | null };
-
-function navItemIsActive(pathname: string, itemHref: string, allHrefs: readonly string[]): boolean {
-  const p = pathname.replace(/\/+$/, "") || "/";
-  const item = itemHref.replace(/\/+$/, "") || "/";
-  const matchesHref = (h: string) => {
-    const x = h.replace(/\/+$/, "") || "/";
-    return p === x || p.startsWith(`${x}/`);
-  };
-  if (!matchesHref(item)) return false;
-  for (const h of allHrefs) {
-    if (h === itemHref) continue;
-    const x = h.replace(/\/+$/, "") || "/";
-    if (x.length <= item.length) continue;
-    if (!x.startsWith(`${item}/`)) continue;
-    if (matchesHref(x)) return false;
-  }
-  return true;
-}
-
-const navAll: NavItem[] = [
-  { href: "/dashboard", labelKey: "tours", roles: null },
-  { href: "/tourists", labelKey: "tourists", roles: ["director", "chief_manager", "manager", "guide", "chief_guide", "accountant"] },
-  { href: "/cash", labelKey: "cash", roles: CASH_VIEW_ROLES },
-  { href: "/accounting", labelKey: "accounting", roles: ACCOUNTING_PANEL_ROLES },
-  { href: "/finance", labelKey: "finance", roles: FINANCE_PAGE_ROLES },
-  { href: "/rentals", labelKey: "rentals", roles: RENTALS_PAGE_ROLES },
-  { href: "/sales-points", labelKey: "salesPoints", roles: SALES_POINT_LEADERSHIP_ROLES },
-  { href: "/tickets", labelKey: "tickets", roles: TICKETS_PAGE_ROLES },
-  { href: "/team", labelKey: "team", roles: TEAM_PAGE_ROLES },
-];
-
-function navForRole(role: Role): NavItem[] {
-  if (role === "director") {
-    const base = navAll.filter((item) => !item.roles || item.roles.includes(role));
-    if (ACCOUNTING_REPORTS_ACCESS_ROLES.includes(role)) {
-      return [...base, { href: "/accounting/reports", labelKey: "report", roles: null }];
-    }
-    return base;
-  }
-  if (role === "accountant") {
-    return [
-      { href: "/accounting", labelKey: "tours", roles: null },
-      { href: "/cash", labelKey: "cash", roles: null },
-      { href: "/tourists", labelKey: "tourists", roles: null },
-      { href: "/accounting/reports", labelKey: "report", roles: null },
-      { href: "/rentals", labelKey: "rentals", roles: null },
-      { href: "/team", labelKey: "employees", roles: null },
-    ];
-  }
-  if (DISPATCHER_PAGE_ROLES.includes(role)) {
-    return [
-      { href: "/dispatcher", labelKey: "workday", roles: null },
-      { href: "/dashboard", labelKey: "tours", roles: null },
-      { href: "/tickets", labelKey: "tickets", roles: null },
-      { href: "/rentals", labelKey: "rentals", roles: null },
-      { href: "/team", labelKey: "team", roles: null },
-    ];
-  }
-  return navAll.filter((item) => !item.roles || item.roles.includes(role));
-}
+import type { SessionUser } from "@/lib/types";
 
 export function TopNav({ user }: { user?: SessionUser }) {
   const pathname = usePathname();
-  const router = useRouter();
   const t = useTranslations("nav");
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -200,26 +128,8 @@ export function TopNav({ user }: { user?: SessionUser }) {
         {/* Навигация */}
         {user ? (
           <>
-            {/* Mobile: навигация-переключатель */}
-            <div className="md:hidden w-full relative">
-              <select
-                value={nav.find((item) => navItemIsActive(pathname, item.href, navHrefs))?.href ?? nav[0]?.href ?? ""}
-                onChange={(e) => { router.push(e.target.value); }}
-                className="w-full cursor-pointer appearance-none rounded-xl border border-[var(--border)] bg-[var(--surface)] pl-4 pr-10 py-2.5 text-[14px] font-semibold text-[var(--text)] outline-none shadow-sm active:opacity-80"
-                aria-label="Навигация"
-              >
-                {nav.map((item) => (
-                  <option key={item.href} value={item.href}>
-                    {t(item.labelKey as Parameters<typeof t>[0])}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-[var(--muted)]">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-            </div>
+            {/* Mobile: нижний tab bar */}
+            <BottomNav nav={nav} />
 
             {/* Desktop md+: равноширинные вкладки */}
             <div className="hidden md:flex w-full min-w-0 overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--surface-soft)] divide-x divide-[var(--border)]">
