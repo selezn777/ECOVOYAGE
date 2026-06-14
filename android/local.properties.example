@@ -1,0 +1,8 @@
+# Скопируйте этот файл как local.properties (он в .gitignore) и подставьте свой путь к SDK.
+# macOS после Android Studio по умолчанию:
+# sdk.dir=/Users/ВАШ_ЛОГИН/Library/Android/sdk
+#
+# Или один раз в shell: export ANDROID_HOME="$HOME/Library/Android/sdk"
+# и добавьте ANDROID_HOME в ~/.zshrc
+
+sdk.dir=/Users/YOUR_USERNAME/Library/Android/sdk

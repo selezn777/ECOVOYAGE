@@ -1,0 +1,17 @@
+---
+description: Persistent project memory and safety rails for Asia Mix CRM
+alwaysApply: true
+---
+
+# Asia Mix CRM - Working Memory
+
+- Treat this repo as web-first (Vercel + Supabase). Do not prioritize APK/mobile work unless the user explicitly asks.
+- Authentication uses `public.users` login/password lookup (not Supabase Auth). Do not silently migrate auth flow during unrelated tasks.
+- For database setup on a fresh Supabase project: run `supabase/schema.sql` first, then `supabase/migrations/*`, then optional seeds.
+- `seed-users.sql` is intentional test data (fixed UUIDs, `admin` password). Do not "fix" it unless user requests.
+- Avoid running root-level manual SQL patches in `supabase/migration_*.sql` unless a specific missing feature requires it.
+- Keep Vercel and Supabase project alignment explicit: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+- Before broad refactors, confirm scope with user; prefer minimal targeted fixes.
+- For mobile header/layout issues, test narrow breakpoints first (`<640px`) before touching desktop styles.
+- Never commit local machine artifacts: `.env*` (except examples), `supabase/.temp/`, Android local SDK paths.
+- When resuming after a pause, read `docs/WORKING_MEMORY.md` first, then inspect only files related to the current request.
