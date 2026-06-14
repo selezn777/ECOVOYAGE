@@ -47,15 +47,15 @@ export function DirectorViewAsControl({ effectiveRole }: { effectiveRole: Role }
     <>
       {/* Mobile: компактный бейдж-селектор роли */}
       <div className="md:hidden w-full">
-        <label className="flex items-center gap-2 rounded-xl border border-amber-300/60 bg-amber-50/80 px-3 py-2 dark:border-amber-700/40 dark:bg-amber-900/20">
-          <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+        <label className="flex items-center gap-2 rounded-xl border border-[var(--accent)]/35 bg-[var(--accent-soft)] px-3 py-2">
+          <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-dark)]">
             {t("roleLabel")}
           </span>
           <select
             value={current}
             onChange={(e) => void switchTo(e.target.value as (typeof OPTIONS)[number]["value"])}
             disabled={busy}
-            className="min-w-0 flex-1 cursor-pointer appearance-none bg-transparent text-sm font-semibold text-amber-900 outline-none dark:text-amber-200"
+            className="min-w-0 flex-1 cursor-pointer appearance-none bg-transparent text-sm font-semibold text-[var(--text)] outline-none"
             aria-label={t("switchLabel")}
           >
             {OPTIONS.map((o) => (
@@ -64,7 +64,7 @@ export function DirectorViewAsControl({ effectiveRole }: { effectiveRole: Role }
               </option>
             ))}
           </select>
-          <svg className="pointer-events-none shrink-0 text-amber-600 dark:text-amber-400" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+          <svg className="pointer-events-none shrink-0 text-[var(--accent-dark)]" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
             <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </label>

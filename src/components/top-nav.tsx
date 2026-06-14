@@ -125,35 +125,33 @@ export function TopNav({ user }: { user?: SessionUser }) {
           <DirectorViewAsControl effectiveRole={user.role} />
         ) : null}
 
-        {/* Навигация */}
+        {/* Навигация: desktop md+ — равноширинные вкладки */}
         {user ? (
-          <>
-            {/* Mobile: нижний tab bar */}
-            <BottomNav nav={nav} />
-
-            {/* Desktop md+: равноширинные вкладки */}
-            <div className="hidden md:flex w-full min-w-0 overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--surface-soft)] divide-x divide-[var(--border)]">
-              {nav.map((item) => {
-                const active = navItemIsActive(pathname, item.href, navHrefs);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    prefetch
-                    className={`flex flex-1 basis-0 min-w-0 touch-manipulation items-center justify-center py-2 text-[12.5px] font-semibold tracking-[-0.01em] transition-all duration-150 text-center leading-tight ${
-                      active
-                        ? "bg-[var(--accent)] text-white"
-                        : "text-[var(--muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text)]"
-                    }`}
-                  >
-                    {t(item.labelKey as Parameters<typeof t>[0])}
-                  </Link>
-                );
-              })}
-            </div>
-          </>
+          <div className="hidden md:flex w-full min-w-0 overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--surface-soft)] divide-x divide-[var(--border)]">
+            {nav.map((item) => {
+              const active = navItemIsActive(pathname, item.href, navHrefs);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  prefetch
+                  className={`flex flex-1 basis-0 min-w-0 touch-manipulation items-center justify-center py-2 text-[12.5px] font-semibold tracking-[-0.01em] transition-all duration-150 text-center leading-tight ${
+                    active
+                      ? "bg-[var(--accent)] text-white"
+                      : "text-[var(--muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text)]"
+                  }`}
+                >
+                  {t(item.labelKey as Parameters<typeof t>[0])}
+                </Link>
+              );
+            })}
+          </div>
         ) : null}
       </div>
+
+      {/* Mobile: нижний tab bar — вне .card, иначе animation:forwards на .card
+          оставляет transform≠none и ломает containing block для position:fixed */}
+      {user ? <BottomNav nav={nav} /> : null}
     </header>
   );
 }
