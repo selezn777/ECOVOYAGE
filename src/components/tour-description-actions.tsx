@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
@@ -328,6 +329,9 @@ export function TourDescriptionDialog({
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const canEdit = canEditTourDescription(viewerRole) && Boolean(templateId);
 
@@ -364,9 +368,9 @@ export function TourDescriptionDialog({
     }
   }
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
       className="ui-scrim fixed inset-0 z-[200] flex items-center justify-center p-4"
       onClick={() => { if (!editing) onClose(); }}
@@ -423,7 +427,8 @@ export function TourDescriptionDialog({
           />
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
