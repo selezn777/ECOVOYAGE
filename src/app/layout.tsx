@@ -58,8 +58,11 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
+    <html lang={locale} translate="no" className={`notranslate ${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
       <head>
+        {/* Отключаем предложение Google Translate / Safari "перевести страницу" —
+            мешает на iOS, когда системный язык отличается от языка интерфейса */}
+        <meta name="google" content="notranslate" />
         {/* iOS PWA splash screen: manifest background_color/theme_color не работают на iOS,
             нужен набор apple-touch-startup-image под все портретные разрешения iPhone */}
         <link rel="apple-touch-startup-image" href="/apple-splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />

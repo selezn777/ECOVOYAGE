@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import type { BookingsByHourRow } from "@/lib/data";
 
 const WORK_HOURS = Array.from({ length: 16 }, (_, i) => i + 8);
@@ -21,12 +22,12 @@ function barY(count: number, max: number) {
 }
 
 // Топ-2 часа по категории
-function topHours(rows: BookingsByHourRow[], key: keyof BookingsByHourRow): string {
+function topHours(rows: BookingsByHourRow[], key: keyof BookingsByHourRow, noDataLabel: string): string {
   const sorted = rows
     .filter(r => (r[key] as number ?? 0) > 0)
     .sort((a, b) => ((b[key] as number) ?? 0) - ((a[key] as number) ?? 0))
     .slice(0, 3);
-  if (sorted.length === 0) return "нет данных";
+  if (sorted.length === 0) return noDataLabel;
   return sorted.map(r => `${r.hour}:00`).join(", ");
 }
 
@@ -34,7 +35,8 @@ function totalByKey(rows: BookingsByHourRow[], key: keyof BookingsByHourRow): nu
   return rows.reduce((s, r) => s + ((r[key] as number) ?? 0), 0);
 }
 
-export function BookingsByHourChart({ rows }: { rows: BookingsByHourRow[] }) {
+export async function BookingsByHourChart({ rows }: { rows: BookingsByHourRow[] }) {
+  const t = await getTranslations("salesAnalytics");
   const workRows = WORK_HOURS.map(h => rows.find(r => r.hour === h) ?? { hour: h, count: 0 });
   const max = Math.max(...workRows.map(r => r.count), 1);
   const total = workRows.reduce((s, r) => s + r.count, 0);
@@ -44,6 +46,7 @@ export function BookingsByHourChart({ rows }: { rows: BookingsByHourRow[] }) {
   const bw = barW(n);
   const gridVal = Math.round(max / 2);
 
+  const noDataShort = t("noDataShort");
   const soloTotal  = totalByKey(workRows, "solo");
   const pairTotal  = totalByKey(workRows, "pair");
   const familyTotal = totalByKey(workRows, "family");
@@ -102,45 +105,45 @@ export function BookingsByHourChart({ rows }: { rows: BookingsByHourRow[] }) {
       {/* Общая сводка */}
       <div className="mt-3 grid grid-cols-3 gap-2">
         <div className="rounded-xl bg-[var(--surface-soft)] px-3 py-2 ring-1 ring-[var(--border)]">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">Пиковый час</div>
+          <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">{t("peakHour")}</div>
           <div className="mt-0.5 text-xl font-bold" style={{ color: "var(--accent)" }}>{peakRow.hour}:00</div>
-          <div className="text-[11px] text-[var(--muted)]">{peakRow.count} записей</div>
+          <div className="text-[11px] text-[var(--muted)]">{peakRow.count} {t("records")}</div>
         </div>
         <div className="rounded-xl bg-[var(--surface-soft)] px-3 py-2 ring-1 ring-[var(--border)]">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">Топ-3 часа</div>
+          <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">{t("top3Hours")}</div>
           <div className="mt-0.5 text-[12px] font-bold text-[var(--text)]">
             {top3.map(r => `${r.hour}:00`).join(" · ")}
           </div>
           <div className="text-[11px] text-[var(--muted)]">{top3.map(r => r.count).join(" / ")}</div>
         </div>
         <div className="rounded-xl bg-[var(--surface-soft)] px-3 py-2 ring-1 ring-[var(--border)]">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">Всего</div>
+          <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">{t("total")}</div>
           <div className="mt-0.5 text-xl font-bold text-[var(--text)]">{total}</div>
-          <div className="text-[11px] text-[var(--muted)]">записей</div>
+          <div className="text-[11px] text-[var(--muted)]">{t("records")}</div>
         </div>
       </div>
 
       {/* 4 отдельных категории — каждая со своими часами */}
       <div className="mt-2 grid grid-cols-2 gap-2">
         <div className="rounded-xl bg-[var(--surface-soft)] px-3 py-2.5 ring-1 ring-[var(--border)]">
-          <div className="text-[11px] font-semibold text-[var(--text)]">👤 Одиночки</div>
-          <div className="mt-1 text-[12px] font-bold text-[var(--text)]">{topHours(workRows, "solo")}</div>
-          <div className="mt-0.5 text-[11px] text-[var(--muted)]">{soloTotal} бронирований · 1 человек</div>
+          <div className="text-[11px] font-semibold text-[var(--text)]">{t("categories.solo.title")}</div>
+          <div className="mt-1 text-[12px] font-bold text-[var(--text)]">{topHours(workRows, "solo", noDataShort)}</div>
+          <div className="mt-0.5 text-[11px] text-[var(--muted)]">{t("categories.solo.hint", { count: soloTotal })}</div>
         </div>
         <div className="rounded-xl bg-[var(--surface-soft)] px-3 py-2.5 ring-1 ring-[var(--border)]">
-          <div className="text-[11px] font-semibold text-[var(--text)]">👫 Пары</div>
-          <div className="mt-1 text-[12px] font-bold text-[var(--text)]">{topHours(workRows, "pair")}</div>
-          <div className="mt-0.5 text-[11px] text-[var(--muted)]">{pairTotal} бронирований · 2-3 человека</div>
+          <div className="text-[11px] font-semibold text-[var(--text)]">{t("categories.pair.title")}</div>
+          <div className="mt-1 text-[12px] font-bold text-[var(--text)]">{topHours(workRows, "pair", noDataShort)}</div>
+          <div className="mt-0.5 text-[11px] text-[var(--muted)]">{t("categories.pair.hint", { count: pairTotal })}</div>
         </div>
         <div className="rounded-xl bg-[var(--surface-soft)] px-3 py-2.5 ring-1 ring-[var(--border)]">
-          <div className="text-[11px] font-semibold text-[var(--text)]">👨‍👩‍👧 Семьи с детьми</div>
-          <div className="mt-1 text-[12px] font-bold text-[var(--text)]">{topHours(workRows, "family")}</div>
-          <div className="mt-0.5 text-[11px] text-[var(--muted)]">{familyTotal} бронирований · есть дети</div>
+          <div className="text-[11px] font-semibold text-[var(--text)]">{t("categories.family.title")}</div>
+          <div className="mt-1 text-[12px] font-bold text-[var(--text)]">{topHours(workRows, "family", noDataShort)}</div>
+          <div className="mt-0.5 text-[11px] text-[var(--muted)]">{t("categories.family.hint", { count: familyTotal })}</div>
         </div>
         <div className="rounded-xl bg-[var(--surface-soft)] px-3 py-2.5 ring-1 ring-[var(--border)]">
-          <div className="text-[11px] font-semibold text-[var(--text)]">👥 Компании 4+</div>
-          <div className="mt-1 text-[12px] font-bold text-[var(--text)]">{topHours(workRows, "group")}</div>
-          <div className="mt-0.5 text-[11px] text-[var(--muted)]">{groupTotal} бронирований · 4+ человека</div>
+          <div className="text-[11px] font-semibold text-[var(--text)]">{t("categories.group.title")}</div>
+          <div className="mt-1 text-[12px] font-bold text-[var(--text)]">{topHours(workRows, "group", noDataShort)}</div>
+          <div className="mt-0.5 text-[11px] text-[var(--muted)]">{t("categories.group.hint", { count: groupTotal })}</div>
         </div>
       </div>
     </div>

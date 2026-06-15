@@ -1,7 +1,8 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
-import { formatYmdWithWeekdayRu, localDateString } from "@/lib/scheduling";
+import { formatMonthYearLong, formatYmdWithWeekday, localDateString } from "@/lib/scheduling";
 import type { RosterUser } from "@/lib/types";
 
 export function SalesPointAssignmentPanel({
@@ -31,6 +32,10 @@ export function SalesPointAssignmentPanel({
   const [monthKey, setMonthKey] = useState(() => localDateString().slice(0, 7));
   const [dayFrom, setDayFrom] = useState("");
   const [dayTo, setDayTo] = useState("");
+
+  const t = useTranslations("salesPointsPage");
+  const tc = useTranslations("common");
+  const locale = useLocale();
 
   useEffect(() => {
     let cancelled = false;
@@ -76,7 +81,7 @@ export function SalesPointAssignmentPanel({
   const invalidRange = rangeDays.length > 3;
 
   if (!selected) {
-    return <p className="text-sm text-[var(--muted)]">Менеджеры не найдены.</p>;
+    return <p className="text-sm text-[var(--muted)]">{t("assignment.noManagersFound")}</p>;
   }
 
   function shiftMonth(delta: number) {
@@ -112,31 +117,31 @@ export function SalesPointAssignmentPanel({
     setErrorText(null);
     setOkText(null);
     if (!rangePreview) {
-      setErrorText("Выберите день или диапазон 1-3 дня в календаре.");
+      setErrorText(t("assignment.errors.selectDayOrRange"));
       return;
     }
     if (invalidRange) {
-      setErrorText("Максимум 3 дня за одно назначение.");
+      setErrorText(t("assignment.errors.maxThreeDays"));
       return;
     }
     if (blockedByOff.length > 0) {
-      setErrorText(`У менеджера выходной на: ${blockedByOff.join(", ")}.`);
+      setErrorText(t("assignment.errors.dayOffOn", { days: blockedByOff.join(", ") }));
       return;
     }
     if (mode === "point" && !pointId) {
-      setErrorText("Выберите точку продаж.");
+      setErrorText(t("assignment.errors.selectPoint"));
       return;
     }
     if (mode === "point" && blockedByPoint.length > 0) {
-      setErrorText(`Точка занята на даты: ${blockedByPoint.join(", ")}.`);
+      setErrorText(t("assignment.errors.pointBusyOn", { days: blockedByPoint.join(", ") }));
       return;
     }
     if (mode === "promo" && promoPlace.trim().length < 2) {
-      setErrorText("Укажите место проведения промо.");
+      setErrorText(t("assignment.errors.specifyPromoPlace"));
       return;
     }
     if (mode === "online" && onlineChannel.trim().length < 2) {
-      setErrorText("Укажите канал трафика для онлайн.");
+      setErrorText(t("assignment.errors.specifyTrafficChannel"));
       return;
     }
     setBusy(true);
@@ -156,11 +161,11 @@ export function SalesPointAssignmentPanel({
         }),
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string; days?: string[] };
-      if (!res.ok) throw new Error(j.error || "Не удалось сохранить назначение.");
-      setOkText(`Назначение сохранено (${(j.days ?? rangeDays).length} дн.).`);
+      if (!res.ok) throw new Error(j.error || t("assignment.couldNotSaveAssignment"));
+      setOkText(t("assignment.savedAssignment", { n: (j.days ?? rangeDays).length }));
       setTimeout(() => window.location.reload(), 350);
     } catch (e) {
-      setErrorText(e instanceof Error ? e.message : "Ошибка");
+      setErrorText(e instanceof Error ? e.message : tc("error"));
     } finally {
       setBusy(false);
     }
@@ -169,12 +174,12 @@ export function SalesPointAssignmentPanel({
   return (
     <div className="space-y-2">
       <label className="block text-xs">
-        <span className="mb-1 block text-[var(--muted2)]">Сотрудник</span>
+        <span className="mb-1 block text-[var(--muted2)]">{t("assignment.employeeLabel")}</span>
         <select
           className="field-surface min-h-[44px] w-full rounded-xl px-3 py-2 text-sm"
           value={selected.id}
           onChange={(e) => setManagerId(e.target.value)}
-          aria-label="Сотрудник для назначения точки"
+          aria-label={t("assignment.employeeAria")}
         >
           {salesStaff.map((r) => (
             <option key={r.id} value={r.id}>
@@ -185,7 +190,7 @@ export function SalesPointAssignmentPanel({
       </label>
 
       <div className="text-[11px] text-[var(--muted)]">
-        {selected.offToday ? "Сегодня выходной" : "Сегодня в работе"} · Выходных в плане: {selectedOffDays.size}
+        {selected.offToday ? t("assignment.todayDayOff") : t("assignment.todayWorking")} · {t("assignment.plannedDaysOff")} {selectedOffDays.size}
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -196,20 +201,20 @@ export function SalesPointAssignmentPanel({
             onClick={() => setMode(m)}
             className={`btn-secondary !min-h-[36px] !rounded-xl !px-3 ${mode === m ? "ring-2 ring-[var(--accent)]" : ""}`}
           >
-            {m === "point" ? "Точка" : m === "promo" ? "Промо" : "Онлайн"}
+            {m === "point" ? t("modes.point") : m === "promo" ? t("modes.promo") : t("modes.online")}
           </button>
         ))}
       </div>
 
       {mode === "point" ? (
         <label className="block text-xs">
-          <span className="mb-1 block text-[var(--muted2)]">Точка продаж</span>
+          <span className="mb-1 block text-[var(--muted2)]">{t("assignment.pointSelectLabel")}</span>
           <select
             value={pointId}
             onChange={(e) => setPointId(e.target.value)}
             className="field-surface min-h-[44px] w-full rounded-xl px-3 py-2 text-sm"
           >
-            <option value="">Выберите точку</option>
+            <option value="">{t("assignment.pointSelectOption")}</option>
             {points.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -221,11 +226,11 @@ export function SalesPointAssignmentPanel({
 
       {mode === "promo" ? (
         <label className="block text-xs">
-          <span className="mb-1 block text-[var(--muted2)]">Где проводил промо</span>
+          <span className="mb-1 block text-[var(--muted2)]">{t("assignment.promoPlaceLabel")}</span>
           <input
             value={promoPlace}
             onChange={(e) => setPromoPlace(e.target.value)}
-            placeholder="Например: Vincom Plaza, стойка у входа"
+            placeholder={t("assignment.promoPlacePlaceholder")}
             className="field-surface min-h-[44px] w-full rounded-xl px-3 py-2 text-sm"
           />
         </label>
@@ -234,29 +239,29 @@ export function SalesPointAssignmentPanel({
       {mode === "online" ? (
         <div className="space-y-2">
           <label className="block text-xs">
-            <span className="mb-1 block text-[var(--muted2)]">Канал трафика</span>
+            <span className="mb-1 block text-[var(--muted2)]">{t("assignment.channelLabel")}</span>
             <input
               value={onlineChannel}
               onChange={(e) => setOnlineChannel(e.target.value)}
-              placeholder="Instagram / Telegram / WhatsApp и т.п."
+              placeholder={t("assignment.channelPlaceholder")}
               className="field-surface min-h-[44px] w-full rounded-xl px-3 py-2 text-sm"
             />
           </label>
-          <div className="text-xs text-[var(--muted2)]">Источник трафика</div>
+          <div className="text-xs text-[var(--muted2)]">{t("assignment.trafficSourceLabel")}</div>
           <div className="flex gap-2">
             <button
               type="button"
               className={`btn-secondary !min-h-[34px] !px-3 ${onlineTrafficSource === "own" ? "ring-2 ring-[var(--accent)]" : ""}`}
               onClick={() => setOnlineTrafficSource("own")}
             >
-              Свой
+              {t("logRow.trafficOwn")}
             </button>
             <button
               type="button"
               className={`btn-secondary !min-h-[34px] !px-3 ${onlineTrafficSource === "office" ? "ring-2 ring-[var(--accent)]" : ""}`}
               onClick={() => setOnlineTrafficSource("office")}
             >
-              Офисный
+              {t("logRow.trafficOffice")}
             </button>
           </div>
         </div>
@@ -268,14 +273,14 @@ export function SalesPointAssignmentPanel({
             ◀
           </button>
           <div className="text-sm font-semibold">
-            {new Date(`${monthKey}-01T12:00:00`).toLocaleDateString("ru-RU", { month: "long", year: "numeric" })}
+            {formatMonthYearLong(Number(monthKey.slice(0, 4)), Number(monthKey.slice(5, 7)), locale)}
           </div>
           <button type="button" className="btn-secondary !min-h-[32px] !px-2" onClick={() => shiftMonth(1)}>
             ▶
           </button>
         </div>
         <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-wide text-[var(--muted2)]">
-          {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map((w) => (
+          {(t.raw("assignment.weekdaysShort") as string[]).map((w) => (
             <div key={w}>{w}</div>
           ))}
         </div>
@@ -310,44 +315,45 @@ export function SalesPointAssignmentPanel({
                         ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200"
                         : "bg-[var(--surface)] text-[var(--text)]"
                 }`}
-                title={`${formatYmdWithWeekdayRu(d)}${
+                title={
                   isOff
-                    ? " · выходной"
-                    : isAssignedAny
-                      ? assignmentIsPoint
-                        ? ` · уже назначен на точку${assignment?.pointName ? `: ${assignment.pointName}` : ""}`
-                        : assignmentIsPromo
-                          ? " · уже назначен в промо"
-                          : " · уже назначен онлайн"
-                      : isBusyPoint
-                        ? " · точка занята"
-                        : ""
-                }`}
+                    ? t("assignment.tooltipDayOff", { weekday: formatYmdWithWeekday(d, locale) })
+                    : `${formatYmdWithWeekday(d, locale)}${
+                        isAssignedAny
+                          ? assignmentIsPoint
+                            ? ` · ${t("assignment.tooltipAlreadyPoint")}${assignment?.pointName ? `: ${assignment.pointName}` : ""}`
+                            : assignmentIsPromo
+                              ? ` · ${t("assignment.tooltipAlreadyPromo")}`
+                              : ` · ${t("assignment.tooltipAlreadyOnline")}`
+                          : isBusyPoint
+                            ? ` · ${t("assignment.tooltipPointBusy")}`
+                            : ""
+                      }`
+                }
               >
                 {d.slice(-2)}
               </button>
             );
           })}
         </div>
-        <p className="mt-2 text-xs text-[var(--muted)]">
-          Выберите диапазон 1-3 дня. Жёлтый — выходной, красный — точка занята, синий/фиолетовый/зелёный —
-          уже назначенная работа сотрудника (точка/промо/онлайн).
-        </p>
+        <p className="mt-2 text-xs text-[var(--muted)]">{t("assignment.legendHint")}</p>
       </div>
       {rangePreview ? (
         <p className="text-xs text-[var(--text)]">
-          Выбрано: {formatYmdWithWeekdayRu(rangePreview.from)} - {formatYmdWithWeekdayRu(rangePreview.to)} ({rangeDays.length} дн.)
+          {t("assignment.selectedRange", {
+            from: formatYmdWithWeekday(rangePreview.from, locale),
+            to: formatYmdWithWeekday(rangePreview.to, locale),
+            n: rangeDays.length,
+          })}
         </p>
       ) : null}
       <button type="button" onClick={() => void savePlan()} disabled={busy} className="btn-primary w-full rounded-xl px-4 py-2">
-        {busy ? "Сохранение..." : "Сохранить назначение"}
+        {busy ? tc("saving") : t("assignment.saveButton")}
       </button>
       {errorText ? <p className="text-xs text-red-600">{errorText}</p> : null}
       {okText ? <p className="text-xs text-emerald-600 dark:text-emerald-400">{okText}</p> : null}
       {mode === "online" ? (
-        <p className="text-[11px] text-[var(--muted)]">
-          Для отчёта фиксируем канал и источник трафика: офисный трафик учитывается отдельно для вычета рекламных затрат.
-        </p>
+        <p className="text-[11px] text-[var(--muted)]">{t("assignment.onlineHint")}</p>
       ) : null}
     </div>
   );

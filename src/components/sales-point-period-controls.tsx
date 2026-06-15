@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -16,6 +17,7 @@ export function SalesPointPeriodControls({
   initialDay: string;
   initialMonth: string;
 }) {
+  const t = useTranslations("salesPointsPage");
   const router = useRouter();
   const [preset, setPreset] = useState<Preset>(initialPreset);
   const [day, setDay] = useState(initialDay);
@@ -39,7 +41,7 @@ export function SalesPointPeriodControls({
             onClick={() => setPreset(p)}
             className={`btn-secondary px-3 py-1.5 text-xs ${preset === p ? "ring-2 ring-[var(--accent)]" : ""}`}
           >
-            {p === "day" ? "День" : p === "month" ? "Месяц" : "Всё время"}
+            {p === "day" ? t("period.day") : p === "month" ? t("period.month") : t("period.allTime")}
           </button>
         ))}
       </div>
@@ -60,7 +62,7 @@ export function SalesPointPeriodControls({
         />
       ) : null}
       <button type="button" onClick={() => router.push(href)} className="btn-primary px-3 py-1.5 text-xs">
-        Применить период
+        {t("period.apply")}
       </button>
     </div>
   );

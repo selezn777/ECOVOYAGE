@@ -408,7 +408,11 @@
     "guideOwes": "HDV cần nộp:",
     "officeOwes": "Văn phòng nợ HDV:",
     "totalToHandover": "Tổng cần nộp:",
-    "toHandover": "Cần nộp:"
+    "toHandover": "Cần nộp:",
+    "commissionPercentLabel": "% trên giá (đặt chỗ)",
+    "commissionPercentAria": "Tỷ lệ phần trăm trên giá cho quản lý",
+    "commissionPercentError": "0-100 hoặc để trống (mặc định 12%)",
+    "commissionPercentHint": "Để trống = mặc định 12%. Tỷ lệ này được lưu trong hồ sơ và dùng để tính lại «Doanh số của tôi», quỹ tiền mặt và thẻ nhân viên."
   },
   "daysOff": {
     "title": "Nghỉ phép nhân viên",
@@ -1130,5 +1134,214 @@
     "hint2": "Tốt nhất nên đính kèm ảnh chụp màn hình và một tin nhắn thoại ngắn.",
     "note": "Bản sửa lỗi thường có trong bản cập nhật gần nhất hoặc tiếp theo.",
     "openTelegram": "Mở Telegram"
+  },
+  "salesPointsPage": {
+    "title": "Điểm bán",
+    "subtitle": "Trước tiên hãy phân công nhân viên bán hàng vào các điểm (phải tính ngày nghỉ), sau đó xem tổng hợp theo điểm: doanh số, tiền, ngày làm việc và chỉ số của từng quản lý.",
+    "pointFallbackName": "Điểm",
+    "dayOff": "Nghỉ",
+    "modes": {
+      "point": "Điểm",
+      "promo": "Promo",
+      "online": "Trực tuyến"
+    },
+    "roles": {
+      "manager": "Quản lý",
+      "chiefManager": "QL trưởng",
+      "chiefGuide": "HDV trưởng",
+      "guide": "HDV"
+    },
+    "assignSection": {
+      "title": "Nhân viên & phân công điểm",
+      "hint": "Phân công quản lý cho 1-3 ngày qua lịch. Không thể phân công nếu quản lý có ngày nghỉ vào ngày đã chọn, hoặc điểm đã được nhân viên khác sử dụng."
+    },
+    "logSection": {
+      "title": "Nhật ký phân công & hiệu quả",
+      "hint": "Nhật ký theo kỳ đã chọn: ai làm việc ở đâu và theo chế độ nào. Màu chế độ giúp nhanh chóng thấy sự phân bổ nhân viên, còn khối hiệu quả hiển thị tổng đặt chỗ và dòng tiền trong các ngày làm việc.",
+      "empty": "Chưa có phân công nào trong kỳ này.",
+      "logEmpty": "Nhật ký trống trong kỳ đã chọn."
+    },
+    "stats": {
+      "workDays": "Số ngày làm:",
+      "bookingsOnAssignedDays": "Đặt chỗ trong các ngày được phân công:",
+      "paymentsMoney": "Số tiền thanh toán:"
+    },
+    "logRow": {
+      "workDate": "Ngày làm việc:",
+      "point": "Điểm:",
+      "promoLocation": "Địa điểm promo:",
+      "channel": "Kênh:",
+      "traffic": "Traffic:",
+      "trafficOffice": "Văn phòng",
+      "trafficOwn": "Của riêng",
+      "assignedAt": "Đã phân công:",
+      "noTime": "không có giờ"
+    },
+    "coverageSection": {
+      "title": "Kiểm soát độ phủ vận hành (14 ngày)",
+      "hint": "Một màn hình để kiểm tra nhanh: thấy chỗ trống của các điểm theo ngày, ai đang nghỉ, ai đã được phân công và ai chưa được phân công cần bổ sung hoặc chuyển sang promo/trực tuyến.",
+      "emptyPoints": "Điểm còn trống:",
+      "noEmpty": "không có điểm trống",
+      "unassignedEmployees": "Nhân viên chưa được phân công:",
+      "allAssigned": "tất cả đã được phân công"
+    },
+    "table": {
+      "employee": "Nhân viên"
+    },
+    "badges": {
+      "notAssigned": "Chưa phân công",
+      "pointLabel": "Điểm: {name}",
+      "promoLabel": "Promo: {place}",
+      "promoLocationMissing": "chưa có địa điểm",
+      "onlineLabel": "Trực tuyến: {channel}",
+      "onlineChannelMissing": "chưa có kênh"
+    },
+    "pointsList": {
+      "title": "Danh sách điểm bán",
+      "empty": "Chưa có điểm nào trong danh mục. Hãy tạo điểm bán trong mục Thuê (kế toán / điều phối viên).",
+      "managersAssigned": "Số quản lý được gán: {n}",
+      "noManagersAssigned": "Chưa có quản lý được gán",
+      "openReport": "Xem báo cáo điểm"
+    },
+    "detail": {
+      "backToList": "Về danh sách điểm",
+      "periodLabel": "Kỳ:",
+      "periodDay": "Ngày · {date}",
+      "periodAllTime": "Toàn thời gian",
+      "pointPhotoAlt": "Ảnh điểm {name}",
+      "pointPhotoMissing": "Ảnh điểm chưa được điều phối viên tải lên.",
+      "noManagers": "Chưa có quản lý được gán",
+      "managers": "Quản lý: {names}",
+      "stats": {
+        "bookingsInPeriod": "Đặt chỗ trong kỳ",
+        "payments": "Thanh toán, ₫",
+        "expenses": "Chi phí điểm, ₫",
+        "rentPerMonth": "Thuê / tháng, ₫",
+        "workDays": "Ngày làm",
+        "rating": "Đánh giá"
+      },
+      "workDaysTooltip": "Số ngày theo lịch: {calendar}, đã đóng: {closed}",
+      "ratingHint": "Đánh giá = điểm trung bình các nhận xét của quản lý về công việc của nhân viên tại điểm trong kỳ.",
+      "whoWorked": {
+        "title": "Ai làm việc khi nào / doanh số",
+        "workedDays": "Số ngày làm trong kỳ:",
+        "bookingsAndPayments": "Đặt chỗ: {bookings} · Thanh toán: {payments}",
+        "byModes": "Theo chế độ: Điểm {pointB}/{pointP} · Promo {promoB}/{promoP} · Trực tuyến {onlineB}/{onlineP}",
+        "days": "Ngày: {list}",
+        "noConfirmations": "chưa có xác nhận"
+      }
+    },
+    "period": {
+      "day": "Ngày",
+      "month": "Tháng",
+      "allTime": "Toàn thời gian",
+      "apply": "Áp dụng kỳ"
+    },
+    "expenses": {
+      "missingPurpose": "Vui lòng nhập mục đích chi phí.",
+      "amountMustBePositive": "Số tiền phải lớn hơn 0.",
+      "errorStatus": "Lỗi {status}",
+      "title": "Yêu cầu chi phí của điểm",
+      "hint": "Quản lý trưởng tạo yêu cầu, kế toán/giám đốc xác nhận hoặc từ chối (kèm lý do), sau đó đánh dấu đã chi.",
+      "purposePlaceholder": "Mục đích chi phí (ở đâu và để làm gì)",
+      "amountPlaceholder": "Số tiền, ₫",
+      "commentPlaceholder": "Ghi chú cho kế toán (không bắt buộc)",
+      "send": "Gửi yêu cầu",
+      "empty": "Chưa có yêu cầu nào.",
+      "status": {
+        "pending": "đang chờ duyệt",
+        "approved": "đã duyệt",
+        "rejected": "đã từ chối"
+      },
+      "statusLabel": "Trạng thái:",
+      "issuedLabel": "Đã chi:",
+      "issuedYes": "đã chi",
+      "issuedNo": "chưa chi",
+      "note": "Ghi chú: {note}",
+      "rejectPlaceholder": "Lý do từ chối/ghi chú (bắt buộc khi từ chối)",
+      "approve": "Xác nhận",
+      "reject": "Từ chối",
+      "markIssued": "Đã chi",
+      "markUnissued": "Chưa chi"
+    },
+    "assignment": {
+      "noManagersFound": "Không tìm thấy quản lý.",
+      "errors": {
+        "selectDayOrRange": "Chọn một ngày hoặc khoảng 1-3 ngày trong lịch.",
+        "maxThreeDays": "Tối đa 3 ngày cho mỗi lần phân công.",
+        "dayOffOn": "Quản lý có ngày nghỉ vào: {days}.",
+        "selectPoint": "Chọn một điểm bán.",
+        "pointBusyOn": "Điểm đã có người vào ngày: {days}.",
+        "specifyPromoPlace": "Nhập địa điểm promo.",
+        "specifyTrafficChannel": "Nhập kênh traffic cho trực tuyến."
+      },
+      "couldNotSaveAssignment": "Không thể lưu phân công.",
+      "savedAssignment": "Đã lưu phân công ({n} ngày).",
+      "employeeLabel": "Nhân viên",
+      "employeeAria": "Nhân viên để phân công điểm",
+      "todayDayOff": "Hôm nay nghỉ",
+      "todayWorking": "Hôm nay làm việc",
+      "plannedDaysOff": "Số ngày nghỉ đã lên kế hoạch:",
+      "pointSelectLabel": "Điểm bán",
+      "pointSelectOption": "Chọn điểm",
+      "promoPlaceLabel": "Nơi diễn ra promo",
+      "promoPlacePlaceholder": "Ví dụ: Vincom Plaza, quầy lối vào",
+      "channelLabel": "Kênh traffic",
+      "channelPlaceholder": "Instagram / Telegram / WhatsApp, v.v.",
+      "trafficSourceLabel": "Nguồn traffic",
+      "weekdaysShort": [
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6",
+        "T7",
+        "CN"
+      ],
+      "tooltipDayOff": "{weekday} · nghỉ",
+      "tooltipAlreadyPoint": "đã được phân công tại điểm",
+      "tooltipAlreadyPromo": "đã được phân công promo",
+      "tooltipAlreadyOnline": "đã được phân công trực tuyến",
+      "tooltipPointBusy": "điểm đã có người",
+      "legendHint": "Chọn khoảng 1-3 ngày. Vàng — nghỉ, đỏ — điểm đã có người, xanh dương/tím/xanh lá — phân công hiện có của nhân viên (điểm/promo/trực tuyến).",
+      "selectedRange": "Đã chọn: {from} - {to} ({n} ngày)",
+      "onlineHint": "Để lập báo cáo, chúng tôi ghi nhận kênh và nguồn traffic: traffic văn phòng được tính riêng khi trừ chi phí quảng cáo.",
+      "saveButton": "Lưu phân công"
+    }
+  },
+  "salesAnalytics": {
+    "title": "Phân tích bán hàng · {count} đơn đặt",
+    "segmentsTitle": "Phân khúc khách",
+    "segments": {
+      "single": "Khách đơn",
+      "couple": "Cặp đôi",
+      "family": "Gia đình 3-4",
+      "group": "Nhóm 5+"
+    },
+    "peakHoursTitle": "Giờ bán hàng (top)",
+    "noData": "Không có dữ liệu",
+    "peakHour": "Giờ cao điểm",
+    "top3Hours": "Top 3 giờ",
+    "total": "Tổng",
+    "records": "lượt",
+    "noDataShort": "không có dữ liệu",
+    "categories": {
+      "solo": {
+        "title": "👤 Khách đơn",
+        "hint": "{count} đơn · 1 người"
+      },
+      "pair": {
+        "title": "👫 Cặp đôi",
+        "hint": "{count} đơn · 2-3 người"
+      },
+      "family": {
+        "title": "👨‍👩‍👧 Gia đình có trẻ em",
+        "hint": "{count} đơn · có trẻ em"
+      },
+      "group": {
+        "title": "👥 Nhóm 4+",
+        "hint": "{count} đơn · 4+ người"
+      }
+    }
   }
 }

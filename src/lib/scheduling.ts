@@ -45,6 +45,20 @@ export function formatYmdWithWeekday(ymd: string, locale?: string): string {
   return `${wd}, ${dd}.${mm}.${yyyy}`;
 }
 
+/** «Июнь 2026» — локализованное название месяца и года. */
+export function formatMonthYearLong(year: number, month: number, locale?: string): string {
+  const loc = locale ?? getActiveLocale();
+  const intlLocale = loc === "ru" ? "ru-RU" : loc === "vi" ? "vi-VN" : "en-GB";
+  return new Date(year, month - 1, 1).toLocaleDateString(intlLocale, { month: "long", year: "numeric" });
+}
+
+/** «28.03.2026, 14:05» — локализованная дата и время. */
+export function formatDateTimeShort(iso: string, locale?: string): string {
+  const loc = locale ?? getActiveLocale();
+  const intlLocale = loc === "ru" ? "ru-RU" : loc === "vi" ? "vi-VN" : "en-GB";
+  return new Date(iso).toLocaleString(intlLocale, { dateStyle: "short", timeStyle: "short" });
+}
+
 /** Части даты для шапки тура — локализованная версия. */
 export function tourDateHeaderParts(ymd: string, locale?: string): { weekdayLong: string; dmy: string } | null {
   const dt = parseYmdLocal(ymd);

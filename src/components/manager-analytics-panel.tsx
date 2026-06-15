@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import type { ManagerBookingAnalytics } from "@/lib/types";
 
 function SegmentBar({ label, count, total, color }: { label: string; count: number; total: number; color: string }) {
@@ -15,32 +16,33 @@ function SegmentBar({ label, count, total, color }: { label: string; count: numb
   );
 }
 
-export function ManagerAnalyticsPanel({ analytics }: { analytics: ManagerBookingAnalytics }) {
+export async function ManagerAnalyticsPanel({ analytics }: { analytics: ManagerBookingAnalytics }) {
   const { segments, peakHours, totalBookings } = analytics;
   const maxHour = peakHours[0]?.count ?? 1;
+  const t = await getTranslations("salesAnalytics");
 
   return (
     <section className="card mb-3">
       <div className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">
-        Аналитика продаж · {totalBookings} броней
+        {t("title", { count: totalBookings })}
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {/* Сегменты */}
         <div>
-          <div className="mb-2 text-[11px] font-medium text-[var(--muted2)]">Сегменты туристов</div>
+          <div className="mb-2 text-[11px] font-medium text-[var(--muted2)]">{t("segmentsTitle")}</div>
           <div className="space-y-2">
-            <SegmentBar label="Одиночные" count={segments.single} total={totalBookings} color="bg-sky-400 dark:bg-sky-500" />
-            <SegmentBar label="Пары" count={segments.couple} total={totalBookings} color="bg-violet-400 dark:bg-violet-500" />
-            <SegmentBar label="Семейные 3-4" count={segments.family} total={totalBookings} color="bg-[var(--accent)]" />
-            <SegmentBar label="Компании 5+" count={segments.group} total={totalBookings} color="bg-emerald-500" />
+            <SegmentBar label={t("segments.single")} count={segments.single} total={totalBookings} color="bg-sky-400 dark:bg-sky-500" />
+            <SegmentBar label={t("segments.couple")} count={segments.couple} total={totalBookings} color="bg-violet-400 dark:bg-violet-500" />
+            <SegmentBar label={t("segments.family")} count={segments.family} total={totalBookings} color="bg-[var(--accent)]" />
+            <SegmentBar label={t("segments.group")} count={segments.group} total={totalBookings} color="bg-emerald-500" />
           </div>
         </div>
 
         {/* Пиковые часы */}
         <div>
-          <div className="mb-2 text-[11px] font-medium text-[var(--muted2)]">Часы продаж (топ)</div>
+          <div className="mb-2 text-[11px] font-medium text-[var(--muted2)]">{t("peakHoursTitle")}</div>
           {peakHours.length === 0 ? (
-            <p className="text-[12px] text-[var(--muted)]">Нет данных</p>
+            <p className="text-[12px] text-[var(--muted)]">{t("noData")}</p>
           ) : (
             <div className="space-y-1.5">
               {peakHours.map(({ hour, count }) => (

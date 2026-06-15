@@ -1,9 +1,10 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatVnd, formatVndInput, parseVndInput } from "@/lib/format";
-import { formatYmdWithWeekdayRu, localDateString } from "@/lib/scheduling";
+import { formatYmdWithWeekday, localDateString } from "@/lib/scheduling";
 import type { RentalPointExpenseRow, Role } from "@/lib/types";
 
 export function SalesPointExpenseRequestsPanel({
@@ -15,6 +16,9 @@ export function SalesPointExpenseRequestsPanel({
   viewerRole: Role;
   expenses: RentalPointExpenseRow[];
 }) {
+  const t = useTranslations("salesPointsPage");
+  const tc = useTranslations("common");
+  const locale = useLocale();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -28,8 +32,8 @@ export function SalesPointExpenseRequestsPanel({
 
   async function submitRequest() {
     const amountVnd = parseVndInput(amountText);
-    if (!title.trim()) return setErrorText("Укажите назначение расхода.");
-    if (amountVnd <= 0) return setErrorText("Сумма должна быть больше нуля.");
+    if (!title.trim()) return setErrorText(t("expenses.missingPurpose"));
+    if (amountVnd <= 0) return setErrorText(t("expenses.amountMustBePositive"));
     setErrorText(null);
     setBusy(true);
     try {
@@ -44,13 +48,13 @@ export function SalesPointExpenseRequestsPanel({
         }),
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(j.error || `Ошибка ${res.status}`);
+      if (!res.ok) throw new Error(j.error || t("expenses.errorStatus", { status: res.status }));
       setTitle("");
       setAmountText("");
       setNote("");
       router.refresh();
     } catch (e) {
-      setErrorText(e instanceof Error ? e.message : "Ошибка");
+      setErrorText(e instanceof Error ? e.message : tc("error"));
     } finally {
       setBusy(false);
     }
@@ -69,10 +73,10 @@ export function SalesPointExpenseRequestsPanel({
         }),
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(j.error || `Ошибка ${res.status}`);
+      if (!res.ok) throw new Error(j.error || t("expenses.errorStatus", { status: res.status }));
       router.refresh();
     } catch (e) {
-      setErrorText(e instanceof Error ? e.message : "Ошибка");
+      setErrorText(e instanceof Error ? e.message : tc("error"));
     } finally {
       setBusy(false);
     }
@@ -80,23 +84,21 @@ export function SalesPointExpenseRequestsPanel({
 
   return (
     <section className="card mt-3 border-[var(--border)] bg-[var(--surface)]">
-      <h2 className="text-base font-semibold">Заявки на расход по точке</h2>
-      <p className="mt-1 text-xs text-[var(--muted)]">
-        Шеф-менеджер оформляет заявку, бухгалтерия/директор подтверждают или отклоняют (с причиной), затем отмечают выдачу.
-      </p>
+      <h2 className="text-base font-semibold">{t("expenses.title")}</h2>
+      <p className="mt-1 text-xs text-[var(--muted)]">{t("expenses.hint")}</p>
       {errorText ? <p className="mt-2 text-xs text-red-600">{errorText}</p> : null}
 
       {canCreate ? (
         <div className="mt-3 grid grid-cols-1 gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3 sm:grid-cols-2">
           <input
             className="field-surface min-h-[42px] rounded-xl px-3 py-2 text-sm sm:col-span-2"
-            placeholder="Назначение расхода (где и зачем)"
+            placeholder={t("expenses.purposePlaceholder")}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
           <input
             className="field-surface min-h-[42px] rounded-xl px-3 py-2 text-sm tabular-nums"
-            placeholder="Сумма, ₫"
+            placeholder={t("expenses.amountPlaceholder")}
             value={amountText}
             onChange={(e) => setAmountText(formatVndInput(parseVndInput(e.target.value)))}
             inputMode="numeric"
@@ -109,19 +111,19 @@ export function SalesPointExpenseRequestsPanel({
           />
           <textarea
             className="field-surface min-h-[74px] rounded-xl px-3 py-2 text-sm sm:col-span-2"
-            placeholder="Комментарий для бухгалтерии (необязательно)"
+            placeholder={t("expenses.commentPlaceholder")}
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
           <button type="button" onClick={() => void submitRequest()} disabled={busy} className="btn-primary min-h-[42px] sm:col-span-2">
-            Отправить заявку
+            {t("expenses.send")}
           </button>
         </div>
       ) : null}
 
       <ul className="mt-3 space-y-2">
         {expenses.length === 0 ? (
-          <li className="text-xs text-[var(--muted)]">Заявок пока нет.</li>
+          <li className="text-xs text-[var(--muted)]">{t("expenses.empty")}</li>
         ) : (
           expenses.map((e) => {
             const status = e.approvalStatus ?? "pending";
@@ -131,17 +133,17 @@ export function SalesPointExpenseRequestsPanel({
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <div className="text-sm font-semibold text-[var(--text)]">
-                      {formatYmdWithWeekdayRu(e.expenseDate)} · {e.title}
+                      {formatYmdWithWeekday(e.expenseDate, locale)} · {e.title}
                     </div>
                     <div className="mt-1 text-xs text-[var(--muted)]">
-                      Статус:{" "}
+                      {t("expenses.statusLabel")}{" "}
                       <span className="font-medium">
-                        {status === "pending" ? "на проверке" : status === "approved" ? "подтверждено" : "отклонено"}
+                        {status === "pending" ? t("expenses.status.pending") : status === "approved" ? t("expenses.status.approved") : t("expenses.status.rejected")}
                       </span>
                       {" · "}
-                      Выдача: <span className="font-medium">{issued ? "выдано" : "не выдано"}</span>
+                      {t("expenses.issuedLabel")} <span className="font-medium">{issued ? t("expenses.issuedYes") : t("expenses.issuedNo")}</span>
                     </div>
-                    {e.approvalNote ? <div className="mt-1 text-xs text-[var(--muted)]">Примечание: {e.approvalNote}</div> : null}
+                    {e.approvalNote ? <div className="mt-1 text-xs text-[var(--muted)]">{t("expenses.note", { note: e.approvalNote })}</div> : null}
                   </div>
                   <div className="text-base font-semibold tabular-nums text-[var(--text)]">{formatVnd(e.amountVnd)}</div>
                 </div>
@@ -150,22 +152,22 @@ export function SalesPointExpenseRequestsPanel({
                   <div className="mt-2 space-y-2">
                     <textarea
                       className="field-surface min-h-[64px] w-full rounded-xl px-3 py-2 text-xs"
-                      placeholder="Причина отказа/комментарий (обязательно для отказа)"
+                      placeholder={t("expenses.rejectPlaceholder")}
                       value={reasonById[e.id] ?? ""}
                       onChange={(ev) => setReasonById((s) => ({ ...s, [e.id]: ev.target.value }))}
                     />
                     <div className="flex flex-wrap gap-2">
                       <button type="button" className="btn-secondary !min-h-[34px] !px-3 text-xs" onClick={() => void patchRequest(e.id, "approve")} disabled={busy}>
-                        Подтвердить
+                        {t("expenses.approve")}
                       </button>
                       <button type="button" className="btn-secondary !min-h-[34px] !px-3 text-xs" onClick={() => void patchRequest(e.id, "reject")} disabled={busy}>
-                        Отказать
+                        {t("expenses.reject")}
                       </button>
                       <button type="button" className="btn-secondary !min-h-[34px] !px-3 text-xs" onClick={() => void patchRequest(e.id, "mark_issued")} disabled={busy || status !== "approved"}>
-                        Выдано
+                        {t("expenses.markIssued")}
                       </button>
                       <button type="button" className="btn-secondary !min-h-[34px] !px-3 text-xs" onClick={() => void patchRequest(e.id, "mark_unissued")} disabled={busy}>
-                        Не выдано
+                        {t("expenses.markUnissued")}
                       </button>
                     </div>
                   </div>

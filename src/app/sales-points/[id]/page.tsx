@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import { SalesPointExpenseRequestsPanel } from "@/components/sales-point-expense-requests-panel";
 import { SalesPointPeriodControls } from "@/components/sales-point-period-controls";
 import { TopNav } from "@/components/top-nav";
@@ -7,7 +8,7 @@ import { requireRoles } from "@/lib/auth-session";
 import { getRentalPointById, getSalesPointRatingReport } from "@/lib/data";
 import { formatVnd } from "@/lib/format";
 import { SALES_POINT_LEADERSHIP_ROLES } from "@/lib/role-policy";
-import { tourBusinessTodayYmd } from "@/lib/scheduling";
+import { formatMonthYearLong, tourBusinessTodayYmd } from "@/lib/scheduling";
 
 function monthBoundsYmd(year: number, month: number): { fromYmd: string; toYmd: string } {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -26,6 +27,8 @@ export default async function SalesPointDetailsPage({
   searchParams: Promise<{ preset?: string; day?: string; month?: string }>;
 }) {
   const user = await requireRoles([...SALES_POINT_LEADERSHIP_ROLES]);
+  const t = await getTranslations("salesPointsPage");
+  const locale = await getLocale();
   const { id } = await params;
   const sp = await searchParams;
   const pointDetail = await getRentalPointById(id);
@@ -44,10 +47,10 @@ export default async function SalesPointDetailsPage({
   if (!row) notFound();
   const periodLabel =
     preset === "day"
-      ? `День · ${dayYmd}`
+      ? t("detail.periodDay", { date: dayYmd })
       : preset === "all"
-        ? "Всё время"
-        : new Date(monthY, monthM - 1, 1).toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
+        ? t("detail.periodAllTime")
+        : formatMonthYearLong(monthY, monthM, locale);
 
   return (
     <main className="app-wrap app-wrap--wide">
@@ -56,62 +59,62 @@ export default async function SalesPointDetailsPage({
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <h1 className="text-lg font-semibold text-[var(--text)]">{row.pointName}</h1>
           <Link href="/sales-points" className="btn-secondary px-3 py-2 text-xs font-medium">
-            К списку точек
+            {t("detail.backToList")}
           </Link>
         </div>
         <SalesPointPeriodControls pointId={id} initialPreset={preset} initialDay={dayYmd} initialMonth={monthKey} />
         <p className="mt-2 text-xs text-[var(--muted2)]">
-          Период:{" "}
+          {t("detail.periodLabel")}{" "}
           <span className="font-medium capitalize text-[var(--muted)]">{periodLabel}</span>{" "}
           ({fromYmd} - {toYmd})
         </p>
         {pointDetail.photoUrl ? (
           <div className="mt-3 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-soft)]">
-            <img src={pointDetail.photoUrl} alt={`Фото точки ${row.pointName}`} className="h-44 w-full object-cover" />
+            <img src={pointDetail.photoUrl} alt={t("detail.pointPhotoAlt", { name: row.pointName })} className="h-44 w-full object-cover" />
           </div>
         ) : (
-          <p className="mt-2 text-xs text-[var(--muted)]">Фото точки пока не загружено диспетчером.</p>
+          <p className="mt-2 text-xs text-[var(--muted)]">{t("detail.pointPhotoMissing")}</p>
         )}
       </section>
 
       <section className="card border-[var(--border)] bg-[var(--surface)] ring-1 ring-black/[0.03] dark:ring-white/[0.06]">
         <div className="mt-1 text-xs text-[var(--muted)]">
           {row.managers.length === 0 ? (
-            <span className="text-[var(--muted2)]">Менеджеры не закреплены</span>
+            <span className="text-[var(--muted2)]">{t("detail.noManagers")}</span>
           ) : (
-            <>Менеджеры: {row.managers.map((m) => m.fullName).join(", ")}</>
+            <>{t("detail.managers", { names: row.managers.map((m) => m.fullName).join(", ") })}</>
           )}
         </div>
         <div className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3 lg:grid-cols-4">
           <div>
-            <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">Брони в периоде</div>
+            <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">{t("detail.stats.bookingsInPeriod")}</div>
             <div className="mt-0.5 tabular-nums font-medium">{row.bookingsOnToursInPeriod}</div>
           </div>
           <div>
-            <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">Оплаты, ₫</div>
+            <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">{t("detail.stats.payments")}</div>
             <div className="mt-0.5 tabular-nums font-semibold">{formatVnd(row.paymentsNetVndInPeriod)}</div>
           </div>
           <div>
-            <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">Расходы точки, ₫</div>
+            <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">{t("detail.stats.expenses")}</div>
             <div className="mt-0.5 tabular-nums">{formatVnd(row.pointExpensesVndInPeriod)}</div>
           </div>
           {user.role === "director" ? (
             <div>
-              <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">Аренда / мес, ₫</div>
+              <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">{t("detail.stats.rentPerMonth")}</div>
               <div className="mt-0.5 tabular-nums text-[var(--muted)]">{formatVnd(row.monthlyRentVnd)}</div>
             </div>
           ) : null}
           <div>
-            <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">Раб. дни</div>
+            <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">{t("detail.stats.workDays")}</div>
             <div
               className="mt-0.5 tabular-nums text-[var(--muted)]"
-              title={`Календарных дней: ${row.calendarDaysInPeriod}, закрытых: ${row.closedDaysInPeriod}`}
+              title={t("detail.workDaysTooltip", { calendar: row.calendarDaysInPeriod, closed: row.closedDaysInPeriod })}
             >
               {row.workingDaysNet}
             </div>
           </div>
           <div>
-            <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">Оценка</div>
+            <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">{t("detail.stats.rating")}</div>
             <div className="mt-0.5 tabular-nums text-[var(--muted)]">
               {row.managerRatingAvg != null ? (
                 <>
@@ -124,31 +127,34 @@ export default async function SalesPointDetailsPage({
             </div>
           </div>
         </div>
-        <p className="mt-2 text-[11px] text-[var(--muted2)]">
-          Оценка = средний балл отзывов руководства по работе менеджеров на точке за период.
-        </p>
+        <p className="mt-2 text-[11px] text-[var(--muted2)]">{t("detail.ratingHint")}</p>
         {row.managers.length > 0 ? (
           <div className="mt-3 rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] p-2.5">
             <div className="mb-2 text-[10px] font-medium uppercase tracking-wide text-[var(--muted2)]">
-              Кто и когда работал / продажи
+              {t("detail.whoWorked.title")}
             </div>
             <ul className="space-y-2">
               {row.managers.map((m) => (
                 <li key={m.id} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2 text-xs text-[var(--text)]">
                   <div className="font-semibold">{m.fullName}</div>
                   <div className="mt-1 text-[var(--muted)]">
-                    Работал дней за период: <span className="font-semibold text-[var(--text)]">{m.openedDays.length}</span>
+                    {t("detail.whoWorked.workedDays")} <span className="font-semibold text-[var(--text)]">{m.openedDays.length}</span>
                   </div>
                   <div className="text-[var(--muted)]">
-                    Брони: {m.bookingsInPeriod} · Оплаты: {formatVnd(m.paymentsNetVndInPeriod)}
+                    {t("detail.whoWorked.bookingsAndPayments", { bookings: m.bookingsInPeriod, payments: formatVnd(m.paymentsNetVndInPeriod) })}
                   </div>
                   <div className="text-[var(--muted)]">
-                    По режимам: Точка {m.modeStats.point.bookings}/{formatVnd(m.modeStats.point.paymentsNetVnd)} · Промо{" "}
-                    {m.modeStats.promo.bookings}/{formatVnd(m.modeStats.promo.paymentsNetVnd)} · Онлайн{" "}
-                    {m.modeStats.online.bookings}/{formatVnd(m.modeStats.online.paymentsNetVnd)}
+                    {t("detail.whoWorked.byModes", {
+                      pointB: m.modeStats.point.bookings,
+                      pointP: formatVnd(m.modeStats.point.paymentsNetVnd),
+                      promoB: m.modeStats.promo.bookings,
+                      promoP: formatVnd(m.modeStats.promo.paymentsNetVnd),
+                      onlineB: m.modeStats.online.bookings,
+                      onlineP: formatVnd(m.modeStats.online.paymentsNetVnd),
+                    })}
                   </div>
                   <div className="mt-1 text-[var(--muted)]">
-                    Дни: {m.openedDays.length > 0 ? m.openedDays.join(", ") : "нет подтверждений"}
+                    {t("detail.whoWorked.days", { list: m.openedDays.length > 0 ? m.openedDays.join(", ") : t("detail.whoWorked.noConfirmations") })}
                   </div>
                 </li>
               ))}
