@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 import { TopNav } from "@/components/top-nav";
 import { requireAuth } from "@/lib/auth-session";
 import { searchBookingsGlobal } from "@/lib/data";
 import { formatVnd } from "@/lib/format";
-import { formatYmdWeekdayLongDmyRu, formatYmdWithWeekdayRu, tourBusinessTodayYmd } from "@/lib/scheduling";
+import { formatYmdWeekdayLongDmy, formatYmdWithWeekday, tourBusinessTodayYmd } from "@/lib/scheduling";
 import { maskPhone } from "@/lib/tourist-sale-phone";
 
 export const dynamic = "force-dynamic";
@@ -23,10 +24,18 @@ function payStatusPill(s: string) {
   return "bg-red-50 text-red-800 ring-1 ring-red-200/80 dark:bg-red-950/40 dark:text-red-100 dark:ring-red-900/50";
 }
 
-function payStatusLabel(s: string) {
-  if (s === "paid") return "Опл.";
-  if (s === "partial") return "Часть";
-  return "Доплата";
+function payStatusLabel(s: string, t: Awaited<ReturnType<typeof getTranslations<"touristsPage">>>) {
+  if (s === "paid") return t("statusPaid");
+  if (s === "partial") return t("statusPartial");
+  return t("statusDue");
+}
+
+function paxLine(a: number, c: number, i: number, tBooking: Awaited<ReturnType<typeof getTranslations<"booking">>>) {
+  const parts: string[] = [];
+  if (a) parts.push(`${a} ${tBooking("adultsShort")}`);
+  if (c) parts.push(`${c} ${tBooking("childrenShort")}`);
+  if (i) parts.push(`${i} ${tBooking("infantsShort")}`);
+  return parts.join(", ") || "0";
 }
 
 export default async function TouristsPage({
@@ -35,11 +44,14 @@ export default async function TouristsPage({
   searchParams: Promise<{ q?: string | string[] }>;
 }) {
   const user = await requireAuth();
+  const t = await getTranslations("touristsPage");
+  const tBooking = await getTranslations("booking");
+  const locale = await getLocale();
   if (!(TOURIST_LIST_ROLES as readonly string[]).includes(user.role)) {
     return (
       <main className="app-wrap">
         <TopNav user={user} />
-        <div className="card mt-4 py-12 text-center text-[var(--muted)]">Раздел недоступен</div>
+        <div className="card mt-4 py-12 text-center text-[var(--muted)]">{t("accessDenied")}</div>
       </main>
     );
   }
@@ -106,7 +118,7 @@ export default async function TouristsPage({
       <>
         {dateGroups.map(([dateKey, groupRows]) => {
           const isPastGroup = dateKey !== "no-date" && dateKey < todayYmd;
-          const groupLabel = dateKey === "no-date" ? "Без даты" : formatYmdWeekdayLongDmyRu(dateKey);
+          const groupLabel = dateKey === "no-date" ? t("noDate") : formatYmdWeekdayLongDmy(dateKey, locale);
           return (
             <div key={dateKey} className="mb-3">
               <div className={`mb-2 flex items-center justify-between gap-2 rounded-xl px-4 py-2.5 text-sm font-bold leading-snug tracking-wide ${
@@ -157,7 +169,7 @@ export default async function TouristsPage({
                             {r.customerName}
                           </span>
                           <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${payStatusPill(r.paymentStatus)}`}>
-                            {payStatusLabel(r.paymentStatus)}
+                            {payStatusLabel(r.paymentStatus, t)}
                           </span>
                         </div>
 
@@ -165,7 +177,7 @@ export default async function TouristsPage({
                         <div className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0 text-[11px] text-[var(--muted)]">
                           <span className="tabular-nums">{displayPhone}</span>
                           {r.hotel ? <span>· {r.hotel}</span> : null}
-                          <span>· {r.adults}В{r.children > 0 ? `/${r.children}Д` : ""}{r.infants > 0 ? `/${r.infants}М` : ""}{pax > 1 ? ` (${pax})` : ""}</span>
+                          <span>· {paxLine(r.adults, r.children, r.infants, tBooking)}{pax > 1 ? ` (${pax})` : ""}</span>
                         </div>
 
                         {/* Строка 3: тур + менеджер (для директора) + сумма */}
@@ -173,7 +185,7 @@ export default async function TouristsPage({
                           <div className="flex min-w-0 flex-wrap gap-x-2">
                             <span className="font-medium text-[var(--muted2)]">
                               {r.tourName}
-                              {q && r.tourDate ? <span className="ml-1 font-normal">· {formatYmdWithWeekdayRu(r.tourDate)}</span> : null}
+                              {q && r.tourDate ? <span className="ml-1 font-normal">· {formatYmdWithWeekday(r.tourDate, locale)}</span> : null}
                             </span>
                             {(isDirectorLike || isManager) && r.managerName ? (
                               <span className="text-[var(--muted2)]">· {r.managerName}</span>
@@ -224,38 +236,30 @@ export default async function TouristsPage({
 
       <section className="card mb-3">
         <div className="mb-2 flex items-baseline justify-between gap-2">
-          <h1 className="text-lg font-semibold text-[var(--text)]">Туристы</h1>
+          <h1 className="text-lg font-semibold text-[var(--text)]">{t("title")}</h1>
           {(isDirectorLike || isManager || isAccountant) && rows.length > 0 ? (
             <span className="text-xs text-[var(--muted)]">
-              {rows.length} броней · {totalPax} чел.
+              {t("bookingsAndPax", { count: rows.length, pax: totalPax })}
             </span>
           ) : null}
         </div>
         {isGuide ? (
-          <p className="mb-3 text-sm text-[var(--muted)]">Туристы ваших туров.</p>
+          <p className="mb-3 text-sm text-[var(--muted)]">{t("hintGuide")}</p>
         ) : isDirectorLike ? (
-          <p className="mb-3 text-sm text-[var(--muted)]">
-            Все брони. Поиск — по имени, отелю, ON-коду или телефону.
-          </p>
+          <p className="mb-3 text-sm text-[var(--muted)]">{t("hintDirector")}</p>
         ) : isManager ? (
-          <p className="mb-3 text-sm text-[var(--muted)]">
-            Все туристы. Поиск по имени, отелю или ON-коду.
-          </p>
+          <p className="mb-3 text-sm text-[var(--muted)]">{t("hintManager")}</p>
         ) : isAccountant ? (
-          <p className="mb-3 text-sm text-[var(--muted)]">
-            Все брони. Поиск по имени, отелю или ON-коду.
-          </p>
+          <p className="mb-3 text-sm text-[var(--muted)]">{t("hintAccountant")}</p>
         ) : (
-          <p className="mb-3 text-sm text-[var(--muted)]">
-            Поиск по имени, отелю или коду ON.
-          </p>
+          <p className="mb-3 text-sm text-[var(--muted)]">{t("hintDefault")}</p>
         )}
         <form method="get" className="flex min-w-0 items-center gap-2">
           <input
             type="search"
             name="q"
             defaultValue={q}
-            placeholder="Имя, отель, ON-код, телефон…"
+            placeholder={t("searchPlaceholder")}
             className="field-surface min-h-[44px] min-w-0 flex-1 rounded-xl px-3 py-2 text-sm"
             autoComplete="off"
           />
@@ -263,31 +267,31 @@ export default async function TouristsPage({
             type="submit"
             className="btn-primary min-h-[44px] shrink-0 rounded-xl px-4 text-sm font-semibold touch-manipulation"
           >
-            Найти
+            {t("searchButton")}
           </button>
         </form>
       </section>
 
       {!shouldFetch && !q ? (
         <div className="card py-10 text-center text-sm text-[var(--muted)]">
-          Введите имя или отель для поиска туриста.
+          {t("enterNameOrHotel")}
         </div>
       ) : rows.length === 0 ? (
         <div className="card py-10 text-center text-sm text-[var(--muted)]">
-          {q ? `По запросу «${q}» ничего не найдено.` : "Туристов пока нет."}
+          {q ? t("noResultsForQuery", { q }) : t("noTouristsYet")}
         </div>
       ) : (isDirectorLike || isManager || isGuide) ? (
         /* ── Аккордион по датам ── */
         <section className="card">
           <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-sm font-semibold text-[var(--text)]">
-              {q ? "Результат поиска" : "По датам"}
+              {q ? t("searchResults") : t("byDates")}
             </h2>
             <span className="text-xs text-[var(--muted)]">
-              {rows.length} броней · {totalPax} чел.
+              {t("bookingsAndPax", { count: rows.length, pax: totalPax })}
               {totalDueSum > 0 ? (
                 <span className="ml-1 text-amber-700 dark:text-amber-300">
-                  · к сбору {formatVnd(totalDueSum)}
+                  · {t("toCollect")} {formatVnd(totalDueSum)}
                 </span>
               ) : null}
             </span>
@@ -295,7 +299,7 @@ export default async function TouristsPage({
           <DateAccordion />
           {rows.length >= limit ? (
             <p className="mt-2 text-xs text-[var(--muted)]">
-              Показано {limit}. Уточните запрос для точного результата.
+              {t("shownOf", { limit })}
             </p>
           ) : null}
         </section>
@@ -303,8 +307,8 @@ export default async function TouristsPage({
         /* ── Бухгалтер / прочие: поиск-список без номеров ── */
         <section className="card">
           <div className="mb-2 flex items-baseline justify-between gap-2">
-            <h2 className="text-sm font-semibold text-[var(--text)]">Результаты</h2>
-            <span className="text-xs text-[var(--muted)]">{rows.length} шт.</span>
+            <h2 className="text-sm font-semibold text-[var(--text)]">{t("results")}</h2>
+            <span className="text-xs text-[var(--muted)]">{t("itemsCount", { count: rows.length })}</span>
           </div>
           <ul className="space-y-2">
             {rows.map((r) => (
@@ -324,23 +328,23 @@ export default async function TouristsPage({
                       </p>
                     </div>
                     <span className={`shrink-0 inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold ${payStatusPill(r.paymentStatus)}`}>
-                      {payStatusLabel(r.paymentStatus)}
+                      {payStatusLabel(r.paymentStatus, t)}
                     </span>
                   </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[var(--muted)]">
-                    <span>{r.adults}В/{r.children}Д/{r.infants}М</span>
+                    <span>{paxLine(r.adults, r.children, r.infants, tBooking)}</span>
                     <span className="tabular-nums font-medium text-[var(--text)]">{formatVnd(r.totalVnd)}</span>
                   </div>
                   <div className="mt-1.5 text-xs text-[var(--muted2)]">
-                    {r.tourName || "Тур"}
-                    {r.tourDate ? <span className="ml-1">· {formatYmdWithWeekdayRu(r.tourDate)}</span> : null}
+                    {r.tourName || t("noTourFallback")}
+                    {r.tourDate ? <span className="ml-1">· {formatYmdWithWeekday(r.tourDate, locale)}</span> : null}
                   </div>
                 </Link>
               </li>
             ))}
           </ul>
           {rows.length >= limit ? (
-            <p className="mt-3 text-xs text-[var(--muted)]">Показано не более {limit}. Уточните запрос.</p>
+            <p className="mt-3 text-xs text-[var(--muted)]">{t("shownOfSimple", { limit })}</p>
           ) : null}
         </section>
       )}

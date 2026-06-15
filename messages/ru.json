@@ -237,6 +237,7 @@
     "adultsShort": "взр.",
     "children": "Дети",
     "childrenShort": "дет.",
+    "infantsShort": "млад.",
     "infants": "Младенцы",
     "comment": "Комментарий",
     "price": "Цена",
@@ -412,7 +413,12 @@
     "commissionPercentLabel": "% от прайса (брони)",
     "commissionPercentAria": "Процент от прайса для менеджера",
     "commissionPercentError": "0-100 или пусто (12% по умолчанию)",
-    "commissionPercentHint": "Пусто = 12% по умолчанию. Процент хранится в профиле и пересчитывает «Мои продажи», кассу и карточку сотрудника."
+    "commissionPercentHint": "Пусто = 12% по умолчанию. Процент хранится в профиле и пересчитывает «Мои продажи», кассу и карточку сотрудника.",
+    "searchByEmployee": "Поиск по сотруднику",
+    "searchNamePlaceholder": "Имя…",
+    "noEmployeesFound": "Никого не найдено.",
+    "accountantTitle": "Сотрудники и выплаты",
+    "accountantDescription": "Список без сумм и процентов - чужой экран не увидит выплат. Вся финансовая работа, % менеджера и авансы - в карточке сотрудника. Сводку с метриками раскрывайте только если рядом нет посторонних."
   },
   "daysOff": {
     "title": "Отпуска сотрудников",
@@ -1343,5 +1349,32 @@
         "hint": "{count} бронирований · 4+ человека"
       }
     }
+  },
+  "touristsPage": {
+    "accessDenied": "Раздел недоступен",
+    "title": "Туристы",
+    "bookingsAndPax": "{count} броней · {pax} чел.",
+    "hintGuide": "Туристы ваших туров.",
+    "hintDirector": "Все брони. Поиск — по имени, отелю, ON-коду или телефону.",
+    "hintManager": "Все туристы. Поиск по имени, отелю или ON-коду.",
+    "hintAccountant": "Все брони. Поиск по имени, отелю или ON-коду.",
+    "hintDefault": "Поиск по имени, отелю или коду ON.",
+    "searchPlaceholder": "Имя, отель, ON-код, телефон…",
+    "searchButton": "Найти",
+    "enterNameOrHotel": "Введите имя или отель для поиска туриста.",
+    "noResultsForQuery": "По запросу «{q}» ничего не найдено.",
+    "noTouristsYet": "Туристов пока нет.",
+    "searchResults": "Результат поиска",
+    "byDates": "По датам",
+    "noDate": "Без даты",
+    "toCollect": "к сбору",
+    "shownOf": "Показано {limit}. Уточните запрос для точного результата.",
+    "shownOfSimple": "Показано не более {limit}. Уточните запрос.",
+    "results": "Результаты",
+    "itemsCount": "{count} шт.",
+    "noTourFallback": "Тур",
+    "statusPaid": "Опл.",
+    "statusPartial": "Часть",
+    "statusDue": "Доплата"
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { TeamAccountantRosterInsights } from "@/components/team-accountant-roster-insights";
 import { TeamRosterList } from "@/components/team-roster-list";
 import { canEditUserRosterPrivacy } from "@/lib/role-policy";
@@ -26,6 +27,7 @@ export function TeamRosterClient({
   /** Бухгалтер: не показывать в списке метрики и чувствительные поля (всё - в карточке). */
   privacyListMode?: boolean;
 }) {
+  const t = useTranslations("team");
   const enableRosterPrivacyEdit = viewerRole ? canEditUserRosterPrivacy(viewerRole) : false;
   const [q, setQ] = useState("");
   const filtered = useMemo(() => {
@@ -45,29 +47,26 @@ export function TeamRosterClient({
     <div className="mb-3 w-full">
       {isAccountant ? (
         <header className="mb-4 px-0.5">
-          <h1 className="text-lg font-semibold leading-tight text-[var(--text)] sm:text-xl">Сотрудники и выплаты</h1>
-          <p className="mt-1.5 text-sm text-[var(--muted)]">
-            Список без сумм и процентов - чужой экран не увидит выплат. Вся финансовая работа, % менеджера и авансы - в
-            карточке сотрудника. Сводку с метриками раскрывайте только если рядом нет посторонних.
-          </p>
+          <h1 className="text-lg font-semibold leading-tight text-[var(--text)] sm:text-xl">{t("accountantTitle")}</h1>
+          <p className="mt-1.5 text-sm text-[var(--muted)]">{t("accountantDescription")}</p>
         </header>
       ) : null}
 
       {isAccountant ? <TeamAccountantRosterInsights rows={rows} salesPointsTotal={salesPointsTotal} /> : null}
 
       <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-[var(--muted2)]">
-        Поиск по сотруднику
+        {t("searchByEmployee")}
       </label>
       <input
         type="search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="Имя…"
+        placeholder={t("searchNamePlaceholder")}
         autoComplete="off"
         className="field-surface mb-3 w-full max-w-full rounded-xl px-3 py-2.5 text-sm sm:max-w-md"
       />
       {filtered.length === 0 ? (
-        <section className="card text-sm text-[var(--muted)]">Никого не найдено.</section>
+        <section className="card text-sm text-[var(--muted)]">{t("noEmployeesFound")}</section>
       ) : (
         <TeamRosterList
           groups={rosterGroups}

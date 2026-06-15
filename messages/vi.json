@@ -237,6 +237,7 @@
     "adultsShort": "lớn",
     "children": "Trẻ em",
     "childrenShort": "trẻ",
+    "infantsShort": "sơ sinh",
     "infants": "Em bé",
     "comment": "Ghi chú",
     "price": "Giá",
@@ -412,7 +413,12 @@
     "commissionPercentLabel": "% trên giá (đặt chỗ)",
     "commissionPercentAria": "Tỷ lệ phần trăm trên giá cho quản lý",
     "commissionPercentError": "0-100 hoặc để trống (mặc định 12%)",
-    "commissionPercentHint": "Để trống = mặc định 12%. Tỷ lệ này được lưu trong hồ sơ và dùng để tính lại «Doanh số của tôi», quỹ tiền mặt và thẻ nhân viên."
+    "commissionPercentHint": "Để trống = mặc định 12%. Tỷ lệ này được lưu trong hồ sơ và dùng để tính lại «Doanh số của tôi», quỹ tiền mặt và thẻ nhân viên.",
+    "searchByEmployee": "Tìm theo nhân viên",
+    "searchNamePlaceholder": "Tên…",
+    "noEmployeesFound": "Không tìm thấy ai.",
+    "accountantTitle": "Nhân viên và thanh toán",
+    "accountantDescription": "Danh sách không hiện số tiền và tỷ lệ % - người nhìn màn hình của bạn sẽ không thấy các khoản thanh toán. Mọi công việc tài chính, % quản lý và tạm ứng nằm trong thẻ nhân viên. Chỉ mở phần tổng hợp số liệu khi không có ai khác nhìn thấy màn hình."
   },
   "daysOff": {
     "title": "Nghỉ phép nhân viên",
@@ -1343,5 +1349,32 @@
         "hint": "{count} đơn · 4+ người"
       }
     }
+  },
+  "touristsPage": {
+    "accessDenied": "Mục không khả dụng",
+    "title": "Khách du lịch",
+    "bookingsAndPax": "{count} đặt chỗ · {pax} người",
+    "hintGuide": "Khách du lịch trong các tour của bạn.",
+    "hintDirector": "Tất cả đặt chỗ. Tìm theo tên, khách sạn, mã ON hoặc số điện thoại.",
+    "hintManager": "Tất cả khách du lịch. Tìm theo tên, khách sạn hoặc mã ON.",
+    "hintAccountant": "Tất cả đặt chỗ. Tìm theo tên, khách sạn hoặc mã ON.",
+    "hintDefault": "Tìm theo tên, khách sạn hoặc mã ON.",
+    "searchPlaceholder": "Tên, khách sạn, mã ON, số điện thoại…",
+    "searchButton": "Tìm",
+    "enterNameOrHotel": "Nhập tên hoặc khách sạn để tìm khách du lịch.",
+    "noResultsForQuery": "Không tìm thấy kết quả cho «{q}».",
+    "noTouristsYet": "Chưa có khách du lịch.",
+    "searchResults": "Kết quả tìm kiếm",
+    "byDates": "Theo ngày",
+    "noDate": "Không có ngày",
+    "toCollect": "cần thu",
+    "shownOf": "Hiển thị {limit}. Thu hẹp tìm kiếm để có kết quả chính xác.",
+    "shownOfSimple": "Hiển thị tối đa {limit}. Thu hẹp tìm kiếm.",
+    "results": "Kết quả",
+    "itemsCount": "{count} mục",
+    "noTourFallback": "Tour",
+    "statusPaid": "Đã trả",
+    "statusPartial": "Một phần",
+    "statusDue": "Còn nợ"
   }
 }

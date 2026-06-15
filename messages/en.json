@@ -237,6 +237,7 @@
     "adultsShort": "adults",
     "children": "Children",
     "childrenShort": "child.",
+    "infantsShort": "inf.",
     "infants": "Infants",
     "comment": "Comment",
     "price": "Price",
@@ -412,7 +413,12 @@
     "commissionPercentLabel": "% of price (booking)",
     "commissionPercentAria": "Percent of price for the manager",
     "commissionPercentError": "0-100 or empty (12% by default)",
-    "commissionPercentHint": "Empty = 12% by default. The percentage is stored in the profile and is used to recalculate \"My sales\", cash register and the employee card."
+    "commissionPercentHint": "Empty = 12% by default. The percentage is stored in the profile and is used to recalculate \"My sales\", cash register and the employee card.",
+    "searchByEmployee": "Search by employee",
+    "searchNamePlaceholder": "Name…",
+    "noEmployeesFound": "No one found.",
+    "accountantTitle": "Staff and payouts",
+    "accountantDescription": "List without amounts and percentages - others looking at your screen won't see payouts. All financial work, manager % and advances are inside the employee card. Open the metrics summary only when no one else can see your screen."
   },
   "daysOff": {
     "title": "Staff Time Off",
@@ -1343,5 +1349,32 @@
         "hint": "{count} bookings · 4+ people"
       }
     }
+  },
+  "touristsPage": {
+    "accessDenied": "Section unavailable",
+    "title": "Tourists",
+    "bookingsAndPax": "{count} bookings · {pax} pax",
+    "hintGuide": "Tourists from your tours.",
+    "hintDirector": "All bookings. Search by name, hotel, ON code or phone.",
+    "hintManager": "All tourists. Search by name, hotel or ON code.",
+    "hintAccountant": "All bookings. Search by name, hotel or ON code.",
+    "hintDefault": "Search by name, hotel or ON code.",
+    "searchPlaceholder": "Name, hotel, ON code, phone…",
+    "searchButton": "Search",
+    "enterNameOrHotel": "Enter a name or hotel to search for a tourist.",
+    "noResultsForQuery": "No results for \"{q}\".",
+    "noTouristsYet": "No tourists yet.",
+    "searchResults": "Search results",
+    "byDates": "By date",
+    "noDate": "No date",
+    "toCollect": "to collect",
+    "shownOf": "Showing {limit}. Refine your search for an exact result.",
+    "shownOfSimple": "Showing up to {limit}. Refine your search.",
+    "results": "Results",
+    "itemsCount": "{count} items",
+    "noTourFallback": "Tour",
+    "statusPaid": "Paid",
+    "statusPartial": "Partial",
+    "statusDue": "Due"
   }
 }
