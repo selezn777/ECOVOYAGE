@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getTranslations } from "next-intl/server";
 import { actorUuidOrNull, isUuidSessionUser } from "@/lib/actor-id";
 import { getSessionUser } from "@/lib/auth-session";
 import { writeAuditLog } from "@/lib/audit";
@@ -27,6 +28,7 @@ const bodySchema = z
   });
 
 export async function POST(request: Request, ctx: { params: Promise<{ id: string }> }) {
+  const t = await getTranslations("cashHandover.methods");
   const session = await getSessionUser();
   if (!session) return NextResponse.json({ error: "Нет авторизации" }, { status: 401 });
   if (!ACCOUNTING_PANEL_ROLES.includes(session.role)) {
@@ -56,12 +58,12 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     .maybeSingle();
   if (chErr) return NextResponse.json({ error: chErr.message }, { status: 500 });
   if (!chRow) {
-    return NextResponse.json({ error: "Канал сдачи не найден. Проверьте справочник на странице «Касса»." }, { status: 400 });
+    return NextResponse.json({ error: t("errHandoverMethodNotFound") }, { status: 400 });
   }
   const expectsUsd = Boolean((chRow as { expects_usd_amount?: boolean }).expects_usd_amount);
   const amountUsdDb = expectsUsd && amountUsd != null ? amountUsd : null;
   if (expectsUsd && (amountUsdDb == null || amountUsdDb <= 0)) {
-    return NextResponse.json({ error: "Укажите сумму в долларах США для выбранного канала." }, { status: 400 });
+    return NextResponse.json({ error: t("errEnterUsdForMethod") }, { status: 400 });
   }
 
   const { data: userRow, error: userErr } = await supabase

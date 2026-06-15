@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getTranslations } from "next-intl/server";
 import { getSessionUser } from "@/lib/auth-session";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { ACCOUNTING_PANEL_ROLES } from "@/lib/role-policy";
@@ -10,14 +11,15 @@ const postSchema = z.object({
 });
 
 export async function GET() {
+  const t = await getTranslations("cashHandover.methods");
   const session = await getSessionUser();
-  if (!session) return NextResponse.json({ error: "Нет авторизации" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: t("errUnauthorized") }, { status: 401 });
   if (!ACCOUNTING_PANEL_ROLES.includes(session.role)) {
-    return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
+    return NextResponse.json({ error: t("errForbidden") }, { status: 403 });
   }
 
   const supabase = getSupabaseAdmin();
-  if (!supabase) return NextResponse.json({ error: "Supabase не настроен" }, { status: 500 });
+  if (!supabase) return NextResponse.json({ error: t("errSupabaseNotConfigured") }, { status: 500 });
 
   const { data, error } = await supabase
     .from("office_cash_handover_channels")
@@ -46,10 +48,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const t = await getTranslations("cashHandover.methods");
   const session = await getSessionUser();
-  if (!session) return NextResponse.json({ error: "Нет авторизации" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: t("errUnauthorized") }, { status: 401 });
   if (!ACCOUNTING_PANEL_ROLES.includes(session.role)) {
-    return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
+    return NextResponse.json({ error: t("errForbidden") }, { status: 403 });
   }
 
   const json = await request.json().catch(() => ({}));
@@ -59,11 +62,11 @@ export async function POST(request: Request) {
   }
 
   const label = parsed.data.label.trim();
-  if (!label) return NextResponse.json({ error: "Укажите название" }, { status: 400 });
+  if (!label) return NextResponse.json({ error: t("errEnterLabel") }, { status: 400 });
   const expectsUsdAmount = parsed.data.expectsUsdAmount === true;
 
   const supabase = getSupabaseAdmin();
-  if (!supabase) return NextResponse.json({ error: "Supabase не настроен" }, { status: 500 });
+  if (!supabase) return NextResponse.json({ error: t("errSupabaseNotConfigured") }, { status: 500 });
 
   const { data: maxRow } = await supabase
     .from("office_cash_handover_channels")
@@ -92,13 +95,10 @@ export async function POST(request: Request) {
   if (error) {
     const msg = String(error.message || "");
     if (/unique|duplicate/i.test(msg)) {
-      return NextResponse.json({ error: "Такой канал уже есть" }, { status: 409 });
+      return NextResponse.json({ error: t("errDuplicate") }, { status: 409 });
     }
     if (/office_cash_handover_channels|does not exist/i.test(msg)) {
-      return NextResponse.json(
-        { error: "Выполните миграцию БД: office_cash_handover_channels." },
-        { status: 503 },
-      );
+      return NextResponse.json({ error: t("errMigration") }, { status: 503 });
     }
     return NextResponse.json({ error: msg }, { status: 500 });
   }
@@ -107,19 +107,20 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const t = await getTranslations("cashHandover.methods");
   const session = await getSessionUser();
-  if (!session) return NextResponse.json({ error: "Нет авторизации" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: t("errUnauthorized") }, { status: 401 });
   if (!ACCOUNTING_PANEL_ROLES.includes(session.role)) {
-    return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
+    return NextResponse.json({ error: t("errForbidden") }, { status: 403 });
   }
 
   const id = new URL(request.url).searchParams.get("id");
   if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
-    return NextResponse.json({ error: "Укажите id канала" }, { status: 400 });
+    return NextResponse.json({ error: t("errEnterId") }, { status: 400 });
   }
 
   const supabase = getSupabaseAdmin();
-  if (!supabase) return NextResponse.json({ error: "Supabase не настроен" }, { status: 500 });
+  if (!supabase) return NextResponse.json({ error: t("errSupabaseNotConfigured") }, { status: 500 });
 
   const { data: row, error: selErr } = await supabase
     .from("office_cash_handover_channels")
@@ -127,9 +128,9 @@ export async function DELETE(request: Request) {
     .eq("id", id)
     .maybeSingle();
   if (selErr) return NextResponse.json({ error: selErr.message }, { status: 500 });
-  if (!row) return NextResponse.json({ error: "Канал не найден" }, { status: 404 });
+  if (!row) return NextResponse.json({ error: t("errNotFound") }, { status: 404 });
   if ((row as { is_system?: boolean }).is_system === true) {
-    return NextResponse.json({ error: "Системный канал нельзя удалить" }, { status: 400 });
+    return NextResponse.json({ error: t("errSystemProtected") }, { status: 400 });
   }
 
   const { error } = await supabase.from("office_cash_handover_channels").delete().eq("id", id);

@@ -3741,7 +3741,7 @@ export async function getCashDashboardData(
       const rec = h.recorded_by ? hoUserNameById.get(h.recorded_by) : null;
       const noteTrim = h.note?.trim();
       const cid = h.channel_id;
-      const chLabel = cid && chLabelById.has(cid) ? (chLabelById.get(cid) as string) : "Без канала";
+      const chLabel = cid && chLabelById.has(cid) ? (chLabelById.get(cid) as string) : "Без способа";
       const usdRaw = h.amount_usd != null && h.amount_usd !== "" ? Number(h.amount_usd) : null;
       const usdPart =
         usdRaw != null && Number.isFinite(usdRaw) && usdRaw > 0 ? ` · ${formatUsd(usdRaw)}` : "";
@@ -4420,7 +4420,7 @@ export async function listTourOfficeCashHandovers(tourId: string): Promise<TourO
       amountVnd: Math.round(Number(r.amount_vnd || 0)),
       amountUsd,
       channelId: r.channel_id ?? null,
-      channelLabel: meta?.label ?? "Без канала",
+      channelLabel: meta?.label ?? "Без способа",
       expectsUsdAmount: meta?.expectsUsd ?? false,
       note: r.note?.trim() || null,
       receivedAt: r.received_at,
@@ -4619,7 +4619,7 @@ export async function getCashReconciliationReport(fromYmd: string, toYmd: string
         orphanAgg.sumVnd += vnd;
         if (amountUsd != null) orphanAgg.sumUsd += amountUsd;
       }
-      const chLabel = cid && labelById.has(cid) ? (labelById.get(cid) as string) : "Без канала";
+      const chLabel = cid && labelById.has(cid) ? (labelById.get(cid) as string) : "Без способа";
       const tm = tourMetaById.get(r.tour_id);
       const tourLine = cashTourLineRu(tm?.name || "тур", tm?.startAt ?? null);
       handoverLines.push({
@@ -4645,7 +4645,7 @@ export async function getCashReconciliationReport(fromYmd: string, toYmd: string
   if (orphanAgg.count > 0) {
     handoverTotalsRows.push({
       channelId: "__unassigned__",
-      label: "Без канала / удалённый справочник",
+      label: "Без способа / удалённый справочник",
       count: orphanAgg.count,
       sumVnd: orphanAgg.sumVnd,
       sumUsd: orphanAgg.sumUsd,

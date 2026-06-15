@@ -865,7 +865,20 @@
     "methodLabel": "Method:",
     "withComment": "with comment",
     "changeOrComment": "Change / comment",
-    "recordingEllipsis": "Recording…"
+    "recordingEllipsis": "Recording…",
+    "methods": {
+      "errUnauthorized": "Not authorized",
+      "errForbidden": "Access denied",
+      "errSupabaseNotConfigured": "Supabase is not configured",
+      "errEnterLabel": "Enter a name",
+      "errDuplicate": "This method already exists",
+      "errMigration": "Run the DB migration: office_cash_handover_channels.",
+      "errEnterId": "Provide the method id",
+      "errNotFound": "Method not found",
+      "errSystemProtected": "System methods cannot be deleted",
+      "errHandoverMethodNotFound": "Handover method not found. Check the list on the Cash page.",
+      "errEnterUsdForMethod": "Enter the amount in US dollars for the selected method."
+    }
   },
   "guide": {
     "depositButton": "Guide Deposit",
@@ -945,7 +958,7 @@
     "journalAutoFillHint": "The money has already been collected from clients but isn't allocated to specific bookings (e.g. a booking is fully paid) — the amount is filled in automatically, check and adjust if needed.",
     "addComment": "+ Add comment",
     "thisTour": "This tour",
-    "noChannelDataGoBack": "No channel data - go back to the tour step.",
+    "noChannelDataGoBack": "No handover method data - go back to the tour step.",
     "toHandOverByManager": "To be handed over by the manager to cash",
     "managerCashCalcHint": "Only money in the manager's cash for the booking is counted (prepayment and top-ups already marked as handed in by the guide). Top-ups still with the guide are not included here - shown separately below for each tour.",
     "noToursWithDebt": "No tours with outstanding handover debt.",
@@ -959,7 +972,7 @@
     "noBookingAmountAlert": "{name}: this booking has no linked amount to hand over (max. 0 ₫).",
     "bookingMaxAlert": "{name}: no more than {amount}.",
     "noIncomeChannelsHint": "No income methods configured — add them on the Cash page.",
-    "noUsdChannelHint": "No channel configured for accepting dollars — add one on the Cash page.",
+    "noUsdChannelHint": "No method configured for accepting dollars — add one on the Cash page.",
     "fillAmountOrJournalAlert": "Fill in the ₫ amount for the relevant tourists and/or the \"not linked to a booking\" line.",
     "confirmRecordHandover": "Confirm cash handover? {n} {word} will be created.",
     "movementSingular": "movement",

@@ -865,7 +865,20 @@
     "methodLabel": "Phương thức:",
     "withComment": "có ghi chú",
     "changeOrComment": "Thay đổi / ghi chú",
-    "recordingEllipsis": "Đang lưu…"
+    "recordingEllipsis": "Đang lưu…",
+    "methods": {
+      "errUnauthorized": "Chưa đăng nhập",
+      "errForbidden": "Không có quyền truy cập",
+      "errSupabaseNotConfigured": "Supabase chưa được cấu hình",
+      "errEnterLabel": "Nhập tên",
+      "errDuplicate": "Phương thức này đã tồn tại",
+      "errMigration": "Hãy chạy migration DB: office_cash_handover_channels.",
+      "errEnterId": "Nhập id phương thức",
+      "errNotFound": "Không tìm thấy phương thức",
+      "errSystemProtected": "Không thể xoá phương thức hệ thống",
+      "errHandoverMethodNotFound": "Không tìm thấy phương thức nộp. Kiểm tra danh sách tại trang Quỹ tiền mặt.",
+      "errEnterUsdForMethod": "Nhập số tiền đô la Mỹ cho phương thức đã chọn."
+    }
   },
   "guide": {
     "depositButton": "Tiền đặt cọc cho HDV",
@@ -945,7 +958,7 @@
     "journalAutoFillHint": "Tiền đã thu từ khách nhưng chưa phân bổ cho đơn cụ thể (ví dụ đơn đã thanh toán đủ) — số tiền được điền tự động, hãy kiểm tra và chỉnh nếu cần.",
     "addComment": "+ Thêm ghi chú",
     "thisTour": "Tour này",
-    "noChannelDataGoBack": "Không có dữ liệu kênh - quay lại bước tour.",
+    "noChannelDataGoBack": "Không có dữ liệu phương thức nộp - quay lại bước tour.",
     "toHandOverByManager": "Quản lý cần nộp vào quỹ",
     "managerCashCalcHint": "Chỉ tính tiền trong quỹ của quản lý cho đơn (tiền cọc và khoản thu thêm đã được HDV đánh dấu là đã nộp). Khoản thu thêm còn ở chỗ HDV không tính ở đây - hiển thị riêng bên dưới theo từng tour.",
     "noToursWithDebt": "Không có tour nào còn nợ quỹ.",
@@ -959,7 +972,7 @@
     "noBookingAmountAlert": "{name}: đơn này không có khoản nộp gắn liền (tối đa 0 ₫).",
     "bookingMaxAlert": "{name}: không quá {amount}.",
     "noIncomeChannelsHint": "Chưa cấu hình phương thức thu — thêm tại trang Quỹ tiền mặt.",
-    "noUsdChannelHint": "Chưa cấu hình kênh nhận đô la — thêm tại trang Quỹ tiền mặt.",
+    "noUsdChannelHint": "Chưa cấu hình phương thức nhận đô la — thêm tại trang Quỹ tiền mặt.",
     "fillAmountOrJournalAlert": "Nhập số tiền ₫ cho khách cần thiết và/hoặc dòng «không gắn với đơn».",
     "confirmRecordHandover": "Xác nhận ghi nhận nộp quỹ? Sẽ tạo {n} {word}.",
     "movementSingular": "giao dịch",
