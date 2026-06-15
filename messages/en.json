@@ -621,7 +621,27 @@
     "myCommission": "My commission",
     "commission": "commission",
     "noSales": "No sales yet.",
-    "loadError": "Failed to load"
+    "loadError": "Failed to load",
+    "templates": {
+      "title": "Ticket Templates",
+      "newButton": "+ New Template",
+      "newHeading": "New Template",
+      "typeLabel": "Type",
+      "nameLabel": "Name",
+      "namePlaceholder": "VinWonders — senior",
+      "salePriceLabel": "Sale price (₫)",
+      "salePricePlaceholder": "950.000",
+      "officeCommissionLabel": "Office commission",
+      "managerCommissionLabel": "Manager commission",
+      "createButton": "Create Template",
+      "noTemplatesYet": "No templates yet. Create the first one.",
+      "disable": "Disable",
+      "enable": "Enable",
+      "listLine": "{price} · office {office} · manager {manager}",
+      "errLoadFailed": "Failed to load templates",
+      "errEnterName": "Enter a name",
+      "errEnterPrice": "Enter a sale price"
+    }
   },
   "accounting": {
     "tours": "Tours",

@@ -621,7 +621,27 @@
     "myCommission": "Hoa hồng của tôi",
     "commission": "hoa hồng",
     "noSales": "Chưa có lần bán nào.",
-    "loadError": "Lỗi tải dữ liệu"
+    "loadError": "Lỗi tải dữ liệu",
+    "templates": {
+      "title": "Mẫu vé",
+      "newButton": "+ Mẫu mới",
+      "newHeading": "Mẫu mới",
+      "typeLabel": "Loại",
+      "nameLabel": "Tên",
+      "namePlaceholder": "VinWonders — người cao tuổi",
+      "salePriceLabel": "Giá bán (₫)",
+      "salePricePlaceholder": "950.000",
+      "officeCommissionLabel": "Hoa hồng văn phòng",
+      "managerCommissionLabel": "Hoa hồng quản lý",
+      "createButton": "Tạo mẫu",
+      "noTemplatesYet": "Chưa có mẫu nào. Hãy tạo mẫu đầu tiên.",
+      "disable": "Tắt",
+      "enable": "Bật",
+      "listLine": "{price} · văn phòng {office} · quản lý {manager}",
+      "errLoadFailed": "Không thể tải mẫu vé",
+      "errEnterName": "Nhập tên",
+      "errEnterPrice": "Nhập giá bán"
+    }
   },
   "accounting": {
     "tours": "Tours",

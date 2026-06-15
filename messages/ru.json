@@ -621,7 +621,27 @@
     "myCommission": "Моя комиссия",
     "commission": "комиссия",
     "noSales": "Продаж пока нет.",
-    "loadError": "Ошибка загрузки"
+    "loadError": "Ошибка загрузки",
+    "templates": {
+      "title": "Шаблоны билетов",
+      "newButton": "+ Новый шаблон",
+      "newHeading": "Новый шаблон",
+      "typeLabel": "Тип",
+      "nameLabel": "Название",
+      "namePlaceholder": "VinWonders — пенсионный",
+      "salePriceLabel": "Цена продажи (₫)",
+      "salePricePlaceholder": "950.000",
+      "officeCommissionLabel": "Комиссия офиса",
+      "managerCommissionLabel": "Комиссия менеджера",
+      "createButton": "Создать шаблон",
+      "noTemplatesYet": "Нет шаблонов. Создайте первый.",
+      "disable": "Отключить",
+      "enable": "Включить",
+      "listLine": "{price} · офис {office} · менеджер {manager}",
+      "errLoadFailed": "Не удалось загрузить шаблоны",
+      "errEnterName": "Введите название",
+      "errEnterPrice": "Введите цену продажи"
+    }
   },
   "accounting": {
     "tours": "Туры",
