@@ -68,6 +68,7 @@ import {
   ymdFromIsoInTimeZone,
 } from "@/lib/scheduling";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import type { SalesDayAssignment } from "@/lib/sales-point-status-ui";
 import { backfillMissingOnlineCodes } from "@/lib/online-code";
 import { ACCT_BOOKING_PREFIX, partitionDispatcherExpenses } from "@/lib/tour-expense-partition";
 import {
@@ -7985,32 +7986,12 @@ export async function getSalesPointAssignmentSnapshot(
 ): Promise<{
   managerDaysOff: Record<string, string[]>;
   pointBusyDays: Record<string, string[]>;
-  managerAssignmentsByDay: Record<
-    string,
-    Record<
-      string,
-      {
-        mode: "point" | "promo" | "online";
-        pointId: string | null;
-        pointName: string | null;
-      }
-    >
-  >;
+  managerAssignmentsByDay: Record<string, Record<string, SalesDayAssignment>>;
 }> {
   const out: {
     managerDaysOff: Record<string, string[]>;
     pointBusyDays: Record<string, string[]>;
-    managerAssignmentsByDay: Record<
-      string,
-      Record<
-        string,
-        {
-          mode: "point" | "promo" | "online";
-          pointId: string | null;
-          pointName: string | null;
-        }
-      >
-    >;
+    managerAssignmentsByDay: Record<string, Record<string, SalesDayAssignment>>;
   } = {
     managerDaysOff: {},
     pointBusyDays: {},
@@ -8069,7 +8050,7 @@ export async function getSalesPointAssignmentSnapshot(
 
   const mp = await supabase
     .from("manager_point_openings")
-    .select("manager_id,point_id,opened_on,work_mode,confirmed_at")
+    .select("manager_id,point_id,opened_on,work_mode,confirmed_at,promo_place,online_channel")
     .in("manager_id", managerIds)
     .gte("opened_on", fromYmd)
     .lte("opened_on", toYmd);
@@ -8081,6 +8062,8 @@ export async function getSalesPointAssignmentSnapshot(
         opened_on: string;
         work_mode?: string | null;
         confirmed_at?: string | null;
+        promo_place?: string | null;
+        online_channel?: string | null;
       }[] | null) ?? []);
     const pointIds = [...new Set(openRows.map((r) => String(r.point_id || "")).filter(Boolean))];
     const pointNameById = new Map<string, string>();
@@ -8103,6 +8086,8 @@ export async function getSalesPointAssignmentSnapshot(
         mode,
         pointId,
         pointName: pointId ? pointNameById.get(pointId) ?? "Точка" : null,
+        promoPlace: r.promo_place ? String(r.promo_place) : null,
+        onlineChannel: r.online_channel ? String(r.online_channel) : null,
       };
       out.managerAssignmentsByDay[managerId] = byDay;
 

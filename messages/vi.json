@@ -546,7 +546,11 @@
     "modePoint": "Tại điểm",
     "modePromo": "Promo",
     "modeOnline": "Trực tuyến",
-    "modeOnPoint": "Tại điểm"
+    "modeOnPoint": "Tại điểm",
+    "weekSchedule": {
+      "title": "Lịch của tôi",
+      "hint": "7 ngày tới: điểm, promo, trực tuyến hoặc nghỉ."
+    }
   },
   "common": {
     "loading": "Đang tải…",
@@ -1220,7 +1224,7 @@
   },
   "salesPointsPage": {
     "title": "Điểm bán",
-    "subtitle": "Trước tiên hãy phân công nhân viên bán hàng vào các điểm (phải tính ngày nghỉ), sau đó xem tổng hợp theo điểm: doanh số, tiền, ngày làm việc và chỉ số của từng quản lý.",
+    "subtitle": "Ai đang làm việc ở đâu hôm nay, điểm nào còn trống, lịch tuần và phân công ca — tất cả ở một nơi.",
     "pointFallbackName": "Điểm",
     "dayOff": "Nghỉ",
     "modes": {
@@ -1232,11 +1236,46 @@
       "manager": "Quản lý",
       "chiefManager": "QL trưởng",
       "chiefGuide": "HDV trưởng",
-      "guide": "HDV"
+      "guide": "HDV",
+      "director": "Giám đốc"
+    },
+    "staffBoard": {
+      "title": "Nhân viên hôm nay",
+      "hint": "Trạng thái của mỗi nhân viên hôm nay và chỉ số trong kỳ đã chọn.",
+      "empty": "Không tìm thấy nhân viên bán hàng.",
+      "statusPoint": "Tại điểm «{name}»",
+      "statusPromo": "Promo: {place}",
+      "statusOnline": "Trực tuyến: {channel}",
+      "statusOff": "Nghỉ",
+      "statusNone": "Chưa phân công",
+      "placeMissing": "chưa ghi địa điểm",
+      "channelMissing": "chưa ghi kênh",
+      "periodStats": "Trong kỳ: {days} ngày làm · {bookings} booking · {amount}",
+      "upcomingOff": "Ngày nghỉ trong 14 ngày tới: {n}"
+    },
+    "branchesBoard": {
+      "title": "Điểm bán",
+      "hint": "Mỗi điểm ở đâu, ai đang làm ở đó hôm nay, doanh thu và đánh giá trong kỳ đã chọn.",
+      "empty": "Chưa có điểm nào trong danh mục. Tạo điểm trong mục «Thuê» (kế toán / điều phối).",
+      "workingToday": "Hôm nay có: {names}",
+      "freeToday": "Điểm trống hôm nay",
+      "revenue": "Doanh thu",
+      "bookings": "Booking",
+      "rating": "Đánh giá",
+      "open": "Xem báo cáo điểm"
+    },
+    "weekGrid": {
+      "title": "Lịch tuần",
+      "hint": "7 ngày tới của mỗi nhân viên. Ô «Trống» là ứng viên để phân công lại.",
+      "employee": "Nhân viên",
+      "shortOff": "Nghỉ",
+      "shortFree": "Trống",
+      "shortPromo": "Promo",
+      "shortOnline": "Online"
     },
     "assignSection": {
-      "title": "Nhân viên & phân công điểm",
-      "hint": "Phân công quản lý cho 1-3 ngày qua lịch. Không thể phân công nếu quản lý có ngày nghỉ vào ngày đã chọn, hoặc điểm đã được nhân viên khác sử dụng."
+      "title": "Phân công ca",
+      "hint": "Phân công nhân viên vào điểm, promo hoặc online tối đa 14 ngày. Tuần tới đã hiển thị ở lịch phía trên — dùng để lấp các ô còn trống."
     },
     "logSection": {
       "title": "Nhật ký phân công & hiệu quả",
@@ -1350,8 +1389,8 @@
     "assignment": {
       "noManagersFound": "Không tìm thấy quản lý.",
       "errors": {
-        "selectDayOrRange": "Chọn một ngày hoặc khoảng 1-3 ngày trong lịch.",
-        "maxThreeDays": "Tối đa 3 ngày cho mỗi lần phân công.",
+        "selectDayOrRange": "Chọn một ngày hoặc một khoảng trong lịch.",
+        "maxThreeDays": "Tối đa 14 ngày cho mỗi lần phân công.",
         "dayOffOn": "Quản lý có ngày nghỉ vào: {days}.",
         "selectPoint": "Chọn một điểm bán.",
         "pointBusyOn": "Điểm đã có người vào ngày: {days}.",
@@ -1389,7 +1428,9 @@
       "legendHint": "Chọn khoảng 1-3 ngày. Vàng — nghỉ, đỏ — điểm đã có người, xanh dương/tím/xanh lá — phân công hiện có của nhân viên (điểm/promo/trực tuyến).",
       "selectedRange": "Đã chọn: {from} - {to} ({n} ngày)",
       "onlineHint": "Để lập báo cáo, chúng tôi ghi nhận kênh và nguồn traffic: traffic văn phòng được tính riêng khi trừ chi phí quảng cáo.",
-      "saveButton": "Lưu phân công"
+      "saveButton": "Lưu phân công",
+      "showCalendar": "Hiện lịch theo tháng",
+      "hideCalendar": "Ẩn lịch"
     }
   },
   "salesAnalytics": {

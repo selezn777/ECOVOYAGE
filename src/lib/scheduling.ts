@@ -299,6 +299,17 @@ export function isValidManagerOffForChiefTarget(dayOff: string): boolean {
   return dayOff >= minManagerDayOffDateForChiefAction();
 }
 
+/** `count` дат подряд начиная с fromYmd (включительно), формат YYYY-MM-DD. */
+export function nextDaysYmd(fromYmd: string, count: number): string[] {
+  const out: string[] = [];
+  const cur = new Date(`${fromYmd}T00:00:00`);
+  for (let i = 0; i < count; i += 1) {
+    out.push(localDateString(cur));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return out;
+}
+
 /** 7 дней пн-вс для календарной недели, содержащей anchor (YYYY-MM-DD). По умолчанию - сегодня. */
 export function weekDayKeysLocal(anchorYmd?: string): string[] {
   const base =

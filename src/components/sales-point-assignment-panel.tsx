@@ -32,6 +32,7 @@ export function SalesPointAssignmentPanel({
   const [monthKey, setMonthKey] = useState(() => localDateString().slice(0, 7));
   const [dayFrom, setDayFrom] = useState("");
   const [dayTo, setDayTo] = useState("");
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const t = useTranslations("salesPointsPage");
   const tc = useTranslations("common");
@@ -78,7 +79,7 @@ export function SalesPointAssignmentPanel({
 
   const blockedByOff = rangeDays.filter((d) => selectedOffDays.has(d));
   const blockedByPoint = mode === "point" ? rangeDays.filter((d) => selectedPointBusy.has(d)) : [];
-  const invalidRange = rangeDays.length > 3;
+  const invalidRange = rangeDays.length > 14;
 
   if (!selected) {
     return <p className="text-sm text-[var(--muted)]">{t("assignment.noManagersFound")}</p>;
@@ -267,77 +268,86 @@ export function SalesPointAssignmentPanel({
         </div>
       ) : null}
 
-      <div className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3">
-        <div className="mb-2 flex items-center justify-between">
-          <button type="button" className="btn-secondary !min-h-[32px] !px-2" onClick={() => shiftMonth(-1)}>
-            ◀
-          </button>
-          <div className="text-sm font-semibold">
-            {formatMonthYearLong(Number(monthKey.slice(0, 4)), Number(monthKey.slice(5, 7)), locale)}
+      <button
+        type="button"
+        onClick={() => setShowCalendar((v) => !v)}
+        className="text-xs font-medium text-[var(--accent)]"
+      >
+        {showCalendar ? t("assignment.hideCalendar") : t("assignment.showCalendar")}
+      </button>
+      {showCalendar ? (
+        <div className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <button type="button" className="btn-secondary !min-h-[32px] !px-2" onClick={() => shiftMonth(-1)}>
+              ◀
+            </button>
+            <div className="text-sm font-semibold">
+              {formatMonthYearLong(Number(monthKey.slice(0, 4)), Number(monthKey.slice(5, 7)), locale)}
+            </div>
+            <button type="button" className="btn-secondary !min-h-[32px] !px-2" onClick={() => shiftMonth(1)}>
+              ▶
+            </button>
           </div>
-          <button type="button" className="btn-secondary !min-h-[32px] !px-2" onClick={() => shiftMonth(1)}>
-            ▶
-          </button>
+          <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-wide text-[var(--muted2)]">
+            {(t.raw("assignment.weekdaysShort") as string[]).map((w) => (
+              <div key={w}>{w}</div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {monthDays.map((d, idx) => {
+              if (!d) return <div key={`b-${idx}`} className="h-9" />;
+              const inRange = rangePreview ? d >= rangePreview.from && d <= rangePreview.to : false;
+              const isOff = selectedOffDays.has(d);
+              const isBusyPoint = mode === "point" && selectedPointBusy.has(d);
+              const assignment = selectedAssignments[d];
+              const isAssignedAny = Boolean(assignment);
+              const assignmentIsPoint = assignment?.mode === "point";
+              const assignmentIsPromo = assignment?.mode === "promo";
+              const assignmentIsOnline = assignment?.mode === "online";
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => pickDay(d)}
+                  className={`h-9 rounded-lg text-xs ${
+                    inRange
+                      ? "bg-[var(--accent)] text-white"
+                      : isOff
+                        ? "bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200"
+                        : assignmentIsPoint
+                          ? "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-200"
+                          : assignmentIsPromo
+                            ? "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/30 dark:text-fuchsia-200"
+                            : assignmentIsOnline
+                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200"
+                        : isBusyPoint
+                          ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200"
+                          : "bg-[var(--surface)] text-[var(--text)]"
+                  }`}
+                  title={
+                    isOff
+                      ? t("assignment.tooltipDayOff", { weekday: formatYmdWithWeekday(d, locale) })
+                      : `${formatYmdWithWeekday(d, locale)}${
+                          isAssignedAny
+                            ? assignmentIsPoint
+                              ? ` · ${t("assignment.tooltipAlreadyPoint")}${assignment?.pointName ? `: ${assignment.pointName}` : ""}`
+                              : assignmentIsPromo
+                                ? ` · ${t("assignment.tooltipAlreadyPromo")}`
+                                : ` · ${t("assignment.tooltipAlreadyOnline")}`
+                            : isBusyPoint
+                              ? ` · ${t("assignment.tooltipPointBusy")}`
+                              : ""
+                        }`
+                  }
+                >
+                  {d.slice(-2)}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-xs text-[var(--muted)]">{t("assignment.legendHint")}</p>
         </div>
-        <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-wide text-[var(--muted2)]">
-          {(t.raw("assignment.weekdaysShort") as string[]).map((w) => (
-            <div key={w}>{w}</div>
-          ))}
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {monthDays.map((d, idx) => {
-            if (!d) return <div key={`b-${idx}`} className="h-9" />;
-            const inRange = rangePreview ? d >= rangePreview.from && d <= rangePreview.to : false;
-            const isOff = selectedOffDays.has(d);
-            const isBusyPoint = mode === "point" && selectedPointBusy.has(d);
-            const assignment = selectedAssignments[d];
-            const isAssignedAny = Boolean(assignment);
-            const assignmentIsPoint = assignment?.mode === "point";
-            const assignmentIsPromo = assignment?.mode === "promo";
-            const assignmentIsOnline = assignment?.mode === "online";
-            return (
-              <button
-                key={d}
-                type="button"
-                onClick={() => pickDay(d)}
-                className={`h-9 rounded-lg text-xs ${
-                  inRange
-                    ? "bg-[var(--accent)] text-white"
-                    : isOff
-                      ? "bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200"
-                      : assignmentIsPoint
-                        ? "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-200"
-                        : assignmentIsPromo
-                          ? "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/30 dark:text-fuchsia-200"
-                          : assignmentIsOnline
-                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200"
-                      : isBusyPoint
-                        ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200"
-                        : "bg-[var(--surface)] text-[var(--text)]"
-                }`}
-                title={
-                  isOff
-                    ? t("assignment.tooltipDayOff", { weekday: formatYmdWithWeekday(d, locale) })
-                    : `${formatYmdWithWeekday(d, locale)}${
-                        isAssignedAny
-                          ? assignmentIsPoint
-                            ? ` · ${t("assignment.tooltipAlreadyPoint")}${assignment?.pointName ? `: ${assignment.pointName}` : ""}`
-                            : assignmentIsPromo
-                              ? ` · ${t("assignment.tooltipAlreadyPromo")}`
-                              : ` · ${t("assignment.tooltipAlreadyOnline")}`
-                          : isBusyPoint
-                            ? ` · ${t("assignment.tooltipPointBusy")}`
-                            : ""
-                      }`
-                }
-              >
-                {d.slice(-2)}
-              </button>
-            );
-          })}
-        </div>
-        <p className="mt-2 text-xs text-[var(--muted)]">{t("assignment.legendHint")}</p>
-      </div>
+      ) : null}
       {rangePreview ? (
         <p className="text-xs text-[var(--text)]">
           {t("assignment.selectedRange", {

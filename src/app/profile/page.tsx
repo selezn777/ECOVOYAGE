@@ -1,18 +1,20 @@
 import { TopNav } from "@/components/top-nav";
 import { ProfileDaysOffPanel } from "@/components/profile-days-off";
 import { ProfileManagerModeToggle } from "@/components/profile-manager-mode-toggle";
-import { ProfileManagerSalesPointCard } from "@/components/profile-manager-sales-point-card";
+import { ProfileManagerSalesPointCard, type ProfileWeekScheduleDay } from "@/components/profile-manager-sales-point-card";
 import { ProfileSettingsForm } from "@/components/profile-settings-form";
 import { requireAuth } from "@/lib/auth-session";
 import { isUuidSessionUser } from "@/lib/actor-id";
 import {
   getManagerSalesPointStatus,
+  getSalesPointAssignmentSnapshot,
   getUserAccountFields,
   getUserPerformanceSnapshot,
   listMyVisaRuns,
   listMyGuideDaysOff,
   listMyManagerDaysOff,
 } from "@/lib/data";
+import { nextDaysYmd, tourBusinessTodayYmd } from "@/lib/scheduling";
 import type { Role } from "@/lib/types";
 
 async function ProfilePerformanceCard({ userId, role }: { userId: string; role: Role }) {
@@ -67,6 +69,18 @@ export default async function ProfilePage() {
   const guideVisaRuns =
     user.role === "guide" || user.role === "chief_guide" ? await listMyVisaRuns(user.id, "guide") : [];
   const managerPointStatus = user.role === "manager" ? await getManagerSalesPointStatus(user.id) : null;
+  let weekSchedule: ProfileWeekScheduleDay[] | undefined;
+  if (user.role === "manager") {
+    const todayYmd = tourBusinessTodayYmd();
+    const next7Days = nextDaysYmd(todayYmd, 7);
+    const snapshot = await getSalesPointAssignmentSnapshot([user.id], todayYmd, next7Days[next7Days.length - 1]);
+    const offDays = new Set(snapshot.managerDaysOff[user.id] ?? []);
+    weekSchedule = next7Days.map((ymd) => ({
+      ymd,
+      assignment: snapshot.managerAssignmentsByDay[user.id]?.[ymd],
+      isOff: offDays.has(ymd),
+    }));
+  }
   const showGuideManagerToggle = user.baseRole === "guide" || user.baseRole === "chief_guide";
 
   return (
@@ -75,7 +89,9 @@ export default async function ProfilePage() {
       <h1 className="page-title mb-3">Профиль</h1>
 
       <ProfilePerformanceCard userId={user.id} role={user.role} />
-      {managerPointStatus ? <ProfileManagerSalesPointCard initial={managerPointStatus} managerId={user.id} /> : null}
+      {managerPointStatus ? (
+        <ProfileManagerSalesPointCard initial={managerPointStatus} managerId={user.id} weekSchedule={weekSchedule} />
+      ) : null}
 
       {showGuideManagerToggle ? <ProfileManagerModeToggle initialEnabled={Boolean(user.managerMode)} /> : null}
 

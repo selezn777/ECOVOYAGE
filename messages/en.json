@@ -546,7 +546,11 @@
     "modePoint": "At Point",
     "modePromo": "Promo",
     "modeOnline": "Online",
-    "modeOnPoint": "At Point"
+    "modeOnPoint": "At Point",
+    "weekSchedule": {
+      "title": "My schedule",
+      "hint": "The next 7 days: point, promo, online, or day off."
+    }
   },
   "common": {
     "loading": "Loading…",
@@ -1220,7 +1224,7 @@
   },
   "salesPointsPage": {
     "title": "Sales Points",
-    "subtitle": "First assign sales staff to points (days off must be accounted for), then review the summary per point: sales, money, work days and metrics for each manager.",
+    "subtitle": "Who's working today and where, which points are free, the weekly schedule, and shift assignment — all in one place.",
     "pointFallbackName": "Point",
     "dayOff": "Day off",
     "modes": {
@@ -1232,11 +1236,46 @@
       "manager": "Manager",
       "chiefManager": "Sr. Manager",
       "chiefGuide": "Sr. Guide",
-      "guide": "Guide"
+      "guide": "Guide",
+      "director": "Director"
+    },
+    "staffBoard": {
+      "title": "Staff today",
+      "hint": "Each employee's status for today and their metrics for the selected period.",
+      "empty": "No sales staff found.",
+      "statusPoint": "At point \"{name}\"",
+      "statusPromo": "Promo: {place}",
+      "statusOnline": "Online: {channel}",
+      "statusOff": "Day off",
+      "statusNone": "Not assigned",
+      "placeMissing": "place not specified",
+      "channelMissing": "channel not specified",
+      "periodStats": "Period: {days} work days · {bookings} bookings · {amount}",
+      "upcomingOff": "Days off in the next 14 days: {n}"
+    },
+    "branchesBoard": {
+      "title": "Sales Points",
+      "hint": "Where each point is, who's working there today, revenue and rating for the selected period.",
+      "empty": "No points in the directory. Create a point in the Rentals section (accountant / dispatcher).",
+      "workingToday": "Working today: {names}",
+      "freeToday": "Point is free today",
+      "revenue": "Revenue",
+      "bookings": "Bookings",
+      "rating": "Rating",
+      "open": "Open point report"
+    },
+    "weekGrid": {
+      "title": "Weekly schedule",
+      "hint": "The next 7 days for each employee. Empty \"Free\" cells are candidates for reassignment.",
+      "employee": "Employee",
+      "shortOff": "Off",
+      "shortFree": "Free",
+      "shortPromo": "Promo",
+      "shortOnline": "Online"
     },
     "assignSection": {
-      "title": "Staff & point assignments",
-      "hint": "Assign a manager for 1-3 days via the calendar. The assignment is blocked if the manager has a day off on the selected day, or the point is already taken by another employee."
+      "title": "Assign a shift",
+      "hint": "Assign an employee to a point, promo, or online for up to 14 days. The upcoming week is already visible in the schedule above — use it to fill the empty cells."
     },
     "logSection": {
       "title": "Assignment log & efficiency",
@@ -1350,8 +1389,8 @@
     "assignment": {
       "noManagersFound": "No managers found.",
       "errors": {
-        "selectDayOrRange": "Select a day or a 1-3 day range in the calendar.",
-        "maxThreeDays": "Maximum 3 days per assignment.",
+        "selectDayOrRange": "Select a day or a range in the calendar.",
+        "maxThreeDays": "Maximum 14 days per assignment.",
         "dayOffOn": "The manager has a day off on: {days}.",
         "selectPoint": "Select a sales point.",
         "pointBusyOn": "The point is busy on: {days}.",
@@ -1389,7 +1428,9 @@
       "legendHint": "Select a 1-3 day range. Yellow — day off, red — point busy, blue/purple/green — employee's existing assignment (point/promo/online).",
       "selectedRange": "Selected: {from} - {to} ({n} d.)",
       "onlineHint": "For the report we record the channel and traffic source: office traffic is accounted separately when deducting advertising costs.",
-      "saveButton": "Save assignment"
+      "saveButton": "Save assignment",
+      "showCalendar": "Show monthly calendar",
+      "hideCalendar": "Hide calendar"
     }
   },
   "salesAnalytics": {
