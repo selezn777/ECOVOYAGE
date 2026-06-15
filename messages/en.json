@@ -418,7 +418,15 @@
     "searchNamePlaceholder": "Name…",
     "noEmployeesFound": "No one found.",
     "accountantTitle": "Staff and payouts",
-    "accountantDescription": "List without amounts and percentages - others looking at your screen won't see payouts. All financial work, manager % and advances are inside the employee card. Open the metrics summary only when no one else can see your screen."
+    "accountantDescription": "List without amounts and percentages - others looking at your screen won't see payouts. All financial work, manager % and advances are inside the employee card. Open the metrics summary only when no one else can see your screen.",
+    "summaryToggle": "Summary",
+    "summaryEmployees": "Employees",
+    "summaryEmployeesValue": "{total} total",
+    "summaryManagers": "Managers",
+    "summaryGuides": "Guides",
+    "summaryInWorkOffTotal": "working {inWork} / off {off} / total {total}",
+    "summarySalesPoints": "Sales points",
+    "summarySalesPointsValue": "working {inWork} / total {total}"
   },
   "daysOff": {
     "title": "Staff Time Off",

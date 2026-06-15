@@ -418,7 +418,15 @@
     "searchNamePlaceholder": "Имя…",
     "noEmployeesFound": "Никого не найдено.",
     "accountantTitle": "Сотрудники и выплаты",
-    "accountantDescription": "Список без сумм и процентов - чужой экран не увидит выплат. Вся финансовая работа, % менеджера и авансы - в карточке сотрудника. Сводку с метриками раскрывайте только если рядом нет посторонних."
+    "accountantDescription": "Список без сумм и процентов - чужой экран не увидит выплат. Вся финансовая работа, % менеджера и авансы - в карточке сотрудника. Сводку с метриками раскрывайте только если рядом нет посторонних.",
+    "summaryToggle": "Сводка",
+    "summaryEmployees": "Сотрудники",
+    "summaryEmployeesValue": "{total} всего",
+    "summaryManagers": "Менеджеры",
+    "summaryGuides": "Гиды",
+    "summaryInWorkOffTotal": "в работе {inWork} / выходные {off} / всего {total}",
+    "summarySalesPoints": "Точки продаж",
+    "summarySalesPointsValue": "в работе {inWork} / всего {total}"
   },
   "daysOff": {
     "title": "Отпуска сотрудников",

@@ -418,7 +418,15 @@
     "searchNamePlaceholder": "Tên…",
     "noEmployeesFound": "Không tìm thấy ai.",
     "accountantTitle": "Nhân viên và thanh toán",
-    "accountantDescription": "Danh sách không hiện số tiền và tỷ lệ % - người nhìn màn hình của bạn sẽ không thấy các khoản thanh toán. Mọi công việc tài chính, % quản lý và tạm ứng nằm trong thẻ nhân viên. Chỉ mở phần tổng hợp số liệu khi không có ai khác nhìn thấy màn hình."
+    "accountantDescription": "Danh sách không hiện số tiền và tỷ lệ % - người nhìn màn hình của bạn sẽ không thấy các khoản thanh toán. Mọi công việc tài chính, % quản lý và tạm ứng nằm trong thẻ nhân viên. Chỉ mở phần tổng hợp số liệu khi không có ai khác nhìn thấy màn hình.",
+    "summaryToggle": "Tổng quan",
+    "summaryEmployees": "Nhân viên",
+    "summaryEmployeesValue": "tổng {total}",
+    "summaryManagers": "Quản lý",
+    "summaryGuides": "HDV",
+    "summaryInWorkOffTotal": "đang làm {inWork} / nghỉ {off} / tổng {total}",
+    "summarySalesPoints": "Điểm bán",
+    "summarySalesPointsValue": "đang hoạt động {inWork} / tổng {total}"
   },
   "daysOff": {
     "title": "Nghỉ phép nhân viên",

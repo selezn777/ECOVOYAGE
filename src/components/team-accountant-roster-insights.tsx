@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import type { RosterUser } from "@/lib/types";
 
 function isManager(r: RosterUser): boolean {
@@ -18,6 +19,7 @@ export function TeamAccountantRosterInsights({
   rows: RosterUser[];
   salesPointsTotal?: number;
 }) {
+  const t = useTranslations("team");
   const stats = useMemo(() => {
     let managers = 0;
     let guides = 0;
@@ -58,16 +60,25 @@ export function TeamAccountantRosterInsights({
   const salesPointsInWork =
     salesPointsShownTotal > 0 ? Math.max(stats.salesPointsInWorkByAssignments, salesPointsShownTotal) : 0;
   const compactRows = [
-    { label: "Сотрудники", value: `${stats.total} всего` },
-    { label: "Менеджеры", value: `в работе ${managersInWork} / выходные ${stats.managersOff} / всего ${stats.managers}` },
-    { label: "Гиды", value: `в работе ${guidesInWork} / выходные ${stats.guidesOff} / всего ${stats.guides}` },
-    { label: "Точки продаж", value: `в работе ${salesPointsInWork} / всего ${salesPointsShownTotal}` },
+    { label: t("summaryEmployees"), value: t("summaryEmployeesValue", { total: stats.total }) },
+    {
+      label: t("summaryManagers"),
+      value: t("summaryInWorkOffTotal", { inWork: managersInWork, off: stats.managersOff, total: stats.managers }),
+    },
+    {
+      label: t("summaryGuides"),
+      value: t("summaryInWorkOffTotal", { inWork: guidesInWork, off: stats.guidesOff, total: stats.guides }),
+    },
+    {
+      label: t("summarySalesPoints"),
+      value: t("summarySalesPointsValue", { inWork: salesPointsInWork, total: salesPointsShownTotal }),
+    },
   ];
 
   return (
     <details className="card mb-3">
       <summary className="cursor-pointer list-none px-3 py-3 text-sm font-semibold text-[var(--text)] sm:px-4 sm:py-3.5 [&::-webkit-details-marker]:hidden">
-        Сводка
+        {t("summaryToggle")}
       </summary>
       <div className="border-t border-[var(--border)] px-3 py-3 sm:px-4">
         <ul className="space-y-2">
