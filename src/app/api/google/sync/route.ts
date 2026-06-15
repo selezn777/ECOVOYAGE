@@ -1,16 +1,18 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { getSessionUser } from "@/lib/auth-session";
 import { isGoogleSheetsConfigured } from "@/lib/google-sheets-client";
 import { pullHotelsFromSheet, pushHotelsToSheet } from "@/lib/google-sync-hotels";
 import { pushReportsToSheet } from "@/lib/google-sync-reports";
 
 export async function POST(request: Request) {
+  const t = await getTranslations("googleSync");
   const session = await getSessionUser();
-  if (!session) return NextResponse.json({ error: "Нет авторизации" }, { status: 401 });
-  if (session.role !== "director") return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errUnauthorized") }, { status: 401 });
+  if (session.role !== "director") return NextResponse.json({ error: t("errForbidden") }, { status: 403 });
 
   if (!isGoogleSheetsConfigured()) {
-    return NextResponse.json({ error: "Google Sheets не настроен (.env)" }, { status: 503 });
+    return NextResponse.json({ error: t("errNotConfigured") }, { status: 503 });
   }
 
   const body = (await request.json().catch(() => ({}))) as { action?: string; category?: string };
@@ -26,8 +28,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, result: await pushReportsToSheet() });
     }
   } catch (e) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : "Ошибка синхронизации" }, { status: 500 });
+    return NextResponse.json({ error: e instanceof Error ? e.message : t("errSyncFailed") }, { status: 500 });
   }
 
-  return NextResponse.json({ error: "Неизвестное действие" }, { status: 400 });
+  return NextResponse.json({ error: t("errUnknownAction") }, { status: 400 });
 }

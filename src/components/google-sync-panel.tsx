@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 type SyncStatus = {
   sheets: { configured: boolean; spreadsheetTitle: string | null; error: string | null };
@@ -9,17 +10,18 @@ type SyncStatus = {
 
 type SyncAction = { category: "hotels" | "reports"; action: "push" | "pull"; label: string };
 
-const ACTIONS: SyncAction[] = [
-  { category: "hotels", action: "push", label: "Отели → таблица" },
-  { category: "hotels", action: "pull", label: "Отели ← таблица" },
-  { category: "reports", action: "push", label: "Отчёты → таблица" },
-];
-
 export function GoogleSyncPanel() {
+  const t = useTranslations("googleSync");
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  const actions: SyncAction[] = [
+    { category: "hotels", action: "push", label: t("actionHotelsPush") },
+    { category: "hotels", action: "pull", label: t("actionHotelsPull") },
+    { category: "reports", action: "push", label: t("actionReportsPush") },
+  ];
 
   useEffect(() => {
     void (async () => {
@@ -46,15 +48,15 @@ export function GoogleSyncPanel() {
       });
       const j = (await res.json().catch(() => ({}))) as { ok?: boolean; result?: Record<string, number>; error?: string };
       if (!res.ok || !j.ok) {
-        setErr(j.error ?? `Ошибка ${res.status}`);
+        setErr(j.error ?? t("errorStatus", { status: res.status }));
         return;
       }
       const summary = Object.entries(j.result ?? {})
         .map(([k, v]) => `${k}: ${v}`)
         .join(", ");
-      setResult(`${a.label} — готово (${summary})`);
+      setResult(t("doneSummary", { label: a.label, summary }));
     } catch {
-      setErr("Ошибка сети");
+      setErr(t("networkError"));
     } finally {
       setBusy(null);
     }
@@ -65,17 +67,17 @@ export function GoogleSyncPanel() {
 
   return (
     <section className="card mb-3">
-      <h2 className="mb-1 text-base font-semibold">Google Таблица</h2>
+      <h2 className="mb-1 text-base font-semibold">{t("title")}</h2>
       <p className="mb-3 text-xs text-[var(--muted)]">
-        {status.sheets.spreadsheetTitle ?? "Подключено"}
-        {status.sheets.error ? ` · ошибка: ${status.sheets.error}` : ""}
+        {status.sheets.spreadsheetTitle ?? t("connected")}
+        {status.sheets.error ? t("errorSuffix", { error: status.sheets.error }) : ""}
       </p>
 
       {err ? <p className="mb-2 text-sm text-red-600 dark:text-red-400">{err}</p> : null}
       {result ? <p className="mb-2 text-sm text-emerald-700 dark:text-emerald-400">{result}</p> : null}
 
       <div className="flex flex-wrap gap-2">
-        {ACTIONS.map((a) => {
+        {actions.map((a) => {
           const key = `${a.category}:${a.action}`;
           return (
             <button

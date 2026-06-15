@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { getSessionUser } from "@/lib/auth-session";
 import { isGoogleGeocodingConfigured } from "@/lib/google-geocode";
 import { getSpreadsheetTitle, isGoogleSheetsConfigured } from "@/lib/google-sheets-client";
 
 export async function GET() {
+  const t = await getTranslations("googleSync");
   const session = await getSessionUser();
-  if (!session) return NextResponse.json({ error: "Нет авторизации" }, { status: 401 });
-  if (session.role !== "director") return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errUnauthorized") }, { status: 401 });
+  if (session.role !== "director") return NextResponse.json({ error: t("errForbidden") }, { status: 403 });
 
   const sheets = isGoogleSheetsConfigured();
   const geocoding = isGoogleGeocodingConfigured();
@@ -17,7 +19,7 @@ export async function GET() {
     try {
       spreadsheetTitle = await getSpreadsheetTitle();
     } catch (e) {
-      sheetsError = e instanceof Error ? e.message : "Ошибка подключения к Sheets API";
+      sheetsError = e instanceof Error ? e.message : t("errSheetsApiError");
     }
   }
 

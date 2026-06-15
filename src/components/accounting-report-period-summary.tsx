@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { formatUsd, formatVnd } from "@/lib/format";
 import type { CashReconciliationReport } from "@/lib/types";
 
@@ -38,13 +39,14 @@ function StatTile({ label, children }: { label: string; children: React.ReactNod
   );
 }
 
-function formatManualForeignNat(currencyCode: string, value: number): string {
-  if (value === 0) return "";
+/** Локализованное форматирование суммы в иностранной валюте (без суффикса кода валюты). */
+export function formatManualForeignAmount(currencyCode: string, value: number, locale: string): string {
+  const intlLocale = locale === "ru" ? "ru-RU" : locale === "vi" ? "vi-VN" : "en-GB";
   const d = currencyCode === "JPY" || currencyCode === "VND" ? 0 : 2;
-  return `${value.toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d })} ${currencyCode}`;
+  return value.toLocaleString(intlLocale, { minimumFractionDigits: d, maximumFractionDigits: d });
 }
 
-export function AccountingReportPeriodSummary({
+export async function AccountingReportPeriodSummary({
   periodLabel,
   tourSnap,
   recon,
@@ -58,20 +60,21 @@ export function AccountingReportPeriodSummary({
   currentBalanceVnd: number;
   balanceAsOfLabel: string;
 }) {
+  const t = await getTranslations("accountingReports");
   const touristNetVnd = Math.max(0, recon.paymentsIncomeVnd - recon.paymentsRefundVnd);
   const touristCashOfficeInPeriod = recon.paymentsOfficeCashVnd + recon.paymentsTopupRemittedInPeriodVnd;
 
   return (
     <section className="card mb-3 min-w-0 border-[var(--border)] bg-[var(--surface-soft)]/40 dark:bg-[var(--surface)]/50">
-      <h2 className="text-sm font-semibold text-[var(--text)]">Сводка за период</h2>
+      <h2 className="text-sm font-semibold text-[var(--text)]">{t("summaryTitle")}</h2>
       {periodLabel ? <p className="mt-1 text-sm text-[var(--muted)]">{periodLabel}</p> : null}
 
       <div className="mt-4 space-y-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted2)]">Учёт туров</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted2)]">{t("toursAccounting")}</p>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <StatTile label="Поступления (сумма платежей)">{formatVnd(tourSnap.incomeVnd)}</StatTile>
-          <StatTile label="Расходы (строки расходов)">{formatVnd(tourSnap.expenseVnd)}</StatTile>
-          <StatTile label="Чистая прибыль">
+          <StatTile label={t("tourIncome")}>{formatVnd(tourSnap.incomeVnd)}</StatTile>
+          <StatTile label={t("tourExpense")}>{formatVnd(tourSnap.expenseVnd)}</StatTile>
+          <StatTile label={t("netProfit")}>
             <span
               className={
                 tourSnap.netVnd >= 0
@@ -83,52 +86,50 @@ export function AccountingReportPeriodSummary({
             </span>
           </StatTile>
         </div>
-        <p className="mt-2 text-[11px] leading-snug text-[var(--muted2)]">
-          Чистая прибыль за период: все платежи по броням минус все строки расходов (по дате записи в системе, UTC).
-        </p>
+        <p className="mt-2 text-[11px] leading-snug text-[var(--muted2)]">{t("netProfitHint")}</p>
       </div>
 
       <div className="mt-5 border-t border-[var(--border)]/70 pt-4">
         <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted2)]">
-          Платежи от туристов за период
+          {t("touristPaymentsTitle")}
         </p>
         <div className="mt-2 divide-y divide-[var(--border)]/60">
           {recon.paymentsRefundVnd > 0 ? (
-            <MoneyLine label="Возвраты туристам" value={recon.paymentsRefundVnd} sign="minus" />
+            <MoneyLine label={t("refundsToTourists")} value={recon.paymentsRefundVnd} sign="minus" />
           ) : null}
-          <MoneyLine label="Зачтено по броням за период" value={touristNetVnd} sign="neutral" />
-          <MoneyLine label="У менеджеров" value={recon.paymentsDepositVnd} sign="neutral" />
-          <MoneyLine label="В кассе" value={touristCashOfficeInPeriod} sign="plus" />
+          <MoneyLine label={t("creditedToBookings")} value={touristNetVnd} sign="neutral" />
+          <MoneyLine label={t("withManagers")} value={recon.paymentsDepositVnd} sign="neutral" />
+          <MoneyLine label={t("inCashBox")} value={touristCashOfficeInPeriod} sign="plus" />
         </div>
       </div>
 
       <div className="mt-5 border-t border-[var(--border)]/70 pt-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted2)]">Снимок по броням</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted2)]">{t("bookingsSnapshotTitle")}</p>
         <div className="mt-2 divide-y divide-[var(--border)]/60">
-          <MoneyLine label="Долг туристов" value={recon.snapshotTotalBookingDueVnd} sign="neutral" />
-          <MoneyLine label="Доплаты у гида, ждут кассу" value={recon.snapshotPendingGuideTopupVnd} sign="neutral" />
+          <MoneyLine label={t("touristDebt")} value={recon.snapshotTotalBookingDueVnd} sign="neutral" />
+          <MoneyLine label={t("guidePendingTopup")} value={recon.snapshotPendingGuideTopupVnd} sign="neutral" />
         </div>
       </div>
 
       <div className="mt-5 border-t border-[var(--border)]/70 pt-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted2)]">Остаток</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted2)]">{t("balanceTitle")}</p>
         <div className="mt-2 rounded-xl border border-[var(--border)]/80 bg-[var(--surface)] px-3 py-3 dark:bg-[var(--surface-elevated)]/35">
-          <p className="text-[11px] text-[var(--muted)]">Остаток кассы (расчётный)</p>
+          <p className="text-[11px] text-[var(--muted)]">{t("cashBalanceCalc")}</p>
           <p className="mt-1 text-base font-medium tabular-nums text-[var(--text)]">{formatVnd(currentBalanceVnd)}</p>
-          <p className="mt-1 text-[11px] text-[var(--muted2)]">на {balanceAsOfLabel}. Журнал - «Касса».</p>
+          <p className="mt-1 text-[11px] text-[var(--muted2)]">{t("asOfDate", { date: balanceAsOfLabel })}</p>
         </div>
       </div>
 
       <p className="mt-3 text-[11px] text-[var(--muted2)]">
         <Link href="/cash" className="font-medium text-blue-700 underline-offset-2 hover:underline dark:text-blue-400">
-          Открыть кассу
+          {t("openCashLink")}
         </Link>
       </p>
     </section>
   );
 }
 
-/** Для списка каналов сдачи: доллары из строки или прочерк. */
+/** Для списка способов сдачи: доллары из строки или прочерк. */
 export function handoverChannelUsdDisplay(
   sumUsd: number,
 ): { text: string; sub?: string } {
