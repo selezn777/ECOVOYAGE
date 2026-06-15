@@ -458,6 +458,7 @@
     "show": "Show",
     "cashOnHand": "Cash",
     "bank": "Bank",
+    "cashUsdLabel": "Cash $",
     "totalApprox": "Total ~",
     "enterAmount": "Enter amount",
     "errorStatus": "Error {status}",

@@ -458,6 +458,7 @@
     "show": "Показать",
     "cashOnHand": "Наличка",
     "bank": "Банк",
+    "cashUsdLabel": "Наличка $",
     "totalApprox": "Итого ~",
     "enterAmount": "Введите сумму",
     "errorStatus": "Ошибка {status}",

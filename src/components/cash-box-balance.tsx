@@ -60,21 +60,21 @@ export function CashBoxBalance({
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        <div className="rounded-xl bg-[var(--surface-soft)] p-3 ring-1 ring-[var(--border)] min-w-0">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted)] mb-1 truncate">{t("cashOnHand")}</div>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-[var(--surface-soft)] p-3 ring-1 ring-[var(--border)] min-w-0 sm:flex-col sm:items-start sm:justify-start sm:gap-1">
+          <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted)] truncate">{t("cashOnHand")}</div>
           <div className={`text-sm font-bold tabular-nums transition-all truncate ${cashVnd < 0 ? "text-red-500" : "text-[var(--text)]"}`}>
             {visible ? formatVndCompact(cashVnd, t("million")) : "•••"}
           </div>
         </div>
-        <div className="rounded-xl bg-[var(--surface-soft)] p-3 ring-1 ring-[var(--border)] min-w-0">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted)] mb-1 truncate">{t("bank")}</div>
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-[var(--surface-soft)] p-3 ring-1 ring-[var(--border)] min-w-0 sm:flex-col sm:items-start sm:justify-start sm:gap-1">
+          <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted)] truncate">{t("bank")}</div>
           <div className={`text-sm font-bold tabular-nums transition-all truncate ${bankVnd < 0 ? "text-red-500" : "text-[var(--text)]"}`}>
             {visible ? formatVndCompact(bankVnd, t("million")) : "•••"}
           </div>
         </div>
-        <div className="rounded-xl bg-[var(--surface-soft)] p-3 ring-1 ring-[var(--border)] min-w-0">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted)] mb-1 truncate">USD</div>
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-[var(--surface-soft)] p-3 ring-1 ring-[var(--border)] min-w-0 sm:flex-col sm:items-start sm:justify-start sm:gap-1">
+          <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted)] truncate">{t("cashUsdLabel")}</div>
           <div className={`text-sm font-bold tabular-nums transition-all truncate ${cashUsd < 0 ? "text-red-500" : "text-[var(--text)]"}`}>
             {visible ? formatUsdCompact(cashUsd) : "•••"}
           </div>

@@ -458,6 +458,7 @@
     "show": "Hiện",
     "cashOnHand": "Tiền mặt",
     "bank": "Ngân hàng",
+    "cashUsdLabel": "Tiền mặt $",
     "totalApprox": "Tổng ~",
     "enterAmount": "Nhập số tiền",
     "errorStatus": "Lỗi {status}",
