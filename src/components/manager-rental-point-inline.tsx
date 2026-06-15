@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { RosterUser } from "@/lib/types";
 
 type PointOpt = { id: string; name: string };
@@ -15,6 +16,8 @@ export function ManagerRentalPointInline({
   onSaved?: () => void;
   disabledReason?: string | null;
 }) {
+  const t = useTranslations("rental");
+  const tCommon = useTranslations("common");
   const [points, setPoints] = useState<PointOpt[] | null>(null);
   const [value, setValue] = useState<string>(r.rentalPointId ?? "");
   const [loadingPts, setLoadingPts] = useState(true);
@@ -61,7 +64,7 @@ export function ManagerRentalPointInline({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(typeof data.error === "string" ? data.error : "Не удалось сохранить");
+        setErr(typeof data.error === "string" ? data.error : tCommon("couldNotSave"));
         return;
       }
       router.refresh();
@@ -73,16 +76,16 @@ export function ManagerRentalPointInline({
 
   return (
     <div className="text-xs sm:text-sm">
-      <div className="text-[var(--muted)] mb-1.5 text-[11px] font-medium leading-snug sm:text-xs">Точка продаж</div>
+      <div className="text-[var(--muted)] mb-1.5 text-[11px] font-medium leading-snug sm:text-xs">{t("managerAssignLabel")}</div>
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-stretch">
         <select
           className="field-surface min-h-10 w-full max-w-full flex-1 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 text-[13px] touch-manipulation sm:max-w-[240px]"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           disabled={loadingPts || points === null || Boolean(disabledReason)}
-          aria-label="Точка продаж для менеджера"
+          aria-label={t("managerAssignAria")}
         >
-          <option value="">Не закреплено</option>
+          <option value="">{t("managerAssignNone")}</option>
           {(points ?? []).map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -95,14 +98,12 @@ export function ManagerRentalPointInline({
           onClick={save}
           className="inline-flex h-10 min-h-10 min-w-[7.5rem] shrink-0 items-center justify-center rounded-[10px] bg-[var(--accent)] px-4 text-[13px] font-semibold text-white shadow-sm ring-1 ring-black/15 transition-[transform,filter] hover:brightness-[1.06] active:scale-[0.99] disabled:opacity-50"
         >
-          {saving ? "…" : "Сохранить"}
+          {saving ? "…" : tCommon("save")}
         </button>
       </div>
       {disabledReason ? <p className="mt-1.5 text-[11px] text-amber-700 dark:text-amber-300">{disabledReason}</p> : null}
       {err ? <p className="mt-1.5 text-[11px] text-red-600">{err}</p> : null}
-      <p className="mt-1.5 text-[10px] leading-snug text-[var(--muted2)] sm:text-[11px]">
-        Видят только директор и главный менеджер. Сводка — в «Точки продаж».
-      </p>
+      <p className="mt-1.5 text-[10px] leading-snug text-[var(--muted2)] sm:text-[11px]">{t("managerAssignHint")}</p>
     </div>
   );
 }

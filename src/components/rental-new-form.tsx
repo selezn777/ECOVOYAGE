@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 export function RentalNewForm() {
   const router = useRouter();
+  const t = useTranslations("rental");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export function RentalNewForm() {
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string; id?: string };
       if (!res.ok) {
-        setErr(typeof j.error === "string" ? j.error : `Ошибка ${res.status}`);
+        setErr(typeof j.error === "string" ? j.error : t("errorStatus", { status: res.status }));
         return;
       }
       if (j.id) router.push(`/rentals/${j.id}`);
@@ -35,18 +37,18 @@ export function RentalNewForm() {
   return (
     <form onSubmit={(e) => void submit(e)} className="card mb-3 flex flex-wrap items-end gap-2">
       <label className="flex min-w-[200px] flex-1 flex-col gap-1 text-xs">
-        <span className="text-[var(--muted2)]">Новая точка - название</span>
+        <span className="text-[var(--muted2)]">{t("newPointNameLabel")}</span>
         <input
           className="field-surface rounded-xl px-3 py-2 text-sm"
           value={name}
           onChange={(e) => setName(e.target.value)}
           disabled={busy}
-          placeholder="напр. Офис Нячанг"
+          placeholder={t("newPointNamePlaceholder")}
         />
       </label>
       {err ? <p className="w-full text-sm text-red-600 dark:text-red-400">{err}</p> : null}
       <button type="submit" className="btn-primary disabled:opacity-50" disabled={busy || !name.trim()}>
-        Создать
+        {t("createBtn")}
       </button>
     </form>
   );

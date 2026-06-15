@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 import { RentalNewForm } from "@/components/rental-new-form";
 import { TopNav } from "@/components/top-nav";
 import { formatVnd } from "@/lib/format";
-import { formatYmdWithWeekdayRu } from "@/lib/scheduling";
+import { formatYmdWithWeekday } from "@/lib/scheduling";
 import { listRentalPoints } from "@/lib/data";
 import { requireRoles } from "@/lib/auth-session";
 import { RENTALS_PAGE_ROLES } from "@/lib/role-policy";
@@ -10,19 +11,19 @@ import { RENTALS_PAGE_ROLES } from "@/lib/role-policy";
 export default async function RentalsPage() {
   const user = await requireRoles([...RENTALS_PAGE_ROLES]);
   const points = await listRentalPoints();
+  const t = await getTranslations("rental");
+  const locale = await getLocale();
 
   return (
     <main className="app-wrap app-wrap--wide">
       <TopNav user={user} />
       <header className="mb-3">
-        <h1 className="text-lg font-semibold">Аренда турточек</h1>
-        <p className="mt-1 text-sm text-[var(--muted)]">
-          Учёт аренды, даты платежей, расходов и закрытых дней. Доступ: бухгалтерия и главный диспетчер.
-        </p>
+        <h1 className="text-lg font-semibold">{t("pageTitle")}</h1>
+        <p className="mt-1 text-sm text-[var(--muted)]">{t("pageDescription")}</p>
       </header>
       <RentalNewForm />
       {points.length === 0 ? (
-        <p className="text-sm text-[var(--muted)]">Точек пока нет - создайте первую.</p>
+        <p className="text-sm text-[var(--muted)]">{t("noPointsYet")}</p>
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {points.map((p) => (
@@ -34,8 +35,10 @@ export default async function RentalsPage() {
                 {p.name}
               </Link>
               <p className="text-xs text-[var(--muted)]">
-                Аренда {formatVnd(p.monthlyRentVnd)}/мес · следующая оплата{" "}
-                {p.nextRentPaymentDate ? formatYmdWithWeekdayRu(p.nextRentPaymentDate) : "не назначена"}
+                {t("pointListRentLine", {
+                  amount: formatVnd(p.monthlyRentVnd),
+                  date: p.nextRentPaymentDate ? formatYmdWithWeekday(p.nextRentPaymentDate, locale) : t("notAssigned"),
+                })}
               </p>
               {p.addressNote ? <p className="text-xs text-[var(--muted2)]">{p.addressNote}</p> : null}
             </li>

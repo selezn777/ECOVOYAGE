@@ -2,10 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { FullscreenImageLightbox } from "@/components/fullscreen-image-lightbox";
 import { formatVnd, formatVndInput, parseVndInput } from "@/lib/format";
 import type { RentalPointDetail } from "@/lib/types";
-import { formatYmdWithWeekdayRu, tourDateHeaderPartsRu } from "@/lib/scheduling";
+import { formatYmdWithWeekday, tourDateHeaderParts } from "@/lib/scheduling";
 import { showConfirm } from "@/lib/ui-dialog";
 
 function localYmd(d: Date): string {
@@ -35,6 +36,8 @@ function addOneMonthSameDayOrLast(ymd: string): string | null {
 
 export function RentalPointDetailClient({ initial }: { initial: RentalPointDetail }) {
   const router = useRouter();
+  const t = useTranslations("rental");
+  const locale = useLocale();
   const pointPhotoInputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -108,7 +111,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
     setErr(null);
     const nameTrim = pointName.trim();
     if (!nameTrim) {
-      setErr("Введите название точки.");
+      setErr(t("errEnterPointName"));
       return;
     }
     const rentVnd = parseVndInput(monthlyStr);
@@ -126,7 +129,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
         }),
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) setErr(typeof j.error === "string" ? j.error : `Ошибка ${res.status}`);
+      if (!res.ok) setErr(typeof j.error === "string" ? j.error : t("errorStatus", { status: res.status }));
       else router.refresh();
     } finally {
       setBusy(false);
@@ -134,7 +137,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
   }
 
   async function deletePoint() {
-    const ok = await showConfirm("Удалить точку продаж? Это действие необратимо.");
+    const ok = await showConfirm(t("deletePointConfirm"));
     if (!ok) return;
     setErr(null);
     setBusy(true);
@@ -142,7 +145,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
       const res = await fetch(`/api/rental-points/${encodeURIComponent(initial.id)}`, { method: "DELETE" });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setErr(typeof j.error === "string" ? j.error : `Ошибка ${res.status}`);
+        setErr(typeof j.error === "string" ? j.error : t("errorStatus", { status: res.status }));
         return;
       }
       router.push("/rentals");
@@ -162,7 +165,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
       const up = await fetch("/api/uploads", { method: "POST", body: fd });
       const uj = (await up.json().catch(() => ({}))) as { error?: string; url?: string };
       if (!up.ok || typeof uj.url !== "string") {
-        setErr(typeof uj.error === "string" ? uj.error : "Загрузка не удалась");
+        setErr(typeof uj.error === "string" ? uj.error : t("errUploadFailed"));
         return;
       }
       const res = await fetch(`/api/rental-points/${encodeURIComponent(initial.id)}`, {
@@ -171,7 +174,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
         body: JSON.stringify({ photoUrl: uj.url }),
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) setErr(typeof j.error === "string" ? j.error : `Ошибка ${res.status}`);
+      if (!res.ok) setErr(typeof j.error === "string" ? j.error : t("errorStatus", { status: res.status }));
       else router.refresh();
     } finally {
       setBusy(false);
@@ -186,7 +189,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
     const up = await fetch("/api/uploads", { method: "POST", body: fd });
     const uj = (await up.json().catch(() => ({}))) as { error?: string; url?: string };
     if (!up.ok || typeof uj.url !== "string") {
-      setErr(typeof uj.error === "string" ? uj.error : "Не удалось загрузить фото");
+      setErr(typeof uj.error === "string" ? uj.error : t("errPhotoUploadFailed"));
       return null;
     }
     return uj.url;
@@ -195,15 +198,15 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
   async function addExpense() {
     const amt = parseVndInput(expAmountStr);
     if (!expTitle.trim()) {
-      setErr("Введите название расхода.");
+      setErr(t("errEnterExpenseName"));
       return;
     }
     if (amt < 1) {
-      setErr("Введите сумму расхода больше 0.");
+      setErr(t("errExpenseAmountPositive"));
       return;
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(expDate)) {
-      setErr("Укажите корректную дату расхода.");
+      setErr(t("errExpenseDateInvalid"));
       return;
     }
     setErr(null);
@@ -236,7 +239,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
             ? j.error
             : textFallback.trim()
               ? textFallback.trim().slice(0, 240)
-              : `Ошибка ${res.status}`,
+              : t("errorStatus", { status: res.status }),
         );
       }
       else {
@@ -264,7 +267,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
         }),
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) setErr(typeof j.error === "string" ? j.error : `Ошибка ${res.status}`);
+      if (!res.ok) setErr(typeof j.error === "string" ? j.error : t("errorStatus", { status: res.status }));
       else {
         setClosedNote("");
         router.refresh();
@@ -277,11 +280,11 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
   async function addRentPayment() {
     const amountVnd = parseVndInput(rentPaymentAmountStr);
     if (amountVnd < 1) {
-      setErr("Укажите сумму оплаты аренды больше 0.");
+      setErr(t("errRentAmountPositive"));
       return;
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(rentPaidOn)) {
-      setErr("Выберите дату оплаты аренды.");
+      setErr(t("errRentDateRequired"));
       return;
     }
     setErr(null);
@@ -300,7 +303,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setErr(typeof j.error === "string" ? j.error : `Ошибка ${res.status}`);
+        setErr(typeof j.error === "string" ? j.error : t("errorStatus", { status: res.status }));
       } else {
         setRentPaymentAmountStr("");
         setRentPaymentNote("");
@@ -317,31 +320,31 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
       {err ? <p className="text-sm text-red-600 dark:text-red-400">{err}</p> : null}
 
       <section className="card">
-        <h2 className="mb-2 text-base font-semibold">Карточка точки</h2>
+        <h2 className="mb-2 text-base font-semibold">{t("pointCardTitle")}</h2>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-xs sm:col-span-2">
-            <span className="text-[var(--muted2)]">Название точки</span>
+            <span className="text-[var(--muted2)]">{t("pointNameLabel")}</span>
             <input
               className="field-surface rounded-xl px-3 py-2 text-sm"
               value={pointName}
               onChange={(e) => setPointName(e.target.value)}
               disabled={busy}
-              placeholder="Например: Citadines"
+              placeholder={t("pointNamePlaceholder")}
             />
           </label>
           <label className="flex flex-col gap-1 text-xs sm:col-span-2">
-            <span className="text-[var(--muted2)]">Аренда в месяц, ₫ (точная сумма)</span>
+            <span className="text-[var(--muted2)]">{t("monthlyRentLabel")}</span>
             <input
               className="field-surface rounded-xl px-3 py-2 text-sm tabular-nums"
               value={monthlyStr}
               onChange={(e) => onMonthlyStrChange(e.target.value)}
               disabled={busy}
               inputMode="numeric"
-              placeholder="например 15.000.000"
+              placeholder={t("amountPlaceholderExample")}
             />
           </label>
           <label className="flex flex-col gap-1 text-xs">
-            <span className="text-[var(--muted2)]">Следующая дата оплаты аренды</span>
+            <span className="text-[var(--muted2)]">{t("nextRentDateLabel")}</span>
             <input
               type="date"
               className="field-surface rounded-xl px-3 py-2 text-sm"
@@ -351,7 +354,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
             />
           </label>
           <label className="flex flex-col gap-1 text-xs sm:col-span-2">
-            <span className="text-[var(--muted2)]">Адрес / ориентир</span>
+            <span className="text-[var(--muted2)]">{t("addressLabel")}</span>
             <input
               className="field-surface rounded-xl px-3 py-2 text-sm"
               value={address}
@@ -360,7 +363,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
             />
           </label>
           <label className="sm:col-span-2 flex flex-col gap-1 text-xs">
-            <span className="text-[var(--muted2)]">Заметки</span>
+            <span className="text-[var(--muted2)]">{t("notesLabel")}</span>
             <textarea
               className="field-surface min-h-[72px] rounded-xl px-3 py-2 text-sm"
               value={notes}
@@ -377,7 +380,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
             disabled={busy}
             onClick={() => void saveMeta()}
           >
-            Сохранить реквизиты
+            {t("saveDetails")}
           </button>
           <button
             type="button"
@@ -385,7 +388,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
             disabled={busy}
             onClick={() => void deletePoint()}
           >
-            Удалить точку
+            {t("deletePoint")}
           </button>
         </div>
 
@@ -403,11 +406,8 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
         />
 
         <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)]/60 p-3 ring-1 ring-[var(--border)]/60">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">Фото точки</div>
-          <p className="mt-1 text-xs leading-snug text-[var(--muted)]">
-            Снимок для диспетчера и шеф-менеджера. Загрузить или заменить — одной кнопкой; открыть — во весь экран или в новой
-            вкладке.
-          </p>
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("pointPhotoTitle")}</div>
+          <p className="mt-1 text-xs leading-snug text-[var(--muted)]">{t("pointPhotoHint")}</p>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <button
               type="button"
@@ -415,7 +415,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
               disabled={busy}
               onClick={() => pointPhotoInputRef.current?.click()}
             >
-              {initial.photoUrl ? "Заменить фото" : "Загрузить фото"}
+              {initial.photoUrl ? t("photoReplace") : t("photoUpload")}
             </button>
             {initial.photoUrl ? (
               <>
@@ -425,7 +425,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
                   disabled={busy}
                   onClick={() => setPointPhotoLightboxOpen(true)}
                 >
-                  Открыть
+                  {t("photoOpen")}
                 </button>
                 <button
                   type="button"
@@ -433,7 +433,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
                   disabled={busy}
                   onClick={() => window.open(initial.photoUrl!, "_blank", "noopener,noreferrer")}
                 >
-                  В новой вкладке
+                  {t("photoNewTab")}
                 </button>
               </>
             ) : null}
@@ -444,48 +444,45 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
               className="mt-3 block w-full max-w-sm overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] text-left ring-1 ring-black/5 transition hover:ring-[var(--accent)]/35 disabled:opacity-50"
               disabled={busy}
               onClick={() => setPointPhotoLightboxOpen(true)}
-              aria-label="Открыть фото точки"
+              aria-label={t("pointPhotoOpenAria")}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={initial.photoUrl}
-                alt="Фото точки продаж"
+                alt={t("pointPhotoAlt")}
                 className="max-h-52 w-full object-cover"
               />
             </button>
           ) : (
-            <p className="mt-3 text-xs text-[var(--muted2)]">Фото ещё не загружено.</p>
+            <p className="mt-3 text-xs text-[var(--muted2)]">{t("photoNotLoaded")}</p>
           )}
         </div>
 
         <FullscreenImageLightbox
           src={initial.photoUrl}
-          alt="Фото точки продаж"
+          alt={t("pointPhotoAlt")}
           open={pointPhotoLightboxOpen && Boolean(initial.photoUrl)}
           onClose={() => setPointPhotoLightboxOpen(false)}
         />
       </section>
 
       <section className="card">
-        <h2 className="mb-1 text-base font-semibold">Оплата аренды</h2>
-        <p className="mb-3 text-xs text-[var(--muted)]">
-          Фиксируйте факт оплаты и дату через календарь. Следующая дата автоматически сдвигается на этот же день следующего
-          месяца.
-        </p>
+        <h2 className="mb-1 text-base font-semibold">{t("rentPaymentTitle")}</h2>
+        <p className="mb-3 text-xs text-[var(--muted)]">{t("rentPaymentHint")}</p>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-xs">
-            <span className="text-[var(--muted2)]">Сумма оплаты, ₫</span>
+            <span className="text-[var(--muted2)]">{t("rentAmountLabel")}</span>
             <input
               className="field-surface min-h-[44px] rounded-xl px-3 py-2 text-sm tabular-nums"
               value={rentPaymentAmountStr}
               onChange={(e) => setRentPaymentAmountStr(formatVndInput(parseVndInput(e.target.value)))}
               disabled={busy}
               inputMode="numeric"
-              placeholder="например 15.000.000"
+              placeholder={t("amountPlaceholderExample")}
             />
           </label>
           <label className="flex flex-col gap-1 text-xs">
-            <span className="text-[var(--muted2)]">Дата оплаты</span>
+            <span className="text-[var(--muted2)]">{t("rentDateLabel")}</span>
             <input
               type="date"
               className="field-surface min-h-[44px] rounded-xl px-3 py-2 text-sm"
@@ -495,10 +492,10 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
             />
           </label>
           <label className="flex flex-col gap-1 text-xs sm:col-span-2">
-            <span className="text-[var(--muted2)]">Комментарий (необязательно)</span>
+            <span className="text-[var(--muted2)]">{t("rentCommentLabel")}</span>
             <textarea
               className="field-surface min-h-[72px] rounded-xl px-3 py-2 text-sm"
-              placeholder="Например: оплата за май, наличные"
+              placeholder={t("rentCommentPlaceholder")}
               value={rentPaymentNote}
               onChange={(e) => setRentPaymentNote(e.target.value)}
               disabled={busy}
@@ -512,12 +509,12 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
           disabled={busy}
           onClick={() => void addRentPayment()}
         >
-          Оплатить аренду
+          {t("payRentBtn")}
         </button>
         <ul className="mt-4 space-y-2">
           {initial.rentPayments.length === 0 ? (
             <li className="rounded-lg border border-dashed border-[var(--border)] px-3 py-6 text-center text-sm text-[var(--muted)]">
-              Пока нет оплат аренды.
+              {t("noRentPayments")}
             </li>
           ) : (
             initial.rentPayments.map((p) => (
@@ -526,7 +523,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
                 className="flex flex-col gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 sm:flex-row sm:items-start sm:justify-between"
               >
                 <div>
-                  <div className="text-sm font-semibold text-[var(--text)]">{formatYmdWithWeekdayRu(p.paidOn)}</div>
+                  <div className="text-sm font-semibold text-[var(--text)]">{formatYmdWithWeekday(p.paidOn, locale)}</div>
                   {p.note ? <p className="mt-1 text-sm text-[var(--muted)]">{p.note}</p> : null}
                 </div>
                 <div className="text-base font-semibold tabular-nums text-[var(--text)]">{formatVnd(p.amountVnd)}</div>
@@ -538,14 +535,14 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
 
       <section className="card border-l-4 border-l-amber-500/70">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base font-semibold">Закрытые дни</h2>
+          <h2 className="text-base font-semibold">{t("closedDaysTitle")}</h2>
           <div className="rounded-xl bg-[var(--surface-soft)] px-3 py-1.5 text-sm font-semibold tabular-nums text-[var(--text)] ring-1 ring-[var(--border)]">
-            {initial.closedDaysCount} дн.
+            {t("closedDaysCount", { count: initial.closedDaysCount })}
           </div>
         </div>
         <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
           <label className="flex flex-col gap-1 text-xs">
-            <span className="text-[var(--muted2)]">Дата закрытого дня</span>
+            <span className="text-[var(--muted2)]">{t("closedDayDateLabel")}</span>
             <input
               type="date"
               className="field-surface min-h-[42px] rounded-xl px-3 py-2 text-sm"
@@ -560,14 +557,14 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
             disabled={busy}
             onClick={() => void addClosed()}
           >
-            + Добавить закрытый день
+            {t("addClosedDay")}
           </button>
         </div>
         <label className="mt-2 flex flex-col gap-1 text-xs">
-          <span className="text-[var(--muted2)]">Причина (необязательно)</span>
+          <span className="text-[var(--muted2)]">{t("closedDayReasonLabel")}</span>
           <input
             className="field-surface min-h-[42px] rounded-xl px-3 py-2 text-sm"
-            placeholder="Например: праздник, ремонт"
+            placeholder={t("closedDayReasonPlaceholder")}
             value={closedNote}
             onChange={(e) => setClosedNote(e.target.value)}
             disabled={busy}
@@ -578,11 +575,11 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
         <ul className="mt-4 space-y-2">
           {initial.closedDays.length === 0 ? (
             <li className="rounded-lg border border-dashed border-[var(--border)] px-3 py-6 text-center text-sm text-[var(--muted)]">
-              Пока нет отмеченных дней.
+              {t("noClosedDays")}
             </li>
           ) : (
             initial.closedDays.map((d) => {
-              const parts = tourDateHeaderPartsRu(d.closedDate);
+              const parts = tourDateHeaderParts(d.closedDate, locale);
               return (
                 <li
                   key={d.id}
@@ -598,7 +595,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
                         d.closedDate
                       )}
                     </div>
-                    <div className="text-xs text-[var(--muted)]">{formatYmdWithWeekdayRu(d.closedDate)}</div>
+                    <div className="text-xs text-[var(--muted)]">{formatYmdWithWeekday(d.closedDate, locale)}</div>
                     {d.note ? <p className="mt-1 text-sm text-[var(--muted)]">{d.note}</p> : null}
                   </div>
                 </li>
@@ -609,22 +606,24 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
       </section>
 
       <section className="card">
-        <h2 className="mb-1 text-base font-semibold">Расходы по точке</h2>
-        <p className="mb-3 text-xs text-[var(--muted)]">Итого зафиксировано: {formatVnd(initial.expensesTotalVnd)}</p>
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">Новый расход</p>
+        <h2 className="mb-1 text-base font-semibold">{t("expensesTitle")}</h2>
+        <p className="mb-3 text-xs text-[var(--muted)]">
+          {t("expensesTotal")} {formatVnd(initial.expensesTotalVnd)}
+        </p>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("newExpense")}</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-xs sm:col-span-2">
-            <span className="text-[var(--muted2)]">Название</span>
+            <span className="text-[var(--muted2)]">{t("expenseNameLabel")}</span>
             <input
               className="field-surface min-h-[44px] rounded-xl px-3 py-2 text-sm"
-              placeholder="Например: вода, уборка, мелкий ремонт"
+              placeholder={t("expenseNamePlaceholder")}
               value={expTitle}
               onChange={(e) => setExpTitle(e.target.value)}
               disabled={busy}
             />
           </label>
           <label className="flex flex-col gap-1 text-xs">
-            <span className="text-[var(--muted2)]">Сумма, ₫</span>
+            <span className="text-[var(--muted2)]">{t("expenseAmountLabel")}</span>
             <input
               className="field-surface min-h-[44px] rounded-xl px-3 py-2 text-sm tabular-nums"
               placeholder="0"
@@ -635,7 +634,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
             />
           </label>
           <label className="flex flex-col gap-1 text-xs">
-            <span className="text-[var(--muted2)]">Дата расхода</span>
+            <span className="text-[var(--muted2)]">{t("expenseDateLabel")}</span>
             <input
               type="date"
               className="field-surface min-h-[44px] rounded-xl px-3 py-2 text-sm"
@@ -645,18 +644,18 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
             />
           </label>
           {(() => {
-            const parts = tourDateHeaderPartsRu(expDate);
+            const parts = tourDateHeaderParts(expDate, locale);
             return parts ? (
               <p className="text-xs text-[var(--muted)] sm:col-span-2">
-                В списке: <span className="font-medium text-[var(--text)]">{formatYmdWithWeekdayRu(expDate)}</span>
+                {t("expenseDateListPreview", { date: formatYmdWithWeekday(expDate, locale) })}
               </p>
             ) : null;
           })()}
           <label className="flex flex-col gap-1 text-xs sm:col-span-2">
-            <span className="text-[var(--muted2)]">Комментарий (необязательно)</span>
+            <span className="text-[var(--muted2)]">{t("expenseCommentLabel")}</span>
             <textarea
               className="field-surface min-h-[88px] rounded-xl px-3 py-2 text-sm"
-              placeholder="Детали для бухгалтерии или себя"
+              placeholder={t("expenseCommentPlaceholder")}
               value={expComment}
               onChange={(e) => setExpComment(e.target.value)}
               disabled={busy}
@@ -664,10 +663,10 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
             />
           </label>
           <div className="flex flex-col gap-2 sm:col-span-2">
-            <span className="text-xs text-[var(--muted2)]">Фото чека / накладной (необязательно)</span>
+            <span className="text-xs text-[var(--muted2)]">{t("expensePhotoLabel")}</span>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
               <label className="btn-secondary min-h-[44px] w-full cursor-pointer px-4 disabled:opacity-50 sm:w-auto">
-                Выбрать файл
+                {t("expenseChooseFile")}
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/gif"
@@ -688,7 +687,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
                     disabled={busy}
                     onClick={() => setExpensePhotoLightboxOpen(true)}
                   >
-                    Открыть
+                    {t("photoOpen")}
                   </button>
                   <button
                     type="button"
@@ -696,7 +695,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
                     disabled={busy}
                     onClick={() => setExpPhotoFile(null)}
                   >
-                    Убрать
+                    {t("removeFile")}
                   </button>
                 </>
               ) : null}
@@ -707,12 +706,12 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
                 className="mt-1 block max-w-xs overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] text-left ring-1 ring-black/5 transition hover:ring-[var(--accent)]/30 disabled:opacity-50"
                 disabled={busy}
                 onClick={() => setExpensePhotoLightboxOpen(true)}
-                aria-label="Открыть предпросмотр вложения"
+                aria-label={t("expensePreviewOpenAria")}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={expPhotoPreviewUrl}
-                  alt="Предпросмотр вложения"
+                  alt={t("expensePreviewAlt")}
                   className="max-h-40 w-full object-contain"
                 />
               </button>
@@ -722,7 +721,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
 
         <FullscreenImageLightbox
           src={expPhotoPreviewUrl}
-          alt="Предпросмотр вложения к расходу"
+          alt={t("expensePreviewAlt")}
           open={expensePhotoLightboxOpen && Boolean(expPhotoPreviewUrl)}
           onClose={() => setExpensePhotoLightboxOpen(false)}
         />
@@ -733,13 +732,13 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
           disabled={busy}
           onClick={() => void addExpense()}
         >
-          Добавить расход
+          {t("addExpenseBtn")}
         </button>
 
         <ul className="mt-4 space-y-2">
           {initial.expenses.length === 0 ? (
             <li className="rounded-lg border border-dashed border-[var(--border)] px-3 py-6 text-center text-sm text-[var(--muted)]">
-              Пока нет расходов.
+              {t("noExpenses")}
             </li>
           ) : (
             initial.expenses.map((e) => (
@@ -749,7 +748,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
               >
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-semibold text-[var(--text)]">
-                    {formatYmdWithWeekdayRu(e.expenseDate)} · {e.title}
+                    {formatYmdWithWeekday(e.expenseDate, locale)} · {e.title}
                   </div>
                   {e.note ? <p className="mt-1 text-sm text-[var(--muted)]">{e.note}</p> : null}
                   {e.attachmentUrl ? (
@@ -764,7 +763,7 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
                         alt=""
                         className="h-12 w-12 rounded-md border border-[var(--border)] object-cover"
                       />
-                      Открыть фото
+                      {t("openPhoto")}
                     </a>
                   ) : null}
                 </div>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { RentalPointDetailClient } from "@/components/rental-point-detail-client";
 import { TopNav } from "@/components/top-nav";
 import { getRentalPointById } from "@/lib/data";
@@ -11,6 +12,7 @@ export default async function RentalPointPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const detail = await getRentalPointById(id);
   if (!detail) notFound();
+  const t = await getTranslations("rental");
 
   return (
     <main className="app-wrap app-wrap--wide">
@@ -18,7 +20,7 @@ export default async function RentalPointPage({ params }: { params: Promise<{ id
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-lg font-semibold">{detail.name}</h1>
         <Link href="/rentals" className="text-sm font-medium text-blue-700 underline-offset-2 hover:underline dark:text-blue-400">
-          К списку точек
+          {t("backToList")}
         </Link>
       </div>
       <RentalPointDetailClient initial={detail} />
