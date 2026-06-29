@@ -25,6 +25,9 @@
 *.pem
 android/.idea/
 
+# demo seed rollback log
+scripts/.demo-seed-log.json
+
 # debug
 npm-debug.log*
 yarn-debug.log*
