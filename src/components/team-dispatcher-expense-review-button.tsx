@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { formatVnd } from "@/lib/format";
 import { formatExpenseDescriptionForDisplay } from "@/lib/receipt-expense-description-ru";
@@ -279,9 +280,12 @@ export function TeamDispatcherExpenseReviewButton({
               </div>
               {reviewExpense.attachmentUrl ? (
                 <div className="pt-1">
-                  <img
+                  <Image
                     src={reviewExpense.attachmentUrl}
                     alt="Чек расхода"
+                    width={420}
+                    height={280}
+                    unoptimized
                     className="max-h-56 rounded-lg border border-[var(--border)] object-contain"
                   />
                   <ExpenseAttachmentOpener url={reviewExpense.attachmentUrl} variant="text" text="Открыть фото чека" />

@@ -13,6 +13,7 @@ export interface SalesDayAssignment {
   pointName: string | null;
   promoPlace?: string | null;
   onlineChannel?: string | null;
+  onlineTrafficSource?: "own" | "office" | null;
 }
 
 export function salesDayKind(assignment: SalesDayAssignment | undefined, isOff: boolean): SalesDayStatusKind {

@@ -114,7 +114,6 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       supabase,
       tourId,
       parsed.data.accountantGuideSalaryVnd,
-      actorId,
     );
     if (!sync.ok) {
       return NextResponse.json(

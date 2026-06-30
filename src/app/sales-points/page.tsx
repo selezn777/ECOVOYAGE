@@ -1,6 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { SalesPointAssignmentPanel } from "@/components/sales-point-assignment-panel";
+import { SalesPointsOnlineBoard } from "@/components/sales-points-online-board";
 import { SalesPointsBranchesBoard } from "@/components/sales-points-branches-board";
+import { SalesPointsProfitSummary } from "@/components/sales-points-profit-summary";
 import { SalesPointsStaffBoard } from "@/components/sales-points-staff-board";
 import { SalesPointsWeekGrid } from "@/components/sales-points-week-grid";
 import { TopNav } from "@/components/top-nav";
@@ -88,6 +90,8 @@ export default async function SalesPointsPage({
         <p className="mt-1 text-sm text-[var(--muted)]">{t("subtitle")}</p>
       </header>
 
+      <SalesPointsProfitSummary rows={rows} />
+
       <SalesPointsStaffBoard
         salesStaff={salesStaff}
         todayYmd={todayYmd}
@@ -95,6 +99,12 @@ export default async function SalesPointsPage({
         managerAssignmentsByDay={assignmentSnapshot.managerAssignmentsByDay}
         managerDaysOff={assignmentSnapshot.managerDaysOff}
         efficiency={workLog.efficiency}
+      />
+
+      <SalesPointsOnlineBoard
+        rows={rows}
+        todayYmd={todayYmd}
+        managerAssignmentsByDay={assignmentSnapshot.managerAssignmentsByDay}
       />
 
       <SalesPointsBranchesBoard

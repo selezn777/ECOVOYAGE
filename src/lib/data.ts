@@ -3454,6 +3454,7 @@ export async function getCashDashboardData(
   }
 
   for (const s of gsRows) {
+    if (s.kind === ACCOUNTANT_TOUR_SALARY_KIND) continue;
     const parsedShopEarly = parseShopExtraNote(s.note);
     const isShopKind = guideSalaryPayoutIsOfficialShop(s.kind, s.note);
     const hasShopAcctCols = gsSelect === gsSelectWithShopAcct;
@@ -8124,7 +8125,7 @@ export async function getSalesPointAssignmentSnapshot(
 
   const mp = await supabase
     .from("manager_point_openings")
-    .select("manager_id,point_id,opened_on,work_mode,confirmed_at,promo_place,online_channel")
+    .select("manager_id,point_id,opened_on,work_mode,confirmed_at,promo_place,online_channel,online_traffic_source")
     .in("manager_id", managerIds)
     .gte("opened_on", fromYmd)
     .lte("opened_on", toYmd);
@@ -8138,6 +8139,7 @@ export async function getSalesPointAssignmentSnapshot(
         confirmed_at?: string | null;
         promo_place?: string | null;
         online_channel?: string | null;
+        online_traffic_source?: string | null;
       }[] | null) ?? []);
     const pointIds = [...new Set(openRows.map((r) => String(r.point_id || "")).filter(Boolean))];
     const pointNameById = new Map<string, string>();
@@ -8162,6 +8164,7 @@ export async function getSalesPointAssignmentSnapshot(
         pointName: pointId ? pointNameById.get(pointId) ?? "Точка" : null,
         promoPlace: r.promo_place ? String(r.promo_place) : null,
         onlineChannel: r.online_channel ? String(r.online_channel) : null,
+        onlineTrafficSource: r.online_traffic_source === "office" ? "office" : r.online_traffic_source === "own" ? "own" : null,
       };
       out.managerAssignmentsByDay[managerId] = byDay;
 

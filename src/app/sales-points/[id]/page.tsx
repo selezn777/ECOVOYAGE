@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { SalesPointExpenseRequestsPanel } from "@/components/sales-point-expense-requests-panel";
@@ -70,7 +71,14 @@ export default async function SalesPointDetailsPage({
         </p>
         {pointDetail.photoUrl ? (
           <div className="mt-3 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-soft)]">
-            <img src={pointDetail.photoUrl} alt={t("detail.pointPhotoAlt", { name: row.pointName })} className="h-44 w-full object-cover" />
+            <Image
+              src={pointDetail.photoUrl}
+              alt={t("detail.pointPhotoAlt", { name: row.pointName })}
+              width={900}
+              height={260}
+              unoptimized
+              className="h-44 w-full object-cover"
+            />
           </div>
         ) : (
           <p className="mt-2 text-xs text-[var(--muted)]">{t("detail.pointPhotoMissing")}</p>
@@ -166,4 +174,3 @@ export default async function SalesPointDetailsPage({
     </main>
   );
 }
-

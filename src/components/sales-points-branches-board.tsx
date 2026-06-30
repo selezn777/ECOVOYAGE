@@ -31,6 +31,8 @@ export async function SalesPointsBranchesBoard({
             const pointId = row.pointId as string;
             const address = addressByPointId[pointId];
             const workingNames = workingTodayByPointId[pointId] ?? [];
+            const costsVnd = Math.max(0, row.monthlyRentVnd) + Math.max(0, row.pointExpensesVndInPeriod);
+            const profitVnd = row.paymentsNetVndInPeriod - costsVnd;
             return (
               <Link
                 key={pointId}
@@ -46,21 +48,32 @@ export async function SalesPointsBranchesBoard({
                 ) : (
                   <span className={`mt-2 ${salesStatusBadgeClass("none")}`}>{t("branchesBoard.freeToday")}</span>
                 )}
-                <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
                   <div>
                     <div className="text-[10px] uppercase tracking-wide text-[var(--muted2)]">{t("branchesBoard.revenue")}</div>
                     <div className="mt-0.5 font-semibold tabular-nums text-[var(--text)]">{formatVnd(row.paymentsNetVndInPeriod)}</div>
                   </div>
                   <div>
+                    <div className="text-[10px] uppercase tracking-wide text-[var(--muted2)]">{t("branchesBoard.profit")}</div>
+                    <div className={`mt-0.5 font-semibold tabular-nums ${profitVnd >= 0 ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"}`}>
+                      {formatVnd(profitVnd)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wide text-[var(--muted2)]">{t("branchesBoard.costs")}</div>
+                    <div className="mt-0.5 font-semibold tabular-nums text-[var(--text)]">{formatVnd(costsVnd)}</div>
+                  </div>
+                  <div>
                     <div className="text-[10px] uppercase tracking-wide text-[var(--muted2)]">{t("branchesBoard.bookings")}</div>
                     <div className="mt-0.5 font-semibold tabular-nums text-[var(--text)]">{row.bookingsOnToursInPeriod}</div>
                   </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wide text-[var(--muted2)]">{t("branchesBoard.rating")}</div>
-                    <div className="mt-0.5 tabular-nums text-[var(--muted)]">
-                      {row.managerRatingAvg != null ? `${row.managerRatingAvg} (${row.managerReviewsCount})` : "—"}
-                    </div>
-                  </div>
+                </div>
+                <div className="mt-2 text-[11px] text-[var(--muted2)]">
+                  {t("branchesBoard.costsDetail", {
+                    rent: formatVnd(row.monthlyRentVnd),
+                    expenses: formatVnd(row.pointExpensesVndInPeriod),
+                    rating: row.managerRatingAvg != null ? `${row.managerRatingAvg} (${row.managerReviewsCount})` : "—",
+                  })}
                 </div>
                 <p className="mt-2 text-xs font-medium text-[var(--accent)]">{t("branchesBoard.open")}</p>
               </Link>

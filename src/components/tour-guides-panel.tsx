@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 import type { GuideCandidate, TourGuideSlot } from "@/lib/types";
 import { formatYmdWithWeekday } from "@/lib/scheduling";
 import { showConfirm } from "@/lib/ui-dialog";
@@ -23,9 +24,12 @@ function GuideMiniAvatar({ name, avatarUrl, size = 32 }: { name: string; avatarU
   const s = `${size}px`;
   if (avatarUrl) {
     return (
-      <img
+      <Image
         src={avatarUrl}
         alt={name}
+        width={size}
+        height={size}
+        unoptimized
         style={{ width: s, height: s, minWidth: s }}
         className="shrink-0 rounded-full object-cover ring-1 ring-[var(--border)]"
       />

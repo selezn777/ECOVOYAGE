@@ -5,6 +5,7 @@ import { actorUuidOrNull, isUuidSessionUser } from "@/lib/actor-id";
 import { writeAuditLog } from "@/lib/audit";
 import { getTourGuideSettlementBreakdownForTour } from "@/lib/data";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { ACCOUNTANT_TOUR_SALARY_KIND } from "@/lib/sync-accountant-tour-salary-record";
 
 const proofSchema = z
   .string()
@@ -200,6 +201,12 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     }
     return NextResponse.json({ error: upErr.message }, { status: 500 });
   }
+  await supabase
+    .from("guide_salary_records")
+    .update({ status: "paid", paid_at: nowIso, paid_by: actorId })
+    .eq("tour_id", tourId)
+    .eq("kind", ACCOUNTANT_TOUR_SALARY_KIND)
+    .neq("status", "paid");
   await writeAuditLog(supabase, {
     actorId,
     entity: "tour",

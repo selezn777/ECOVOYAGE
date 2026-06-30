@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -758,9 +759,12 @@ export function RentalPointDetailClient({ initial }: { initial: RentalPointDetai
                       rel="noopener noreferrer"
                       className="mt-2 inline-flex items-center gap-2 text-sm text-blue-600 hover:underline dark:text-blue-400"
                     >
-                      <img
+                      <Image
                         src={e.attachmentUrl}
                         alt=""
+                        width={48}
+                        height={48}
+                        unoptimized
                         className="h-12 w-12 rounded-md border border-[var(--border)] object-cover"
                       />
                       {t("openPhoto")}

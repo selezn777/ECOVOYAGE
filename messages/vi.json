@@ -1245,6 +1245,23 @@
       "guide": "HDV",
       "director": "Giám đốc"
     },
+    "summary": {
+      "title": "Tiền trong kỳ",
+      "hint": "Doanh thu của tất cả chế độ làm việc trừ tiền thuê và chi phí điểm. Online và promo được tách riêng.",
+      "profit": "Lợi nhuận",
+      "revenue": "Doanh thu",
+      "costs": "Chi phí điểm",
+      "bookings": "Booking",
+      "modeBookings": "{n} booking"
+    },
+    "onlineBoard": {
+      "title": "Online",
+      "hint": "Theo dõi riêng quản lý online: ai online hôm nay, kênh và doanh thu trong kỳ.",
+      "empty": "Chưa có doanh thu online hoặc ca online trong kỳ này.",
+      "today": "Online hôm nay",
+      "ownTraffic": "traffic riêng",
+      "officeTraffic": "traffic văn phòng"
+    },
     "staffBoard": {
       "title": "Nhân viên hôm nay",
       "hint": "Trạng thái của mỗi nhân viên hôm nay và chỉ số trong kỳ đã chọn.",
@@ -1267,6 +1284,9 @@
       "freeToday": "Điểm trống hôm nay",
       "revenue": "Doanh thu",
       "bookings": "Booking",
+      "profit": "Lợi nhuận",
+      "costs": "Chi phí",
+      "costsDetail": "Thuê: {rent} · chi phí: {expenses} · đánh giá: {rating}",
       "rating": "Đánh giá",
       "open": "Xem báo cáo điểm"
     },

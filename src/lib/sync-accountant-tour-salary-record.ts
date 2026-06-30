@@ -11,7 +11,6 @@ export async function syncAccountantTourSalaryGuideRecord(
   supabase: SupabaseClient,
   tourId: string,
   salaryVnd: number | null | undefined,
-  paidByUserId: string,
 ): Promise<{ ok: true; affectedGuideId: string | null } | { ok: false; message: string }> {
   const { error: delErr } = await supabase
     .from("guide_salary_records")
@@ -38,9 +37,9 @@ export async function syncAccountantTourSalaryGuideRecord(
     guide_id: primary.guide_id,
     amount_vnd: amount,
     kind: ACCOUNTANT_TOUR_SALARY_KIND,
-    status: "paid",
-    paid_at: new Date().toISOString(),
-    paid_by: paidByUserId,
+    status: "pending",
+    paid_at: null,
+    paid_by: null,
     note: "Зарплата по туру (бухгалтерия)",
   });
   if (insErr) return { ok: false, message: insErr.message };

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
 import { RentalNewForm } from "@/components/rental-new-form";
 import { TopNav } from "@/components/top-nav";
@@ -29,7 +30,7 @@ export default async function RentalsPage() {
           {points.map((p) => (
             <li key={p.id} className="card flex flex-col gap-2">
               {p.photoUrl ? (
-                <img src={p.photoUrl} alt="" className="h-32 w-full rounded-lg object-cover" />
+                <Image src={p.photoUrl} alt="" width={420} height={180} unoptimized className="h-32 w-full rounded-lg object-cover" />
               ) : null}
               <Link href={`/rentals/${p.id}`} className="font-semibold text-[var(--text)] hover:underline">
                 {p.name}

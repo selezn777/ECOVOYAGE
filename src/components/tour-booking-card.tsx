@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -1694,7 +1695,14 @@ export function TourBookingCard({
             <div className="mb-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 ring-1 ring-black/[0.03] dark:ring-white/5">
               <div className="text-xs text-[var(--muted2)]">Фото квитанции</div>
               <a href={receiptPhotoUrl || undefined} target="_blank" rel="noreferrer" className="mt-2 inline-block max-w-full">
-                <img src={receiptPhotoUrl || ""} alt="" className="max-h-56 max-w-full rounded-lg object-contain" />
+                <Image
+                  src={receiptPhotoUrl ?? ""}
+                  alt=""
+                  width={420}
+                  height={280}
+                  unoptimized
+                  className="max-h-56 max-w-full rounded-lg object-contain"
+                />
               </a>
             </div>
           ) : null}

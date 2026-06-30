@@ -1245,6 +1245,23 @@
       "guide": "Guide",
       "director": "Director"
     },
+    "summary": {
+      "title": "Period money",
+      "hint": "Revenue across all work modes minus rent and point expenses. Online and promo are separated so they do not disappear inside rent.",
+      "profit": "Profit",
+      "revenue": "Revenue",
+      "costs": "Point costs",
+      "bookings": "Bookings",
+      "modeBookings": "{n} bookings"
+    },
+    "onlineBoard": {
+      "title": "Online",
+      "hint": "Separate accounting for online managers: who is online today, channel, and period money.",
+      "empty": "No online sales or online shifts in this period yet.",
+      "today": "Online today",
+      "ownTraffic": "own traffic",
+      "officeTraffic": "office traffic"
+    },
     "staffBoard": {
       "title": "Staff today",
       "hint": "Each employee's status for today and their metrics for the selected period.",
@@ -1267,6 +1284,9 @@
       "freeToday": "Point is free today",
       "revenue": "Revenue",
       "bookings": "Bookings",
+      "profit": "Profit",
+      "costs": "Costs",
+      "costsDetail": "Rent: {rent} · expenses: {expenses} · rating: {rating}",
       "rating": "Rating",
       "open": "Open point report"
     },

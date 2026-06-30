@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Role, TourExpense } from "@/lib/types";
@@ -1068,7 +1069,14 @@ export function TourExpensesPanel({
 
                           {editPreviewUrl ? (
                             <div className="mt-2 flex items-start gap-2">
-                              <img src={editPreviewUrl} alt="" className="h-20 w-auto rounded-lg object-contain ring-1 ring-[var(--border)]" />
+                              <Image
+                                src={editPreviewUrl}
+                                alt=""
+                                width={120}
+                                height={80}
+                                unoptimized
+                                className="h-20 w-auto rounded-lg object-contain ring-1 ring-[var(--border)]"
+                              />
                               <button
                                 type="button"
                                 className="text-xs text-[var(--muted)] underline underline-offset-2"
@@ -1229,9 +1237,12 @@ export function TourExpensesPanel({
               </div>
               {reviewModalExpense.attachmentUrl ? (
                 <div className="pt-1">
-                  <img
+                  <Image
                     src={reviewModalExpense.attachmentUrl}
                     alt="Чек расхода"
+                    width={420}
+                    height={280}
+                    unoptimized
                     className="max-h-56 rounded-lg border border-[var(--border)] object-contain"
                   />
                   <ExpenseAttachmentOpener url={reviewModalExpense.attachmentUrl} variant="text" text="Открыть фото чека" />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { PhoneCallLink, WhatsAppBookingLink } from "@/components/tour-actions";
 import { UserRosterPrivacyInline } from "@/components/user-roster-privacy-inline";
 import Link from "next/link";
@@ -340,11 +341,13 @@ export function TeamRosterList({
             </button>
           </div>
           {/* Read-only preview: photo editing is not available in this modal. */}
-          <img
+          <Image
             src={photoPreview.url}
             alt={tT("openPhotoAlt", { name: photoPreview.fullName })}
+            width={640}
+            height={640}
+            unoptimized
             className="max-h-[75vh] w-full rounded-xl object-contain"
-            loading="lazy"
           />
         </div>
       </div>

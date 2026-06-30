@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatVnd, formatVndInput, parseVndInput } from "@/lib/format";
@@ -801,9 +802,12 @@ export function TourGuideExtraEarningsPanel({
                 </div>
 
                 {shopReceiptPreviewUrl ? (
-                  <img
+                  <Image
                     src={shopReceiptPreviewUrl}
                     alt=""
+                    width={320}
+                    height={96}
+                    unoptimized
                     className="mt-2 h-24 w-full max-w-full rounded-lg object-contain ring-1 ring-[var(--border)]"
                   />
                 ) : (() => {
@@ -1217,4 +1221,3 @@ export function TourGuideExtraEarningsPanel({
     </section>
   );
 }
-
