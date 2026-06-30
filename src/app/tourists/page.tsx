@@ -113,9 +113,8 @@ export default async function TouristsPage({
   });
 
   // Группы по датам — без сворачивания
-  function DateAccordion() {
-    return (
-      <>
+  const dateAccordion = (
+    <>
         {dateGroups.map(([dateKey, groupRows]) => {
           const isPastGroup = dateKey !== "no-date" && dateKey < todayYmd;
           const groupLabel = dateKey === "no-date" ? t("noDate") : formatYmdWeekdayLongDmy(dateKey, locale);
@@ -226,9 +225,8 @@ export default async function TouristsPage({
             </div>
           );
         })}
-      </>
-    );
-  }
+    </>
+  );
 
   return (
     <main className="app-wrap app-wrap--wide">
@@ -296,7 +294,7 @@ export default async function TouristsPage({
               ) : null}
             </span>
           </div>
-          <DateAccordion />
+          {dateAccordion}
           {rows.length >= limit ? (
             <p className="mt-2 text-xs text-[var(--muted)]">
               {t("shownOf", { limit })}

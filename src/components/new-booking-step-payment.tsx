@@ -116,7 +116,7 @@ export function NewBookingStepPayment({
       if (u <= 0) continue;
       lines.push({ label: e.label.trim() || "Доп. услуга", amountVnd: Math.round(u * rate) });
     }
-    let sum = lines.reduce((s, l) => s + l.amountVnd, 0);
+    const sum = lines.reduce((s, l) => s + l.amountVnd, 0);
     if (sum !== totalVnd && lines.length) {
       lines[lines.length - 1].amountVnd += totalVnd - sum;
     }

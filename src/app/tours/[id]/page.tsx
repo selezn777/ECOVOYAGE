@@ -242,7 +242,7 @@ export default async function TourDetailsPage({
   /** Гид: только доплата по долгу, только брони своего тура (см. API). */
   const guideDebtTopupBase =
     (user.role === "guide" || user.role === "chief_guide") && assignedAsGuide;
-  // eslint-disable-next-line react-hooks/purity
+
   const nowMs = Date.now();
   /** После 17:00 накануне выезда (Asia/Ho_Chi_Minh) правка/удаление брони недоступны, кроме директора. */
   const bookingPolicyCutoffPassed =

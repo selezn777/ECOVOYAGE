@@ -81,10 +81,6 @@ export function SalesPointAssignmentPanel({
   const blockedByPoint = mode === "point" ? rangeDays.filter((d) => selectedPointBusy.has(d)) : [];
   const invalidRange = rangeDays.length > 14;
 
-  if (!selected) {
-    return <p className="text-sm text-[var(--muted)]">{t("assignment.noManagersFound")}</p>;
-  }
-
   function shiftMonth(delta: number) {
     const [y, m] = monthKey.split("-").map(Number);
     const dt = new Date(y, (m || 1) - 1 + delta, 1);
@@ -102,6 +98,10 @@ export function SalesPointAssignmentPanel({
     while (out.length % 7 !== 0) out.push("");
     return out;
   }, [monthKey]);
+
+  if (!selected) {
+    return <p className="text-sm text-[var(--muted)]">{t("assignment.noManagersFound")}</p>;
+  }
 
   function pickDay(d: string) {
     if (!d) return;
@@ -368,4 +368,3 @@ export function SalesPointAssignmentPanel({
     </div>
   );
 }
-

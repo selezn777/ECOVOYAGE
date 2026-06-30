@@ -81,7 +81,7 @@ async function sendPushBestEffort(
   if (!webPushEnvReady()) return;
   if (!userIds.length) return;
   const unique = [...new Set(userIds)];
-  let subs: { id: string; user_id: string; endpoint: string; p256dh: string; auth: string }[] = [];
+  const subs: { id: string; user_id: string; endpoint: string; p256dh: string; auth: string }[] = [];
   for (let i = 0; i < unique.length; i += 50) {
     const chunk = unique.slice(i, i + 50);
     const { data, error } = await supabase

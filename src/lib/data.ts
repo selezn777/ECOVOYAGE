@@ -3425,7 +3425,7 @@ export async function getCashDashboardData(
     })();
   }
 
-  let gsRows: GsCashRow[] = (gsPaidRes.data as GsCashRow[] | null) || [];
+  const gsRows: GsCashRow[] = (gsPaidRes.data as GsCashRow[] | null) || [];
 
   if (!gsPaidRes.error && gsSelect === gsSelectWithShopAcct) {
     let extraQ = supabase
@@ -5006,7 +5006,7 @@ export async function getTourById(id: string): Promise<Tour | null> {
   const supabase = getSupabaseAdmin();
   if (!supabase) {
     if (process.env.NODE_ENV === "development") {
-      // eslint-disable-next-line no-console
+
       console.warn(
         "[crm] getTourById: нет Supabase admin (проверьте NEXT_PUBLIC_SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY в .env.local). Реальные UUID туров не найдутся - будет 404 на /tours/[id]/accounting.",
       );
@@ -5020,7 +5020,7 @@ export async function getTourById(id: string): Promise<Tour | null> {
   const tourSelectDispatchNoteOnly =
     "id,human_id,name,start_at,end_at,tour_type,capacity,status,template_id,guide_cash_deposit_vnd,accountant_guide_salary_vnd,accountant_salary_sheet_json,guide_settlement_guide_paid_office_at,guide_settlement_guide_paid_office_proof_url,guide_settlement_office_paid_guide_at,guide_settlement_office_paid_guide_proof_url,accountant_dispatch_expenses_note";
 
-  let tourFull = await supabase.from("tours").select(tourSelectWithDispatch).eq("id", id).is("deleted_at", null).single();
+  const tourFull = await supabase.from("tours").select(tourSelectWithDispatch).eq("id", id).is("deleted_at", null).single();
   let tourRow = tourFull.data as DbTour | null;
   let tourErr = tourFull.error;
   if (tourErr && tourErrMissingColumn(tourErr.message, "description_override")) {
@@ -6551,10 +6551,14 @@ export async function listExpensesForTour(tourId: string): Promise<TourExpense[]
   if (!data) {
     // Подсказка для диагностики: что именно не удалось прочитать.
     // (В dev-режиме это будет видно в терминале Next.)
-    // eslint-disable-next-line no-console
+
     console.error("listExpensesForTour: all SELECT attempts failed", {
       tourId,
-      errors: errors.map((e) => (e && typeof e === "object" && "message" in e ? (e as any).message : String(e))),
+      errors: errors.map((e) =>
+        e && typeof e === "object" && "message" in e
+          ? String((e as { message?: unknown }).message)
+          : String(e),
+      ),
     });
     return [];
   }
@@ -7568,7 +7572,27 @@ export async function listGuideSalaryRecordsForTour(
   if (error || !rows)
     return { officialAccruedVnd: 0, officialPaidVnd: 0, totalAccruedVnd: 0, totalPaidVnd: 0, records: [] };
 
-  const mapped = (rows as any[]).map((r) => ({
+  type GuideSalaryRecordRow = {
+    id: string;
+    tour_id: string;
+    guide_id: string;
+    amount_vnd: number | string | null;
+    kind?: string | null;
+    status?: GuideSalaryRecord["status"] | null;
+    created_at: string;
+    paid_at?: string | null;
+    note?: string | null;
+    attachment_url?: string | null;
+    outside_total_vnd?: number | string | null;
+    outside_driver_percent?: number | string | null;
+    outside_driver_fixed_vnd?: number | string | null;
+    shop_driver_paid_by_guide_vnd?: number | string | null;
+    shop_accountant_guide_vnd?: number | string | null;
+    shop_accountant_office_vnd?: number | string | null;
+    shop_accountant_confirmed_at?: string | null;
+  };
+
+  const mapped = (rows as unknown as GuideSalaryRecordRow[]).map((r) => ({
     id: String(r.id),
     tourId: String(r.tour_id),
     guideId: String(r.guide_id),

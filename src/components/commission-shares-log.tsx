@@ -100,6 +100,7 @@ export function CommissionSharesLog({ alwaysOpen }: { alwaysOpen?: boolean }) {
 
   useEffect(() => {
     if (!open) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setErr("");
     fetch("/api/managers/commission-shares", { cache: "no-store" })

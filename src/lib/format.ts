@@ -40,7 +40,7 @@ export function formatUsd(value: number): string {
 
 /** Ввод суммы с разделителями тысяч (800.000). Убираем пробелы, точки (в т.ч. U+FF0E), запятые - без strip всех нецифр, чтобы не ломать пошаговый ввод. */
 export function parseVndInput(raw: string): number {
-  let s = String(raw ?? "")
+  const s = String(raw ?? "")
     .trim()
     .replace(/\s/g, "")
     .replace(/\uFF0E/g, ".")

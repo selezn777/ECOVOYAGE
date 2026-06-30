@@ -12,18 +12,19 @@ import { useTranslations } from "next-intl";
  *      Manifest orientation: "portrait" работает только при запуске.
  */
 export function PortraitLock() {
-  const [landscape, setLandscape] = useState(false);
-  const [standalone, setStandalone] = useState(false);
+  const [landscape, setLandscape] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth > window.innerHeight : false,
+  );
+  const [standalone] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(display-mode: standalone)").matches ||
+        (navigator as { standalone?: boolean }).standalone === true
+      : false,
+  );
 
   useEffect(() => {
-    // Проверяем standalone только один раз при монтировании
-    const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (navigator as { standalone?: boolean }).standalone === true;
-    setStandalone(isStandalone);
-
     // Android: пробуем заблокировать через API
-    if (isStandalone) {
+    if (standalone) {
       const ori = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
       ori?.lock?.("portrait").catch(() => {});
     }
@@ -37,7 +38,7 @@ export function PortraitLock() {
       window.removeEventListener("resize", check);
       screen.orientation?.removeEventListener?.("change", check);
     };
-  }, []);
+  }, [standalone]);
 
   const t = useTranslations("common");
 

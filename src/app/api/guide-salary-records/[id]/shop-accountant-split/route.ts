@@ -91,7 +91,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     shop_accountant_confirmed_at: nowIso,
   };
 
-  let { error } = await supabase.from("guide_salary_records").update(patch).eq("id", recordId);
+  const { error } = await supabase.from("guide_salary_records").update(patch).eq("id", recordId);
   if (error && /shop_accountant_guide_vnd|column|does not exist/i.test(String(error.message))) {
     return NextResponse.json({ error: "Выполните миграцию БД: shop_accountant_* в guide_salary_records." }, { status: 503 });
   }

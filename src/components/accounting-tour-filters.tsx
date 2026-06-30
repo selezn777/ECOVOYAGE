@@ -56,6 +56,7 @@ export function AccountingTourFilters({ tourNames, q, tourExact, preserved, sear
 
   useEffect(() => {
     if (inputRef.current && document.activeElement === inputRef.current) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDraft(appliedText);
   }, [appliedText]);
 

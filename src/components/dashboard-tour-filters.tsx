@@ -79,6 +79,7 @@ export function DashboardTourFilters({
   /** Не перетираем строку во время ввода, пока поле в фокусе (ответ сервера может отставать). */
   useEffect(() => {
     if (inputRef.current && document.activeElement === inputRef.current) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDraft(appliedText);
   }, [appliedText]);
 

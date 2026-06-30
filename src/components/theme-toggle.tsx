@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const STORAGE_KEY = "amx-theme";
 
@@ -11,11 +11,9 @@ export function ThemeToggle({
   compact?: boolean;
   className?: string;
 }) {
-  const [dark, setDark] = useState(false);
-
-  useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
-  }, []);
+  const [dark, setDark] = useState(() =>
+    typeof document !== "undefined" ? document.documentElement.classList.contains("dark") : false,
+  );
 
   function toggle() {
     const next = !document.documentElement.classList.contains("dark");

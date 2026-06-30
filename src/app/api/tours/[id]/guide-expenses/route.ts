@@ -33,6 +33,16 @@ const deleteBodySchema = z.object({
 
 const DUPLICATE_EXPENSE_WINDOW_MS = 45_000;
 
+type ExpenseGuideRow = {
+  id: string;
+  tour_id: string;
+  category: string;
+  created_by: string | null;
+  accountant_reviewed_at?: string | null;
+};
+
+type SupabaseMessageError = { message?: string } | null;
+
 export async function POST(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const session = await getSessionUser();
   if (!session) return NextResponse.json({ error: "Нет авторизации" }, { status: 401 });
@@ -222,9 +232,14 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     .eq("id", expenseId)
     .eq("tour_id", tourId)
     .maybeSingle();
-  let expenseRow: any = null;
-  let expenseSelectErr: any = null;
-  ({ data: expenseRow, error: expenseSelectErr } = (await selectWithReviewedAt) as any);
+  let expenseRow: ExpenseGuideRow | null = null;
+  let expenseSelectErr: SupabaseMessageError = null;
+  const expenseSelectResult = (await selectWithReviewedAt) as unknown as {
+    data: ExpenseGuideRow | null;
+    error: SupabaseMessageError;
+  };
+  expenseRow = expenseSelectResult.data;
+  expenseSelectErr = expenseSelectResult.error;
 
   if (!expenseRow && expenseSelectErr && isMissingAccountantReviewedAtColumn(expenseSelectErr)) {
     const selectWithoutReviewedAt = await supabase
@@ -368,9 +383,14 @@ export async function DELETE(request: Request, ctx: { params: Promise<{ id: stri
     .eq("id", expenseId)
     .eq("tour_id", tourId)
     .maybeSingle();
-  let expenseRow: any = null;
-  let expenseSelectErr: any = null;
-  ({ data: expenseRow, error: expenseSelectErr } = (await selectWithReviewedAt) as any);
+  let expenseRow: ExpenseGuideRow | null = null;
+  let expenseSelectErr: SupabaseMessageError = null;
+  const expenseSelectResult = (await selectWithReviewedAt) as unknown as {
+    data: ExpenseGuideRow | null;
+    error: SupabaseMessageError;
+  };
+  expenseRow = expenseSelectResult.data;
+  expenseSelectErr = expenseSelectResult.error;
 
   if (!expenseRow && expenseSelectErr && isMissingAccountantReviewedAtColumn(expenseSelectErr)) {
     const selectWithoutReviewedAt = await supabase

@@ -28,8 +28,6 @@ export function TopNav({ user }: { user?: SessionUser }) {
   const navHrefs = nav.map((i) => i.href);
   const homeHref = user ? defaultHomePathForRole(user.role) : "/dashboard";
 
-  useEffect(() => { setMenuOpen(false); }, [pathname]);
-
   useEffect(() => {
     if (!menuOpen) return;
     const onDown = (ev: MouseEvent | TouchEvent) => {

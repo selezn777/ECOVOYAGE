@@ -65,6 +65,7 @@ export function NewBookingDraftProvider({ tourId, children }: { tourId: string; 
       if (raw) {
         const d = JSON.parse(raw) as { contact?: NewBookingContactDraft };
         if (d.contact && typeof d.contact === "object") {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setContactState({ ...emptyContact(), ...d.contact });
         }
       }

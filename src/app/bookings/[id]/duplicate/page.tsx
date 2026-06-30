@@ -9,6 +9,22 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { listTours } from "@/lib/data";
 import { formatYmdWithWeekdayRu, tourBusinessTodayYmd } from "@/lib/scheduling";
 
+type BookingSourceRow = {
+  id: string;
+  tour_id: string;
+  manager_id: string;
+  customer_name: string | null;
+  phone_e164: string | null;
+  hotel_name: string | null;
+  room: string | null;
+};
+
+type BookingDuplicateLookupRow = {
+  tour_id: string;
+  customer_name: string | null;
+  phone_e164: string | null;
+};
+
 export default async function DuplicateBookingTourPickerPage({
   params,
   searchParams,
@@ -36,7 +52,8 @@ export default async function DuplicateBookingTourPickerPage({
     notFound();
   }
 
-  const managerId = String((booking as any).manager_id);
+  const bookingRow = booking as unknown as BookingSourceRow;
+  const managerId = String(bookingRow.manager_id);
   const canAccess =
     user.role === "director" ||
     user.role === "chief_manager" ||
@@ -46,15 +63,15 @@ export default async function DuplicateBookingTourPickerPage({
     redirect("/dashboard");
   }
 
-  const tourId = String((booking as any).tour_id);
-  const sourcePhone = String((booking as any).phone_e164 || "").trim();
+  const tourId = String(bookingRow.tour_id);
+  const sourcePhone = String(bookingRow.phone_e164 || "").trim();
   const today = tourBusinessTodayYmd();
   const allTours = await listTours();
   const futureTours = allTours.filter((t) => t.date >= today && t.status !== "deleted");
 
-  const customerName = String((booking as any).customer_name || "").trim() || "Турист";
-  const hotel = String((booking as any).hotel_name || "").trim();
-  const room = String((booking as any).room || "").trim();
+  const customerName = String(bookingRow.customer_name || "").trim() || "Турист";
+  const hotel = String(bookingRow.hotel_name || "").trim();
+  const room = String(bookingRow.room || "").trim();
   const customerNameKey = customerName.toLocaleLowerCase("ru-RU").replace(/\s+/g, " ").trim();
 
   const futureTourIds = futureTours.map((t) => t.id);
@@ -66,7 +83,7 @@ export default async function DuplicateBookingTourPickerPage({
       .in("tour_id", futureTourIds)
       .is("deleted_at", null)
       .limit(1200);
-    for (const r of ((rows as any[]) ?? [])) {
+    for (const r of ((rows as unknown as BookingDuplicateLookupRow[] | null) ?? [])) {
       const samePhone = sourcePhone.length > 0 && String(r.phone_e164 || "") === sourcePhone;
       const sameName = String(r.customer_name || "").toLocaleLowerCase("ru-RU").replace(/\s+/g, " ").trim() === customerNameKey;
       if (samePhone || sameName) duplicateTourIds.add(String(r.tour_id));
@@ -114,7 +131,7 @@ export default async function DuplicateBookingTourPickerPage({
           upcomingTours={upcomingTours}
           q={q}
           tourExact={tourExact}
-          preserved={{ view: "all" } as any}
+          preserved={{ view: "all" }}
           title="Поиск тура"
           hint={null}
           onTourSelectHrefPattern={`/tours/[id]/new-booking?fromBooking=${encodeURIComponent(bookingId)}`}

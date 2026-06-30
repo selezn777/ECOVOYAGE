@@ -1,18 +1,14 @@
 "use client";
 
-import { useTransition, useEffect, useState } from "react";
+import { useTransition, useState } from "react";
 import { setLocale } from "@/app/actions/set-locale";
 import { locales, defaultLocale, type Locale } from "@/i18n/config";
 
 const labels: Record<Locale, string> = { ru: "Рус", en: "Eng", vi: "Việt" };
 
 export function LanguageSwitcher({ onSelect }: { onSelect?: () => void }) {
-  const [current, setCurrent] = useState<Locale>(defaultLocale);
+  const [current, setCurrent] = useState<Locale>(() => getCurrentLocale());
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    setCurrent(getCurrentLocale());
-  }, []);
 
   return (
     <div className="flex w-full min-w-0 overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--surface-elevated)]">
