@@ -136,7 +136,7 @@ export function TourDescriptionPanelContent({
         </div>
       ) : null}
 
-      <div className="action-row mt-4">
+      <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => void onCopyWhatsapp()}

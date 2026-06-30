@@ -200,7 +200,7 @@ export function WhatsAppBookingLink({
   phone,
   className,
   prefillMessage,
-  label = "WhatsApp",
+  label = "Контакты",
   onOpen,
 }: {
   phone: string;
