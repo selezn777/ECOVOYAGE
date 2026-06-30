@@ -49,7 +49,6 @@ export async function POST(
 
   const depositVnd = Number((booking as { deposit_vnd?: number }).deposit_vnd ?? 0);
   const totalVnd = totalVndFromBody ?? depositVnd;
-  const managerId = String((booking as { manager_id: string }).manager_id);
   const tourId = String((booking as { tour_id: string }).tour_id);
   const customerName = String((booking as { customer_name?: string }).customer_name ?? "Турист");
   const onlineCode = String((booking as { online_code?: string | null }).online_code ?? "").trim();

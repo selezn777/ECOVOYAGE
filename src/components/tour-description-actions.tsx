@@ -433,7 +433,6 @@ export function TourDescriptionDialog({
 }
 
 export function TourDescriptionActions({
-  tourId: _tourId,
   tourName,
   tourDate,
   pickupWindow,

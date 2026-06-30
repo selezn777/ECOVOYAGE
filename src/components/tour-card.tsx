@@ -57,16 +57,6 @@ function normalizeBusInfoForDisplay(s: string): string {
 
 const BUS_BLOCK_SEP = /\n\n────────\n\n/;
 
-/** Склонение «место» для фразы «осталось N …» (N = 1…3 на карточке). */
-function ruMesto(n: number): string {
-  const k = n % 100;
-  if (k >= 11 && k <= 14) return "мест";
-  const k10 = n % 10;
-  if (k10 === 1) return "место";
-  if (k10 >= 2 && k10 <= 4) return "места";
-  return "мест";
-}
-
 function IconUsersOpen({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>

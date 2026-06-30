@@ -85,13 +85,6 @@ function initialVisibleBookingIds(
   return [];
 }
 
-function hasSavedAbsenceData(saved: TourManifestAbsence[]): boolean {
-  return saved.some(
-    (a) =>
-      a.absentAdults + a.absentChildren + a.absentInfants > 0 || (a.note ?? "").trim().length > 0,
-  );
-}
-
 function absenceLinesSignature(lines: AbsenceLine[]): string {
   return [...lines]
     .sort((a, b) => a.bookingId.localeCompare(b.bookingId))
@@ -196,7 +189,7 @@ export function TourManifestPanel({
   /** Снимок неявок с сервера - чтобы шапка совпадала с SSR и не ломала гидрацию, пока гид не менял карточки. */
   const baselineAbsenceLines = useMemo(
     () => buildLinesFromBookings(bookings, initialAbsences),
-    [bookingSig, initialAbsences, bookings],
+    [initialAbsences, bookings],
   );
 
   const linesDirtyVsServer = useMemo(

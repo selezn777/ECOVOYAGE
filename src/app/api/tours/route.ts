@@ -261,11 +261,11 @@ export async function POST(request: Request) {
   let error: { message?: string } | null = null;
   const ins = await supabase.from("tours").insert([insertRow]).select("id,start_at");
   if (ins.error && /description_override|column|does not exist/i.test(String(ins.error.message))) {
+    const legacyInsertRow = { ...insertRow };
+    delete legacyInsertRow.description_override;
     const ins2 = await supabase
       .from("tours")
-      .insert([
-        (({ description_override: _drop, ...rest }) => rest)(insertRow),
-      ])
+      .insert([legacyInsertRow])
       .select("id,start_at");
     createdRows = ins2.data as { id: string; start_at: string }[] | null;
     error = ins2.error;

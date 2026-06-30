@@ -652,15 +652,18 @@ export function CashManualEntryForm({
                   placeholder="Название или дата…"
                   disabled={busy || sortedTourOptions.length === 0}
                   autoComplete="off"
+                  role="combobox"
                   aria-autocomplete="list"
+                  aria-controls="cash-manual-tour-listbox"
                   aria-expanded={tourPickerOpen}
                 />
                 {tourPickerOpen && !busy && sortedTourOptions.length > 0 ? (
                   <ul
+                    id="cash-manual-tour-listbox"
                     role="listbox"
                     className="absolute left-0 right-0 z-[60] mt-1 max-h-60 overflow-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] py-1 shadow-[var(--shadow-lg)] ring-1 ring-black/10 dark:ring-white/10"
                   >
-                    <li role="option">
+                    <li role="option" aria-selected={tourId === ""}>
                       <button
                         type="button"
                         className="w-full px-3 py-2.5 text-left text-sm text-[var(--muted)] hover:bg-[var(--surface-soft)]"
@@ -681,7 +684,7 @@ export function CashManualEntryForm({
                       <li className="px-3 py-2 text-xs text-[var(--muted)]">Ничего не найдено.</li>
                     ) : (
                       filteredTourOptions.map((o) => (
-                        <li key={o.id} role="option">
+                        <li key={o.id} role="option" aria-selected={tourId === o.id}>
                           <button
                             type="button"
                             className="w-full px-3 py-2.5 text-left text-sm text-[var(--text)] hover:bg-[var(--accent-soft)]"

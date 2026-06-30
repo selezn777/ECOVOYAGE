@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { normalizePhone, formatVnd } from "@/lib/format";
 import { HotelPickerField } from "@/components/hotel-picker-field";
 

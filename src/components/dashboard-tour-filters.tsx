@@ -63,9 +63,6 @@ export function DashboardTourFilters({
   q,
   tourExact,
   preserved,
-  title = "Поиск по названию тура",
-  hint = "Сужает список ниже: введите часть названия или выберите из подсказок, затем «Найти».",
-  onTourSelectHrefPattern = "/tours/[id]",
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -192,6 +189,7 @@ export function DashboardTourFilters({
                   <button
                     type="button"
                     role="option"
+                    aria-selected={tour.name === tourExact}
                     className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-[var(--surface-soft)]"
                     onMouseDown={(ev) => ev.preventDefault()}
                     onTouchStart={(ev) => ev.preventDefault()}

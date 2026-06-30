@@ -41,8 +41,6 @@ export function DirectorViewAsControl({ effectiveRole }: { effectiveRole: Role }
     }
   }
 
-  const currentLabel = OPTIONS.find((o) => o.value === current)?.label ?? t("roleDirector");
-
   return (
     <>
       {/* Mobile: компактный бейдж-селектор роли */}

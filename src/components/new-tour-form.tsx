@@ -163,7 +163,6 @@ export function NewTourForm({ initialDate = "", viewerRole }: { initialDate?: st
   const [templateBusy, setTemplateBusy] = useState(false);
   const [templateForm, setTemplateForm] = useState<TemplateCreateForm>(TEMPLATE_INITIAL);
   const [manualTime, setManualTime] = useState(false);
-  const [templateSearch, setTemplateSearch] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const templateBaselineRef = useRef<TemplateBaseline | null>(null);
 

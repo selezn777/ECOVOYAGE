@@ -67,10 +67,8 @@ export function GoogleMapsUrlField({ register, setValue, label = "Ссылка G
   }
   const rr = !controlled && register ? register : null;
   const ref = rr?.ref;
-  const rest = rr ? (() => {
-    const { ref: _ignore, ...x } = rr;
-    return x;
-  })() : {};
+  const rest: Record<string, unknown> = rr ? { ...rr } : {};
+  delete rest.ref;
 
   function openMaps() {
     const mapsUrl = "https://www.google.com/maps";

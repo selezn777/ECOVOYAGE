@@ -115,7 +115,9 @@ export async function allocateHandoverAmountToBooking(
     };
     let { error: insErr } = await supabase.from("payments").insert([insertRow]);
     if (insErr && /remitted_to_cash_at|column|does not exist/i.test(String(insErr.message))) {
-      const { remitted_to_cash_at: _a, remitted_to_cash_by: _b, ...legacy } = insertRow;
+      const legacy: Record<string, unknown> = { ...insertRow };
+      delete legacy.remitted_to_cash_at;
+      delete legacy.remitted_to_cash_by;
       ({ error: insErr } = await supabase.from("payments").insert([legacy]));
     }
     if (insErr) return { ok: false, error: insErr.message };

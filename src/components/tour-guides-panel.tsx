@@ -59,7 +59,7 @@ export function TourGuidesPanel({ tourId, embedded = false }: { tourId: string; 
       return;
     }
     setState(json as State);
-  }, [tourId]);
+  }, [tourId, t]);
 
   useEffect(() => { void load(); }, [load]);
 

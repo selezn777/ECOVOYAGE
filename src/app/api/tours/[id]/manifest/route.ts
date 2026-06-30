@@ -135,7 +135,8 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
       };
       let insErr = (await supabase.from("tour_manifests").insert(insertRow)).error;
       if (insErr && isMissingNeedsAccountantReviewColumnError(insErr.message)) {
-        const { needs_accountant_review: _n, ...rest } = insertRow;
+        const rest: Record<string, unknown> = { ...insertRow };
+        delete rest.needs_accountant_review;
         insErr = (await supabase.from("tour_manifests").insert(rest)).error;
       }
       if (insErr) return NextResponse.json({ error: insErr.message }, { status: 500 });
@@ -173,7 +174,8 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     };
     let upErr = (await supabase.from("tour_manifests").update(updateRow).eq("tour_id", tourId)).error;
     if (upErr && isMissingNeedsAccountantReviewColumnError(upErr.message)) {
-      const { needs_accountant_review: _n, ...rest } = updateRow;
+      const rest: Record<string, unknown> = { ...updateRow };
+      delete rest.needs_accountant_review;
       upErr = (await supabase.from("tour_manifests").update(rest).eq("tour_id", tourId)).error;
     }
     if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
@@ -281,7 +283,8 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   };
   let manErr = (await supabase.from("tour_manifests").upsert(upsertRow, { onConflict: "tour_id" })).error;
   if (manErr && isMissingNeedsAccountantReviewColumnError(manErr.message)) {
-    const { needs_accountant_review: _n, ...rest } = upsertRow;
+    const rest: Record<string, unknown> = { ...upsertRow };
+    delete rest.needs_accountant_review;
     manErr = (await supabase.from("tour_manifests").upsert(rest, { onConflict: "tour_id" })).error;
   }
   if (manErr) return NextResponse.json({ error: manErr.message }, { status: 500 });

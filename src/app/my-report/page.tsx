@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { getTranslations } from "next-intl/server";
 import { TopNav } from "@/components/top-nav";
 import { MyReportMonthPicker } from "@/components/my-report-month-picker";
 import { CommissionSharesLog } from "@/components/commission-shares-log";

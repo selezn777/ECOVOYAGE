@@ -13,13 +13,12 @@ import {
   listToursForDashboard,
   mergeGuideDashboardExpenseBadges,
 } from "@/lib/data";
-import { formatYmdWithWeekday, tourBusinessTodayYmd } from "@/lib/scheduling";
+import { tourBusinessTodayYmd } from "@/lib/scheduling";
 import { canCreateTour } from "@/lib/role-policy";
 import { DashboardAutoRefresh } from "@/components/dashboard-auto-refresh";
-import { BookingsByHourChart } from "@/components/bookings-by-hour-chart";
 import { CommissionSharesLog } from "@/components/commission-shares-log";
 import { DashboardTourListClient } from "@/components/dashboard-tour-list-client";
-import type { Tour, TourFeedMode } from "@/lib/types";
+import type { TourFeedMode } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -51,8 +50,6 @@ type DashboardSearchParams = {
   range?: string | string[];
 };
 
-type TourNameGroup = { name: string; items: Tour[]; totalBooked: number };
-
 function isPartnerTour(name: string): boolean {
   const n = name.toLowerCase();
   return (
@@ -62,44 +59,6 @@ function isPartnerTour(name: string): boolean {
     n.includes("круиз") ||
     n.includes("рыбалк")
   );
-}
-
-/** Туры одного дня → под-группы по названию.
- * Порядок: сначала свои туры (по заполненности убывание), потом партнёрские. */
-function groupToursByName(tours: Tour[]): TourNameGroup[] {
-  const nameMap = new Map<string, Tour[]>();
-  for (const t of tours) {
-    const arr = nameMap.get(t.name) ?? [];
-    arr.push(t);
-    nameMap.set(t.name, arr);
-  }
-  return [...nameMap.entries()]
-    .map(([name, items]) => ({
-      name,
-      items: items.slice().sort((a, b) => (b.booked ?? 0) - (a.booked ?? 0)),
-      totalBooked: items.reduce((s, t) => s + (t.booked ?? 0), 0),
-    }))
-    .sort((a, b) => {
-      const ap = isPartnerTour(a.name) ? 1 : 0;
-      const bp = isPartnerTour(b.name) ? 1 : 0;
-      if (ap !== bp) return ap - bp;
-      return b.totalBooked - a.totalBooked || a.name.localeCompare(b.name, "ru");
-    });
-}
-
-function groupToursByDate(tours: Tour[]): { date: string; nameGroups: TourNameGroup[] }[] {
-  const order: string[] = [];
-  const map = new Map<string, Tour[]>();
-  for (const t of tours) {
-    if (!map.has(t.date)) order.push(t.date);
-    const arr = map.get(t.date) ?? [];
-    arr.push(t);
-    map.set(t.date, arr);
-  }
-  return order.map((date) => ({
-    date,
-    nameGroups: groupToursByName(map.get(date) ?? []),
-  }));
 }
 
 function monthFromYmd(ymd: string): string {
@@ -120,20 +79,6 @@ function monthTitleRu(month: string): string {
   const [y, m] = month.split("-").map(Number);
   const dt = new Date(y, (m || 1) - 1, 1);
   return dt.toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
-}
-
-function calendarDays(month: string): string[] {
-  const [y, m] = month.split("-").map(Number);
-  const first = new Date(y, (m || 1) - 1, 1);
-  const daysInMonth = new Date(y, m || 1, 0).getDate();
-  const offset = (first.getDay() + 6) % 7;
-  const cells: string[] = [];
-  for (let i = 0; i < offset; i += 1) cells.push("");
-  for (let d = 1; d <= daysInMonth; d += 1) {
-    cells.push(`${month}-${String(d).padStart(2, "0")}`);
-  }
-  while (cells.length % 7 !== 0) cells.push("");
-  return cells;
 }
 
 function withDashboardParams(base: {
@@ -162,8 +107,6 @@ export default async function DashboardPage({
   searchParams: Promise<DashboardSearchParams>;
 }) {
   const t = await getTranslations("dashboard");
-  const { getLocale } = await import("next-intl/server");
-  const locale = await getLocale();
   const VIEW_LABELS: Record<TourFeedMode, string> = {
     all: t("allTours"),
     my_tours: t("myTours"),
@@ -233,24 +176,6 @@ export default async function DashboardPage({
     })() : Promise.resolve(null),
   ]);
 
-  const upcomingTours = toursRaw
-    .filter((t) => t.date >= tourBusinessTodayYmd() && t.status !== "deleted" && t.status !== "completed")
-    .sort((a, b) => {
-      const byDate = a.date.localeCompare(b.date);
-      if (byDate !== 0) return byDate;
-      const ap = isPartnerTour(a.name) ? 1 : 0;
-      const bp = isPartnerTour(b.name) ? 1 : 0;
-      if (ap !== bp) return ap - bp;
-      return (b.booked ?? 0) - (a.booked ?? 0);
-    })
-    .map((t) => ({
-      id: t.id,
-      name: t.name,
-      dateLabel: formatYmdWithWeekday(t.date, locale),
-      booked: t.booked,
-      capacity: t.capacity,
-    }));
-
   const today = tourBusinessTodayYmd();
   const ignoreCalendarForGuideTrips = isGuideRole && view === "my_trips";
   const effectiveRange: RangeMode = ignoreCalendarForGuideTrips ? "all" : range;
@@ -304,20 +229,6 @@ export default async function DashboardPage({
       return (b.booked ?? 0) - (a.booked ?? 0);
     });
 
-  const preserved = {
-    view,
-    month: month || undefined,
-    cal,
-    day: day || undefined,
-    range,
-  };
-
-  const upcomingTourNames = [...new Set(toursRaw.map((t) => t.name).filter(Boolean))];
-  const countsByDay = new Map<string, number>();
-  for (const t of toursRaw.filter((x) => x.date.slice(0, 7) === month)) {
-    countsByDay.set(t.date, (countsByDay.get(t.date) || 0) + 1);
-  }
-  const monthCells = calendarDays(month);
   const filterChipBase =
     "flex min-h-[48px] min-w-0 basis-0 flex-1 touch-manipulation items-center justify-center rounded-none px-2 py-2 text-center text-[12px] font-semibold leading-tight transition-all active:scale-[0.98] sm:min-h-[44px] sm:px-3 sm:text-[13px]";
   const filterChipActive =

@@ -19,7 +19,6 @@ function groupRowsByTourDate(rows: AccountingTourRow[]): AccountingTourRow[][] {
 export function AccountingToursTable({
   rows,
   upcomingTab,
-  todayYmd,
 }: {
   rows: AccountingTourRow[];
   upcomingTab: boolean;

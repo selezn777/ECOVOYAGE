@@ -33,7 +33,6 @@ import { BookingDeleteButton } from "./booking-delete-button";
 import { BookingCancelRetentionButton } from "./booking-cancel-retention-button";
 import { BookingPassportPhotosBlock } from "@/components/booking-passport-photos-block";
 import {
-  CopyTouristBriefingButton,
   ReceiptPdfButton,
   TelegramBookingLink,
   WhatsAppBookingLink,
@@ -109,7 +108,6 @@ export function TourBookingCard({
   duplicateHref,
   contextLine,
   canEditDispatcherPhoto = false,
-  hideDispatcherBookingForViewer = false,
   canViewPassportPhotos = false,
   canUploadPassportPhotos = false,
   /** Гид без назначения на тур: скрытые подписи вместо ПДн (данные уже обрезаны на сервере). */
@@ -179,7 +177,6 @@ export function TourBookingCard({
   briefingSentAt?: string | null;
 }) {
   const t = useTranslations("booking");
-  const [open, setOpen] = useState(false);
   const [briefingSent, setBriefingSent] = useState(Boolean(briefingSentAt));
   const [customerName, setCustomerName] = useState(booking.customerName);
   const [hotelName, setHotelName] = useState(booking.hotel);
@@ -346,6 +343,7 @@ export function TourBookingCard({
     setNote(booking.note ?? "");
     setTopupText(formatVndInput(booking.dueVnd));
     // Все поля учтены в bookingSyncKey - не добавлять booking в deps (иначе снова object + смена формы deps).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingSyncKey]);
 
   useEffect(() => {
@@ -357,9 +355,8 @@ export function TourBookingCard({
     }
   }, [
     booking.id,
-    managerNoShowRefund?.absenceId ?? "",
-    serverRefundAcknowledgedAt ?? "",
-    managerNoShowRefund?.refundVnd ?? 0,
+    managerNoShowRefund,
+    serverRefundAcknowledgedAt,
   ]);
 
   useEffect(() => {
@@ -377,7 +374,6 @@ export function TourBookingCard({
 
   useEffect(() => {
     if (!autoOpen) return;
-    setOpen(true);
     const el = document.getElementById(`booking-${booking.id}`);
     if (el) el.scrollIntoView({ block: "start", behavior: "smooth" });
   }, [autoOpen, booking.id]);
@@ -629,12 +625,6 @@ export function TourBookingCard({
     }
   }
 
-  function isInteractiveTarget(target: EventTarget | null): boolean {
-    const el = target as HTMLElement | null;
-    if (!el) return false;
-    return !!el.closest("button, input, textarea, select, a, [data-booking-modal], [data-booking-stop-toggle]");
-  }
-
   const shareFilteredUsers = (() => {
     const q = shareQuery.trim().toLowerCase();
     if (!q) return shareUsers.slice(0, 20);
@@ -792,7 +782,6 @@ export function TourBookingCard({
       const j = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) throw new Error(typeof j.error === "string" ? j.error : "Не удалось сохранить");
       setManagerRefundEdit(false);
-      setOpen(false);
       if (body.noRefund) {
         setLocalRefundResolved({ noRefund: true, refundVnd: 0 });
       } else if (typeof body.refundVnd === "number") {

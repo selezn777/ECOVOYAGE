@@ -194,6 +194,7 @@ export function AccountingTourFilters({ tourNames, q, tourExact, preserved, sear
                   <button
                     type="button"
                     role="option"
+                    aria-selected={name === tourExact}
                     className="w-full px-3 py-2 text-left hover:bg-[var(--surface-soft)]"
                     onMouseDown={(ev) => ev.preventDefault()}
                     onClick={() => pickName(name)}

@@ -199,7 +199,7 @@ function TourCard({
 }) {
   const t = useTranslations("dispatcherWorkday");
   const router = useRouter();
-  const [expenses, setExpenses] = useState(initialExpenses);
+  const [expenses] = useState(initialExpenses);
   const [addOpen, setAddOpen] = useState(false);
   const [expOpen, setExpOpen] = useState(initialExpenses.length > 0);
 

@@ -355,7 +355,6 @@ export function DispatcherBusQuickForm({
           {buses.map((b, idx) => {
             const parsed = parseCommentIntoForm(b.comment);
             const phone = parsed.driverPhoneLocal ? toE164(parsed.driverPhoneLocal) : null;
-            const zaloPath = phone ? phoneToZaloPath(phone) : null;
             return (
               <li
                 key={b.id ?? `${b.busNumber}-${idx}`}

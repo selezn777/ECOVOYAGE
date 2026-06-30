@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 type Template = {
@@ -50,7 +50,7 @@ export function TicketTemplateManager() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/ticket-templates?all=true");
@@ -63,9 +63,9 @@ export function TicketTemplateManager() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [t, tCommon]);
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(); }, [load]);
 
   async function toggleActive(tpl: Template) {
     setToggling(tpl.id);

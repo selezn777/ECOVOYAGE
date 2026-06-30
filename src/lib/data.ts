@@ -382,8 +382,6 @@ function paymentStatusFrom(totalVnd: number, paidVnd: number): PaymentStatus {
   return "partial";
 }
 
-type PayAgg = { deposit: number; topup: number; refund: number };
-
 /** Строка платежа для агрегации (topup без remitted_to_cash_at не считается в оплату в кассу). */
 export type PaymentRowAgg = {
   booking_id: string;
@@ -447,21 +445,6 @@ export function aggregatePaymentsEx(paymentRows: PaymentRowAgg[]): Map<string, P
     } else {
       cur.topupRemitted += amt;
     }
-    map.set(p.booking_id, cur);
-  }
-  return map;
-}
-
-function aggregatePayments(
-  paymentRows: { booking_id: string; amount_vnd: number; kind: string }[],
-): Map<string, PayAgg> {
-  const map = new Map<string, PayAgg>();
-  for (const p of paymentRows) {
-    const cur = map.get(p.booking_id) || { deposit: 0, topup: 0, refund: 0 };
-    const amt = Number(p.amount_vnd) || 0;
-    if (p.kind === "refund") cur.refund += amt;
-    else if (p.kind === "deposit") cur.deposit += amt;
-    else cur.topup += amt;
     map.set(p.booking_id, cur);
   }
   return map;
@@ -7483,12 +7466,6 @@ export async function listGuideSalaryRecordsForTour(
 
   const selectWithNoteWithoutFixed =
     "id,tour_id,guide_id,amount_vnd,status,paid_at,paid_by,note,attachment_url,created_at,kind,outside_total_vnd,outside_driver_percent";
-  const selectWithoutNoteWithoutFixed =
-    "id,tour_id,guide_id,amount_vnd,status,paid_at,paid_by,attachment_url,created_at,kind,outside_total_vnd,outside_driver_percent";
-  const selectWithoutNoteAndAttachmentWithoutFixed =
-    "id,tour_id,guide_id,amount_vnd,status,paid_at,paid_by,created_at,kind,outside_total_vnd,outside_driver_percent";
-  const selectWithoutNoteAndAttachmentWithoutKindWithoutFixed =
-    "id,tour_id,guide_id,amount_vnd,status,paid_at,paid_by,created_at,outside_total_vnd,outside_driver_percent";
 
   const first = await supabase
     .from("guide_salary_records")

@@ -7,9 +7,6 @@ import { receiptFileToJpegDataUrl } from "@/lib/receipt-image-compress";
 
 const MAX_PICK_BYTES = 12 * 1024 * 1024;
 
-function fmt(n: number) {
-  return n > 0 ? n.toLocaleString("ru-RU") : "";
-}
 function parseVnd(s: string) {
   const n = Number(s.replace(/\s/g, "").replace(/[^\d]/g, ""));
   return Number.isFinite(n) ? n : 0;

@@ -252,7 +252,6 @@ export default async function FinancePage({
             {byManager.map((m, i) => {
               const pct = Math.round((m.amountVnd / maxManagerAmount) * 100);
               const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
-              const [first, ...rest] = m.name.split(" ");
               return (
                 <li key={m.name}>
                   <div className="flex min-w-0 items-start gap-1.5">

@@ -87,7 +87,7 @@ export function StaffNotificationsModalTrigger({ user }: { user: SessionUser }) 
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!open) return;

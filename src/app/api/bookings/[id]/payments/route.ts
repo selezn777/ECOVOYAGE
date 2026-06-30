@@ -140,7 +140,9 @@ export async function POST(
   let { error } = await supabase.from("payments").insert([insertRow]);
 
   if (error && /remitted_to_cash_at|remitted_to_cash_by|column|does not exist/i.test(String(error.message))) {
-    const { remitted_to_cash_at: _a, remitted_to_cash_by: _b, ...legacyRow } = insertRow;
+    const legacyRow = { ...insertRow };
+    delete legacyRow.remitted_to_cash_at;
+    delete legacyRow.remitted_to_cash_by;
     ({ error } = await supabase.from("payments").insert([legacyRow]));
   }
 

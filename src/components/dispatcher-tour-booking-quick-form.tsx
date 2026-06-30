@@ -93,7 +93,7 @@ export function DispatcherTourBookingQuickForm({ tourId }: { tourId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [tourId]);
+  }, [tourId, t]);
 
   function goCompact() {
     setNote(savedNote);

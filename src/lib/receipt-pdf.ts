@@ -204,7 +204,6 @@ export async function buildReceiptPdfBytes(
   }
 
   for (const rowDef of policyRows) {
-    const raw = rowDef.raw;
     if (rowDef.isBlank) {
       y -= policyBlankGap;
       continue;

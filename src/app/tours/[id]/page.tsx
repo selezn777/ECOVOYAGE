@@ -17,7 +17,6 @@ import {
   getManagerTourMessageOverride,
   getTourManifestForTour,
   isUserAssignedGuideOnTour,
-  listTours,
   listBookingsForTour,
   listExpensesForTour,
   listGuideSalaryRecordsForTour,
@@ -57,7 +56,6 @@ import {
   canUploadBookingPassportPhotos,
   canViewBookingPassportPhotos,
   guideMayViewTouristPiiOnTour,
-  canResolveTourOverbook,
 } from "@/lib/role-policy";
 import { formatVnd } from "@/lib/format";
 import {
@@ -73,10 +71,8 @@ import { redactBookingTouristPii } from "@/lib/booking-privacy";
 
 export default async function TourDetailsPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ transferFrom?: string }>;
 }) {
   const t = await getTranslations("tour");
   const tB = await getTranslations("booking");
@@ -84,7 +80,6 @@ export default async function TourDetailsPage({
   const locale = await getLocale();
   const user = await requireAuth();
   const { id } = await params;
-  const query = (await searchParams) ?? {};
   const tour = await getTourById(id);
   if (!tour) notFound();
 

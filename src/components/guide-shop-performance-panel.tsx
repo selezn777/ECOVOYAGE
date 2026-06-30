@@ -18,7 +18,6 @@ export function GuideShopPerformancePanel({
   employeeId: string;
   snapshot: GuideShopSnapshot;
 }) {
-  const pendingInPeriodVnd = Math.max(0, snapshot.accruedInPeriodVnd - snapshot.paidInPeriodVnd);
   const pendingAllTimeVnd = Math.max(0, snapshot.allTimeAccruedVnd - snapshot.allTimePaidVnd);
   return (
     <section className="card mb-3">

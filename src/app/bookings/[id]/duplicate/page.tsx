@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AppNavSecondaryLink } from "@/components/app-nav-secondary";
 import { TopNav } from "@/components/top-nav";
@@ -53,7 +52,6 @@ export default async function DuplicateBookingTourPickerPage({
   }
 
   const bookingRow = booking as unknown as BookingSourceRow;
-  const managerId = String(bookingRow.manager_id);
   const canAccess =
     user.role === "director" ||
     user.role === "chief_manager" ||

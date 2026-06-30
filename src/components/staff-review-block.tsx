@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { StaffReviewRow } from "@/lib/types";
 
 export function StaffReviewBlock({
@@ -30,18 +30,18 @@ export function StaffReviewBlock({
   const fileRef = useRef<HTMLInputElement>(null);
   const [attachmentUrl, setAttachmentUrl] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     const res = await fetch(`/api/staff-reviews?subjectId=${encodeURIComponent(subjectId)}&kind=${kind}`, {
       credentials: "same-origin",
     });
     const j = (await res.json().catch(() => ({}))) as { reviews?: StaffReviewRow[] };
     if (res.ok) setReviews(j.reviews ?? []);
     setLoading(false);
-  }
+  }, [subjectId, kind]);
 
   useEffect(() => {
     void load();
-  }, [subjectId, kind]);
+  }, [load]);
 
   async function onPickFile(ev: React.ChangeEvent<HTMLInputElement>) {
     const f = ev.target.files?.[0];

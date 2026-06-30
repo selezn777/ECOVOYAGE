@@ -15,7 +15,6 @@ import {
 import { minManagerDayOffDateForChiefAction } from "@/lib/scheduling";
 
 export default async function TeamPage() {
-  const t = await getTranslations("team");
   const tC = await getTranslations("common");
   const user = await requireRoles([...TEAM_PAGE_ROLES]);
   if (isDemoUser(user)) return <main className="app-wrap"><TopNav user={user} /><div className="card mt-4 text-center text-[var(--muted)] py-12">{tC("noData")}</div></main>;

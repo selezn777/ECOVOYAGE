@@ -565,8 +565,10 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     };
     let { error: upErr } = await supabase.from("guide_salary_records").update(baseUpdate).eq("id", recordId);
     if (upErr && /shop_accountant|column|does not exist/i.test(String(upErr.message))) {
-      const { shop_accountant_confirmed_at: _a, shop_accountant_guide_vnd: _g, shop_accountant_office_vnd: _o, ...legacy } =
-        baseUpdate;
+      const legacy = { ...baseUpdate };
+      delete legacy.shop_accountant_confirmed_at;
+      delete legacy.shop_accountant_guide_vnd;
+      delete legacy.shop_accountant_office_vnd;
       ({ error: upErr } = await supabase.from("guide_salary_records").update(legacy).eq("id", recordId));
     }
     if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
@@ -653,4 +655,3 @@ export async function DELETE(request: Request, ctx: { params: Promise<{ id: stri
 
   return NextResponse.json({ ok: true });
 }
-

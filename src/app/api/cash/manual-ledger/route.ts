@@ -341,7 +341,9 @@ export async function POST(request: Request) {
     };
     let { error: payErr } = await supabase.from("payments").insert([payRow]);
     if (payErr && /remitted_to_cash_at|column|does not exist/i.test(String(payErr.message))) {
-      const { remitted_to_cash_at: _a, remitted_to_cash_by: _b, ...legacy } = payRow;
+      const legacy = { ...payRow };
+      delete legacy.remitted_to_cash_at;
+      delete legacy.remitted_to_cash_by;
       ({ error: payErr } = await supabase.from("payments").insert([legacy]));
     }
     if (payErr) {
