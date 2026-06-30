@@ -55,7 +55,13 @@
     "bookings": "броней",
     "people": "чел.",
     "upcomingTours": "Все туры",
-    "pastTours": "Прошедшие"
+    "pastTours": "Прошедшие",
+    "financeMonth": "Финансы месяца",
+    "income": "Выручка",
+    "expenses": "Расходы",
+    "profit": "Прибыль",
+    "topGuides": "Топ гидов",
+    "trips": "выездов"
   },
   "tour": {
     "booked": "Занято мест",

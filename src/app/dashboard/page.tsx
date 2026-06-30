@@ -459,6 +459,37 @@ export default async function DashboardPage({
               >›</a>
             </div>
           </div>
+          {/* ── Финансы месяца ── */}
+          <div className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3">
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("financeMonth")}</div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-lg bg-[var(--surface-elevated)] px-3 py-2 text-center">
+                <div className="text-[11px] text-[var(--muted)]">{t("income")}</div>
+                <div className="mt-0.5 text-[13px] font-bold text-[var(--accent)]">
+                  {directorSalesPulse.financeMonth.incomeVnd > 0
+                    ? `${(directorSalesPulse.financeMonth.incomeVnd / 1_000_000).toFixed(1)}M`
+                    : "—"}
+                </div>
+              </div>
+              <div className="rounded-lg bg-[var(--surface-elevated)] px-3 py-2 text-center">
+                <div className="text-[11px] text-[var(--muted)]">{t("expenses")}</div>
+                <div className="mt-0.5 text-[13px] font-bold text-[var(--danger,#ef4444)]">
+                  {directorSalesPulse.financeMonth.expenseVnd > 0
+                    ? `${(directorSalesPulse.financeMonth.expenseVnd / 1_000_000).toFixed(1)}M`
+                    : "—"}
+                </div>
+              </div>
+              <div className="rounded-lg bg-[var(--surface-elevated)] px-3 py-2 text-center">
+                <div className="text-[11px] text-[var(--muted)]">{t("profit")}</div>
+                <div className={`mt-0.5 text-[13px] font-bold ${directorSalesPulse.financeMonth.netVnd >= 0 ? "text-[var(--success,#22c55e)]" : "text-[var(--danger,#ef4444)]"}`}>
+                  {directorSalesPulse.financeMonth.incomeVnd > 0 || directorSalesPulse.financeMonth.expenseVnd > 0
+                    ? `${directorSalesPulse.financeMonth.netVnd >= 0 ? "+" : ""}${(directorSalesPulse.financeMonth.netVnd / 1_000_000).toFixed(1)}M`
+                    : "—"}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
 
             {/* ── Топ менеджеров ── */}
@@ -539,6 +570,36 @@ export default async function DashboardPage({
                 })}
               </ul>
             </div>
+
+            {/* ── Топ гидов ── */}
+            {directorSalesPulse.byGuide.length > 0 ? (
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3">
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("topGuides")}</div>
+                <ul className="space-y-2">
+                  {directorSalesPulse.byGuide.map((r, i) => {
+                    const maxT = directorSalesPulse.byGuide[0]?.trips ?? 1;
+                    const pct = Math.round((r.trips / maxT) * 100);
+                    const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+                    return (
+                      <li key={r.guideId}>
+                        <div className="flex min-w-0 items-start gap-1.5">
+                          <span className="mt-0.5 shrink-0 text-sm leading-none">
+                            {medal ?? <span className="w-4 block text-center text-[10px] font-semibold text-[var(--muted2)]">{i + 1}</span>}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-[13px] font-semibold text-[var(--text)]">{r.guideName}</div>
+                            <div className="text-[11px] text-[var(--muted)]">{r.trips} {t("trips")} · {r.pax} {t("people")}</div>
+                          </div>
+                        </div>
+                        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
+                          <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${pct}%`, opacity: 0.7 + 0.3 * (pct / 100) }} />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ) : null}
 
           </div>
         </section>

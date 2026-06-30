@@ -841,30 +841,93 @@ export type DirectorSalesPulse = {
   byManager: Array<{ managerId: string; managerName: string; bookings: number; pax: number }>;
   byTour: Array<{ tourId: string; tourName: string; bookings: number; pax: number }>;
   byHour: Array<{ hour: string; bookings: number; pax: number; solo: number; pair: number; family: number; group: number }>;
+  byGuide: Array<{ guideId: string; guideName: string; trips: number; pax: number }>;
+  financeMonth: { incomeVnd: number; expenseVnd: number; netVnd: number };
 };
 
 /** Директорский срез продаж: кто, куда и во сколько записывает.
  *  fromYmd — начало периода YYYY-MM-DD (если не передан — windowDays от сегодня). */
 export async function getDirectorSalesPulse(windowDays = 30, fromYmd?: string): Promise<DirectorSalesPulse> {
   const supabase = getSupabaseAdmin();
-  if (!supabase) {
-    return { windowDays, recentBookings: [], byManager: [], byTour: [], byHour: [] };
-  }
+  const emptyResult: DirectorSalesPulse = {
+    windowDays,
+    recentBookings: [],
+    byManager: [],
+    byTour: [],
+    byHour: [],
+    byGuide: [],
+    financeMonth: { incomeVnd: 0, expenseVnd: 0, netVnd: 0 },
+  };
+  if (!supabase) return emptyResult;
+
   const days = Math.max(1, Math.min(120, Math.round(windowDays)));
   const sinceIso = fromYmd
     ? new Date(`${fromYmd}T00:00:00.000Z`).toISOString()
     : new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  // Конец периода: начало следующего месяца (если fromYmd задан как YYYY-MM-01)
+  const untilIso = fromYmd
+    ? (() => {
+        const [y, m] = fromYmd.slice(0, 7).split("-").map(Number);
+        const next = new Date(Date.UTC(y, m, 1)); // m — уже следующий месяц (0-based + 1)
+        return next.toISOString();
+      })()
+    : new Date().toISOString();
 
-  const { data: bookingRows, error } = await supabase
-    .from("bookings")
-    .select("id,tour_id,manager_id,created_at,adults,children,infants")
-    .is("deleted_at", null)
-    .gte("created_at", sinceIso)
-    .order("created_at", { ascending: false })
-    .limit(3000);
-  if (error || !bookingRows) {
-    return { windowDays: days, recentBookings: [], byManager: [], byTour: [], byHour: [] };
+  const [bookingRes, guideRes, payRes, expRes] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select("id,tour_id,manager_id,created_at,adults,children,infants")
+      .is("deleted_at", null)
+      .gte("created_at", sinceIso)
+      .order("created_at", { ascending: false })
+      .limit(3000),
+    supabase
+      .from("tour_guides")
+      .select("guide_id,tour_id,tours!inner(start_at,adults,children,infants)")
+      .gte("tours.start_at", sinceIso)
+      .lt("tours.start_at", untilIso)
+      .eq("is_inspection", false)
+      .limit(2000),
+    supabase.from("payments").select("amount_vnd").gte("created_at", sinceIso).lt("created_at", untilIso),
+    supabase.from("expenses").select("amount_vnd").gte("created_at", sinceIso).lt("created_at", untilIso),
+  ]);
+
+  const { data: bookingRows, error } = bookingRes;
+  if (error || !bookingRows) return { ...emptyResult, windowDays: days };
+
+  // Финансы
+  const incomeVnd = (payRes.data || []).reduce((s, r) => s + Number((r as { amount_vnd: number }).amount_vnd || 0), 0);
+  const expenseVnd = (expRes.data || []).reduce((s, r) => s + Number((r as { amount_vnd: number }).amount_vnd || 0), 0);
+  const financeMonth = { incomeVnd, expenseVnd, netVnd: incomeVnd - expenseVnd };
+
+  // Гиды: группируем tour_guides по guide_id
+  const byGuideMap = new Map<string, { guideId: string; guideName: string; trips: number; pax: number }>();
+  const guideUserIds: string[] = [];
+  type TourGuideRaw = { guide_id: string; tour_id: string; tours: { start_at: string; adults?: number | null; children?: number | null; infants?: number | null } | null };
+  for (const tg of (guideRes.data as TourGuideRaw[] | null) ?? []) {
+    const guideId = String(tg.guide_id);
+    if (!byGuideMap.has(guideId)) {
+      guideUserIds.push(guideId);
+      byGuideMap.set(guideId, { guideId, guideName: "", trips: 0, pax: 0 });
+    }
+    const entry = byGuideMap.get(guideId)!;
+    entry.trips += 1;
+    const t = tg.tours;
+    if (t) {
+      entry.pax += Math.max(0, Number(t.adults || 0)) + Math.max(0, Number(t.children || 0)) + Math.max(0, Number(t.infants || 0));
+    }
   }
+  if (guideUserIds.length) {
+    const { data: guideUsers } = await supabase.from("users").select("id,full_name").in("id", guideUserIds);
+    for (const u of (guideUsers as Array<{ id: string; full_name?: string | null }> | null) ?? []) {
+      const entry = byGuideMap.get(String(u.id));
+      if (entry) entry.guideName = String(u.full_name || "Гид");
+    }
+  }
+  const byGuide = [...byGuideMap.values()]
+    .filter((g) => g.guideName)
+    .sort((a, b) => b.trips - a.trips || b.pax - a.pax)
+    .slice(0, 10);
 
   const rows = bookingRows as Array<{
     id: string;
@@ -953,6 +1016,8 @@ export async function getDirectorSalesPulse(windowDays = 30, fromYmd?: string): 
     byManager: [...byManagerMap.values()].sort((a, b) => b.bookings - a.bookings || b.pax - a.pax).slice(0, 10),
     byTour: [...byTourMap.values()].sort((a, b) => b.bookings - a.bookings || b.pax - a.pax).slice(0, 10),
     byHour: [...byHourMap.values()].sort((a, b) => a.hour.localeCompare(b.hour)),
+    byGuide,
+    financeMonth,
   };
 }
 

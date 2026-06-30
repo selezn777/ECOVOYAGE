@@ -55,7 +55,13 @@
     "bookings": "bookings",
     "people": "pax",
     "upcomingTours": "All Tours",
-    "pastTours": "Past Tours"
+    "pastTours": "Past Tours",
+    "financeMonth": "Monthly Finance",
+    "income": "Revenue",
+    "expenses": "Expenses",
+    "profit": "Profit",
+    "topGuides": "Top Guides",
+    "trips": "trips"
   },
   "tour": {
     "booked": "Seats Booked",
