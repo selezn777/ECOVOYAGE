@@ -4,7 +4,7 @@ import { TopNav } from "@/components/top-nav";
 import { MyReportMonthPicker } from "@/components/my-report-month-picker";
 import { CommissionSharesLog } from "@/components/commission-shares-log";
 import { requireAuth } from "@/lib/auth-session";
-import { getPersonalReport, type InspectionTourRow } from "@/lib/data";
+import { getPersonalReport, getGuideAllTimeStats, type GuideProgramStat } from "@/lib/data";
 import { formatVnd } from "@/lib/format";
 import { roleLabel } from "@/lib/role-labels";
 
@@ -35,26 +35,34 @@ function monthRange(ym: string): { fromYmd: string; toYmd: string; label: string
   void from;
 }
 
-function InspectionBlock({ inspections, title, noneLabel }: { inspections: InspectionTourRow[]; title: string; noneLabel: string }) {
-  if (inspections.length === 0) return (
-    <div className="rounded-xl bg-[var(--surface-soft)] px-3 py-2.5 ring-1 ring-[var(--border)]">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{title}</p>
-      <p className="mt-1 text-sm text-[var(--muted)]">{noneLabel}</p>
-    </div>
-  );
+function AllTimeProgramsBlock({ programs, inspectionTotal }: { programs: GuideProgramStat[]; inspectionTotal: number }) {
+  if (!programs.length && !inspectionTotal) return null;
   return (
     <div className="rounded-xl bg-[var(--surface-soft)] px-3 py-2.5 ring-1 ring-[var(--border)]">
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">
-        {title} · {inspections.length}
-      </p>
-      <ul className="space-y-1">
-        {inspections.map((t, i) => (
-          <li key={i} className="flex items-baseline justify-between gap-2 text-xs">
-            <span className="min-w-0 truncate text-[var(--text)]">{t.name}</span>
-            <span className="shrink-0 tabular-nums text-[var(--muted)]">{t.date.slice(5).replace("-", ".")}</span>
-          </li>
-        ))}
-      </ul>
+      {programs.length > 0 && (
+        <>
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">
+            Программы · {programs.length}
+          </p>
+          <ul className="space-y-1">
+            {programs.map((p, i) => (
+              <li key={i} className="flex items-baseline gap-1.5 text-xs">
+                <span className="min-w-0 flex-1 truncate text-[var(--text)]">{p.templateName}</span>
+                <span className="shrink-0 tabular-nums text-[var(--muted)]">{p.count}×</span>
+                {p.inspectionCount > 0 && (
+                  <span className="shrink-0 text-[10px] tabular-nums text-[var(--muted2)]">инсп:{p.inspectionCount}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {inspectionTotal > 0 && (
+        <p className={`text-[11px] text-[var(--muted)] ${programs.length ? "mt-2 border-t border-[var(--border)] pt-1.5" : ""}`}>
+          Всего инспекций: <span className="font-semibold tabular-nums text-[var(--text)]">{inspectionTotal}</span>
+        </p>
+      )}
+      {!programs.length && !inspectionTotal && null}
     </div>
   );
 }
@@ -103,9 +111,10 @@ export default async function MyReportPage({
   const monthYm = parseMonth(rawM);
   const { fromYmd, toYmd, label } = monthRange(monthYm);
 
-  const [report, tMR] = await Promise.all([
+  const needsAllTimeStats = ["guide","chief_guide","manager","chief_manager"].includes(user.role);
+  const [report, allTimeStats] = await Promise.all([
     getPersonalReport(user.id, user.role, fromYmd, toYmd),
-    getTranslations("myReport"),
+    needsAllTimeStats ? getGuideAllTimeStats(user.id) : Promise.resolve({ programs: [], inspectionTotal: 0 }),
   ]);
 
   return (
@@ -143,11 +152,7 @@ export default async function MyReportPage({
           {report.bookings === 0 && (
             <p className="mt-2 text-center text-sm text-[var(--muted)]">Нет броней за этот месяц</p>
           )}
-          <InspectionBlock
-            inspections={report.inspections}
-            title={tMR("inspectionTitle")}
-            noneLabel={tMR("inspectionNone")}
-          />
+          <AllTimeProgramsBlock programs={allTimeStats.programs} inspectionTotal={allTimeStats.inspectionTotal} />
           <div className="mt-1">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-[var(--muted2)]">Деление комиссии</p>
             <CommissionSharesLog alwaysOpen />
@@ -170,11 +175,7 @@ export default async function MyReportPage({
           {report.trips === 0 && (
             <p className="mt-2 text-center text-sm text-[var(--muted)]">Нет назначений в этом месяце</p>
           )}
-          <InspectionBlock
-            inspections={report.inspections}
-            title={tMR("inspectionTitle")}
-            noneLabel={tMR("inspectionNone")}
-          />
+          <AllTimeProgramsBlock programs={allTimeStats.programs} inspectionTotal={allTimeStats.inspectionTotal} />
         </div>
       )}
 

@@ -9421,32 +9421,83 @@ export async function getManagerBookingAnalytics(managerId: string): Promise<Man
   return { totalBookings: rows.length, segments, peakHours };
 }
 
-export type InspectionTourRow = { name: string; date: string };
-
 export type PersonalReportData =
-  | { kind: "manager"; bookings: number; tourists: number; totalVnd: number; commissionVnd: number; commissionPct: number; ticketProfitVnd: number; inspections: InspectionTourRow[] }
-  | { kind: "guide"; trips: number; salaryAccruedVnd: number; salaryPaidVnd: number; inspections: InspectionTourRow[] }
+  | { kind: "manager"; bookings: number; tourists: number; totalVnd: number; commissionVnd: number; commissionPct: number; ticketProfitVnd: number }
+  | { kind: "guide"; trips: number; salaryAccruedVnd: number; salaryPaidVnd: number }
   | { kind: "dispatcher"; tours: number; busAssignments: number }
   | { kind: "accountant"; cashOps: number; cashInVnd: number; cashOutVnd: number }
   | { kind: "other" };
 
-async function fetchInspectionTours(supabase: ReturnType<typeof getSupabaseAdmin>, userId: string, fromYmd: string, toYmd: string): Promise<InspectionTourRow[]> {
-  if (!supabase) return [];
+export type GuideProgramStat = {
+  templateName: string;
+  count: number;
+  lastDate: string;
+  inspectionCount: number;
+};
+
+/** All-time stats: which tour programs a user has worked + inspection count per program */
+export async function getGuideAllTimeStats(userId: string): Promise<{
+  programs: GuideProgramStat[];
+  inspectionTotal: number;
+}> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return { programs: [], inspectionTotal: 0 };
+
   const { data: tgRows } = await supabase
     .from("tour_guides")
-    .select("tour_id")
-    .eq("guide_id", userId)
-    .eq("is_inspection", true);
-  const tourIds = (tgRows as { tour_id: string }[] | null)?.map((r) => r.tour_id) ?? [];
-  if (!tourIds.length) return [];
+    .select("tour_id,is_primary,is_inspection")
+    .eq("guide_id", userId);
+
+  const allSlots = (tgRows as { tour_id: string; is_primary: boolean; is_inspection: boolean }[] | null) ?? [];
+  if (!allSlots.length) return { programs: [], inspectionTotal: 0 };
+
+  const tourIds = [...new Set(allSlots.map((r) => r.tour_id))];
   const { data: tourRows } = await supabase
     .from("tours")
-    .select("name,start_at")
+    .select("id,template_id,start_at,tour_templates(name)")
     .in("id", tourIds)
     .order("start_at", { ascending: false });
-  return ((tourRows as { name: string; start_at: string }[]) ?? [])
-    .filter((t) => { const ymd = startDateOnly(t.start_at); return ymd >= fromYmd && ymd <= toYmd; })
-    .map((t) => ({ name: t.name, date: startDateOnly(t.start_at) }));
+
+  type TRowRaw = { id: string; template_id: string | null; start_at: string; tour_templates: { name: string }[] | { name: string } | null };
+  type TRow = { id: string; template_id: string | null; start_at: string; tour_templates: { name: string } | null };
+  const tourMap = new Map<string, TRow>();
+  for (const t of ((tourRows as unknown as TRowRaw[]) ?? [])) {
+    const tpl = Array.isArray(t.tour_templates) ? (t.tour_templates[0] ?? null) : t.tour_templates;
+    tourMap.set(t.id, { id: t.id, template_id: t.template_id, start_at: t.start_at, tour_templates: tpl });
+  }
+
+  // primary slots → count by template
+  const primaryByTpl = new Map<string, { count: number; lastDate: string; templateName: string }>();
+  const inspectionByTpl = new Map<string, number>();
+  let inspectionTotal = 0;
+
+  for (const slot of allSlots) {
+    const tour = tourMap.get(slot.tour_id);
+    if (!tour) continue;
+    const tplName = tour.tour_templates?.name ?? tour.start_at.slice(0, 7);
+    const dateYmd = startDateOnly(tour.start_at);
+
+    if (slot.is_inspection) {
+      inspectionTotal++;
+      inspectionByTpl.set(tplName, (inspectionByTpl.get(tplName) ?? 0) + 1);
+    } else {
+      const cur = primaryByTpl.get(tplName) ?? { count: 0, lastDate: "", templateName: tplName };
+      cur.count++;
+      if (!cur.lastDate || dateYmd > cur.lastDate) cur.lastDate = dateYmd;
+      primaryByTpl.set(tplName, cur);
+    }
+  }
+
+  const programs: GuideProgramStat[] = [...primaryByTpl.entries()]
+    .map(([tplName, v]) => ({
+      templateName: v.templateName,
+      count: v.count,
+      lastDate: v.lastDate,
+      inspectionCount: inspectionByTpl.get(tplName) ?? 0,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  return { programs, inspectionTotal };
 }
 
 export async function getPersonalReport(
@@ -9458,9 +9509,9 @@ export async function getPersonalReport(
   const supabase = getSupabaseAdmin();
   if (!supabase) {
     if (role === "manager" || role === "chief_manager")
-      return { kind: "manager", bookings: 0, tourists: 0, totalVnd: 0, commissionVnd: 0, commissionPct: DEFAULT_MANAGER_SALES_COMMISSION, ticketProfitVnd: 0, inspections: [] };
+      return { kind: "manager", bookings: 0, tourists: 0, totalVnd: 0, commissionVnd: 0, commissionPct: DEFAULT_MANAGER_SALES_COMMISSION, ticketProfitVnd: 0 };
     if (role === "guide" || role === "chief_guide")
-      return { kind: "guide", trips: 0, salaryAccruedVnd: 0, salaryPaidVnd: 0, inspections: [] };
+      return { kind: "guide", trips: 0, salaryAccruedVnd: 0, salaryPaidVnd: 0 };
     if (role === "dispatcher" || role === "booking_dispatcher")
       return { kind: "dispatcher", tours: 0, busAssignments: 0 };
     if (role === "accountant")
@@ -9495,7 +9546,7 @@ export async function getPersonalReport(
     const allById = new Map<string, BkRow>();
     for (const r of [...ownRows, ...shareRows]) allById.set(r.id, r);
     const allRows = [...allById.values()];
-    if (!allRows.length) return { kind: "manager", bookings: 0, tourists: 0, totalVnd: 0, commissionVnd: 0, commissionPct, ticketProfitVnd: 0, inspections: await fetchInspectionTours(supabase, userId, fromYmd, toYmd) };
+    if (!allRows.length) return { kind: "manager", bookings: 0, tourists: 0, totalVnd: 0, commissionVnd: 0, commissionPct, ticketProfitVnd: 0 };
 
     // 2. Даты туров → фильтрация по месяцу на клиенте
     const tourIds = [...new Set(allRows.map((r) => r.tour_id))];
@@ -9508,7 +9559,7 @@ export async function getPersonalReport(
       return ymd && ymd >= fromYmd && ymd <= toYmd;
     }).map((b) => b.id);
 
-    if (!filteredIds.length) return { kind: "manager", bookings: 0, tourists: 0, totalVnd: 0, commissionVnd: 0, commissionPct, ticketProfitVnd: 0, inspections: await fetchInspectionTours(supabase, userId, fromYmd, toYmd) };
+    if (!filteredIds.length) return { kind: "manager", bookings: 0, tourists: 0, totalVnd: 0, commissionVnd: 0, commissionPct, ticketProfitVnd: 0 };
 
     // 3. Сумма по прайсу из booking_prices
     const { data: priceRows } = await supabase.from("booking_prices").select("booking_id,amount_vnd").in("booking_id", filteredIds);
@@ -9535,14 +9586,13 @@ export async function getPersonalReport(
       if (d >= fromYmd && d <= toYmd) ticketProfitVnd += Number(row.manager_profit_vnd || 0);
     }
 
-    const inspections = await fetchInspectionTours(supabase, userId, fromYmd, toYmd);
-    return { kind: "manager", bookings: filteredIds.length, tourists, totalVnd, commissionVnd: Math.round((totalVnd * commissionPct) / 100), commissionPct, ticketProfitVnd, inspections };
+    return { kind: "manager", bookings: filteredIds.length, tourists, totalVnd, commissionVnd: Math.round((totalVnd * commissionPct) / 100), commissionPct, ticketProfitVnd };
   }
 
   if (role === "guide" || role === "chief_guide") {
     const { data: tgRows } = await supabase.from("tour_guides").select("tour_id").eq("guide_id", userId);
     const allTourIds = [...new Set((tgRows as { tour_id: string }[] | null)?.map((r) => r.tour_id) ?? [])];
-    if (!allTourIds.length) return { kind: "guide", trips: 0, salaryAccruedVnd: 0, salaryPaidVnd: 0, inspections: await fetchInspectionTours(supabase, userId, fromYmd, toYmd) };
+    if (!allTourIds.length) return { kind: "guide", trips: 0, salaryAccruedVnd: 0, salaryPaidVnd: 0 };
 
     const { data: tourRows } = await supabase.from("tours").select("id,start_at").in("id", allTourIds);
     const filteredTourIds = ((tourRows as { id: string; start_at: string }[]) ?? [])
@@ -9559,8 +9609,7 @@ export async function getPersonalReport(
         if (s.status === "paid") salaryPaidVnd += Number(s.amount_vnd || 0);
       }
     }
-    const inspections = await fetchInspectionTours(supabase, userId, fromYmd, toYmd);
-    return { kind: "guide", trips: filteredTourIds.length, salaryAccruedVnd, salaryPaidVnd, inspections };
+    return { kind: "guide", trips: filteredTourIds.length, salaryAccruedVnd, salaryPaidVnd };
   }
 
   if (role === "dispatcher" || role === "booking_dispatcher") {
