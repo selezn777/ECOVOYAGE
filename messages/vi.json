@@ -1559,5 +1559,10 @@
     "errNotConfigured": "Google Trang tính chưa được cấu hình (.env)",
     "errSyncFailed": "Đồng bộ thất bại",
     "errUnknownAction": "Hành động không xác định"
+  },
+  "myReport": {
+    "inspectionTitle": "Kiểm tra",
+    "inspectionCount": "{count} lần kiểm tra",
+    "inspectionNone": "Không có kiểm tra trong kỳ này"
   }
 }

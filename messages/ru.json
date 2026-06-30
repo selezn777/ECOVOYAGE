@@ -1559,5 +1559,10 @@
     "errNotConfigured": "Google Таблица не настроена (.env)",
     "errSyncFailed": "Ошибка синхронизации",
     "errUnknownAction": "Неизвестное действие"
+  },
+  "myReport": {
+    "inspectionTitle": "Инспекшн",
+    "inspectionCount": "{count, plural, one {# инспекшн} few {# инспекшна} many {# инспекшнов} other {# инспекшна}}",
+    "inspectionNone": "Нет инспекшнов в этом периоде"
   }
 }

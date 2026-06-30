@@ -1,9 +1,10 @@
 import { Suspense } from "react";
+import { getTranslations } from "next-intl/server";
 import { TopNav } from "@/components/top-nav";
 import { MyReportMonthPicker } from "@/components/my-report-month-picker";
 import { CommissionSharesLog } from "@/components/commission-shares-log";
 import { requireAuth } from "@/lib/auth-session";
-import { getPersonalReport } from "@/lib/data";
+import { getPersonalReport, type InspectionTourRow } from "@/lib/data";
 import { formatVnd } from "@/lib/format";
 import { roleLabel } from "@/lib/role-labels";
 
@@ -32,6 +33,30 @@ function monthRange(ym: string): { fromYmd: string; toYmd: string; label: string
   const label = `${monthNames[m - 1]} ${y}`;
   return { fromYmd, toYmd, label };
   void from;
+}
+
+function InspectionBlock({ inspections, title, noneLabel }: { inspections: InspectionTourRow[]; title: string; noneLabel: string }) {
+  if (inspections.length === 0) return (
+    <div className="rounded-xl bg-[var(--surface-soft)] px-3 py-2.5 ring-1 ring-[var(--border)]">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{title}</p>
+      <p className="mt-1 text-sm text-[var(--muted)]">{noneLabel}</p>
+    </div>
+  );
+  return (
+    <div className="rounded-xl bg-[var(--surface-soft)] px-3 py-2.5 ring-1 ring-[var(--border)]">
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">
+        {title} · {inspections.length}
+      </p>
+      <ul className="space-y-1">
+        {inspections.map((t, i) => (
+          <li key={i} className="flex items-baseline justify-between gap-2 text-xs">
+            <span className="min-w-0 truncate text-[var(--text)]">{t.name}</span>
+            <span className="shrink-0 tabular-nums text-[var(--muted)]">{t.date.slice(5).replace("-", ".")}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 function StatRow({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
@@ -78,7 +103,10 @@ export default async function MyReportPage({
   const monthYm = parseMonth(rawM);
   const { fromYmd, toYmd, label } = monthRange(monthYm);
 
-  const report = await getPersonalReport(user.id, user.role, fromYmd, toYmd);
+  const [report, tMR] = await Promise.all([
+    getPersonalReport(user.id, user.role, fromYmd, toYmd),
+    getTranslations("myReport"),
+  ]);
 
   return (
     <main className="app-wrap">
@@ -115,6 +143,11 @@ export default async function MyReportPage({
           {report.bookings === 0 && (
             <p className="mt-2 text-center text-sm text-[var(--muted)]">Нет броней за этот месяц</p>
           )}
+          <InspectionBlock
+            inspections={report.inspections}
+            title={tMR("inspectionTitle")}
+            noneLabel={tMR("inspectionNone")}
+          />
           <div className="mt-1">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-[var(--muted2)]">Деление комиссии</p>
             <CommissionSharesLog alwaysOpen />
@@ -137,6 +170,11 @@ export default async function MyReportPage({
           {report.trips === 0 && (
             <p className="mt-2 text-center text-sm text-[var(--muted)]">Нет назначений в этом месяце</p>
           )}
+          <InspectionBlock
+            inspections={report.inspections}
+            title={tMR("inspectionTitle")}
+            noneLabel={tMR("inspectionNone")}
+          />
         </div>
       )}
 

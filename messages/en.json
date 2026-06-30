@@ -1559,5 +1559,10 @@
     "errNotConfigured": "Google Sheet is not configured (.env)",
     "errSyncFailed": "Sync failed",
     "errUnknownAction": "Unknown action"
+  },
+  "myReport": {
+    "inspectionTitle": "Inspections",
+    "inspectionCount": "{count} {count, plural, one {inspection} other {inspections}}",
+    "inspectionNone": "No inspections this period"
   }
 }

@@ -9421,12 +9421,33 @@ export async function getManagerBookingAnalytics(managerId: string): Promise<Man
   return { totalBookings: rows.length, segments, peakHours };
 }
 
+export type InspectionTourRow = { name: string; date: string };
+
 export type PersonalReportData =
-  | { kind: "manager"; bookings: number; tourists: number; totalVnd: number; commissionVnd: number; commissionPct: number; ticketProfitVnd: number }
-  | { kind: "guide"; trips: number; salaryAccruedVnd: number; salaryPaidVnd: number }
+  | { kind: "manager"; bookings: number; tourists: number; totalVnd: number; commissionVnd: number; commissionPct: number; ticketProfitVnd: number; inspections: InspectionTourRow[] }
+  | { kind: "guide"; trips: number; salaryAccruedVnd: number; salaryPaidVnd: number; inspections: InspectionTourRow[] }
   | { kind: "dispatcher"; tours: number; busAssignments: number }
   | { kind: "accountant"; cashOps: number; cashInVnd: number; cashOutVnd: number }
   | { kind: "other" };
+
+async function fetchInspectionTours(supabase: ReturnType<typeof getSupabaseAdmin>, userId: string, fromYmd: string, toYmd: string): Promise<InspectionTourRow[]> {
+  if (!supabase) return [];
+  const { data: tgRows } = await supabase
+    .from("tour_guides")
+    .select("tour_id")
+    .eq("guide_id", userId)
+    .eq("is_inspection", true);
+  const tourIds = (tgRows as { tour_id: string }[] | null)?.map((r) => r.tour_id) ?? [];
+  if (!tourIds.length) return [];
+  const { data: tourRows } = await supabase
+    .from("tours")
+    .select("name,start_at")
+    .in("id", tourIds)
+    .order("start_at", { ascending: false });
+  return ((tourRows as { name: string; start_at: string }[]) ?? [])
+    .filter((t) => { const ymd = startDateOnly(t.start_at); return ymd >= fromYmd && ymd <= toYmd; })
+    .map((t) => ({ name: t.name, date: startDateOnly(t.start_at) }));
+}
 
 export async function getPersonalReport(
   userId: string,
@@ -9437,9 +9458,9 @@ export async function getPersonalReport(
   const supabase = getSupabaseAdmin();
   if (!supabase) {
     if (role === "manager" || role === "chief_manager")
-      return { kind: "manager", bookings: 0, tourists: 0, totalVnd: 0, commissionVnd: 0, commissionPct: DEFAULT_MANAGER_SALES_COMMISSION, ticketProfitVnd: 0 };
+      return { kind: "manager", bookings: 0, tourists: 0, totalVnd: 0, commissionVnd: 0, commissionPct: DEFAULT_MANAGER_SALES_COMMISSION, ticketProfitVnd: 0, inspections: [] };
     if (role === "guide" || role === "chief_guide")
-      return { kind: "guide", trips: 0, salaryAccruedVnd: 0, salaryPaidVnd: 0 };
+      return { kind: "guide", trips: 0, salaryAccruedVnd: 0, salaryPaidVnd: 0, inspections: [] };
     if (role === "dispatcher" || role === "booking_dispatcher")
       return { kind: "dispatcher", tours: 0, busAssignments: 0 };
     if (role === "accountant")
@@ -9474,7 +9495,7 @@ export async function getPersonalReport(
     const allById = new Map<string, BkRow>();
     for (const r of [...ownRows, ...shareRows]) allById.set(r.id, r);
     const allRows = [...allById.values()];
-    if (!allRows.length) return { kind: "manager", bookings: 0, tourists: 0, totalVnd: 0, commissionVnd: 0, commissionPct, ticketProfitVnd: 0 };
+    if (!allRows.length) return { kind: "manager", bookings: 0, tourists: 0, totalVnd: 0, commissionVnd: 0, commissionPct, ticketProfitVnd: 0, inspections: await fetchInspectionTours(supabase, userId, fromYmd, toYmd) };
 
     // 2. Даты туров → фильтрация по месяцу на клиенте
     const tourIds = [...new Set(allRows.map((r) => r.tour_id))];
@@ -9487,7 +9508,7 @@ export async function getPersonalReport(
       return ymd && ymd >= fromYmd && ymd <= toYmd;
     }).map((b) => b.id);
 
-    if (!filteredIds.length) return { kind: "manager", bookings: 0, tourists: 0, totalVnd: 0, commissionVnd: 0, commissionPct, ticketProfitVnd: 0 };
+    if (!filteredIds.length) return { kind: "manager", bookings: 0, tourists: 0, totalVnd: 0, commissionVnd: 0, commissionPct, ticketProfitVnd: 0, inspections: await fetchInspectionTours(supabase, userId, fromYmd, toYmd) };
 
     // 3. Сумма по прайсу из booking_prices
     const { data: priceRows } = await supabase.from("booking_prices").select("booking_id,amount_vnd").in("booking_id", filteredIds);
@@ -9514,13 +9535,14 @@ export async function getPersonalReport(
       if (d >= fromYmd && d <= toYmd) ticketProfitVnd += Number(row.manager_profit_vnd || 0);
     }
 
-    return { kind: "manager", bookings: filteredIds.length, tourists, totalVnd, commissionVnd: Math.round((totalVnd * commissionPct) / 100), commissionPct, ticketProfitVnd };
+    const inspections = await fetchInspectionTours(supabase, userId, fromYmd, toYmd);
+    return { kind: "manager", bookings: filteredIds.length, tourists, totalVnd, commissionVnd: Math.round((totalVnd * commissionPct) / 100), commissionPct, ticketProfitVnd, inspections };
   }
 
   if (role === "guide" || role === "chief_guide") {
     const { data: tgRows } = await supabase.from("tour_guides").select("tour_id").eq("guide_id", userId);
     const allTourIds = [...new Set((tgRows as { tour_id: string }[] | null)?.map((r) => r.tour_id) ?? [])];
-    if (!allTourIds.length) return { kind: "guide", trips: 0, salaryAccruedVnd: 0, salaryPaidVnd: 0 };
+    if (!allTourIds.length) return { kind: "guide", trips: 0, salaryAccruedVnd: 0, salaryPaidVnd: 0, inspections: await fetchInspectionTours(supabase, userId, fromYmd, toYmd) };
 
     const { data: tourRows } = await supabase.from("tours").select("id,start_at").in("id", allTourIds);
     const filteredTourIds = ((tourRows as { id: string; start_at: string }[]) ?? [])
@@ -9537,7 +9559,8 @@ export async function getPersonalReport(
         if (s.status === "paid") salaryPaidVnd += Number(s.amount_vnd || 0);
       }
     }
-    return { kind: "guide", trips: filteredTourIds.length, salaryAccruedVnd, salaryPaidVnd };
+    const inspections = await fetchInspectionTours(supabase, userId, fromYmd, toYmd);
+    return { kind: "guide", trips: filteredTourIds.length, salaryAccruedVnd, salaryPaidVnd, inspections };
   }
 
   if (role === "dispatcher" || role === "booking_dispatcher") {
