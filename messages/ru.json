@@ -57,11 +57,11 @@
     "upcomingTours": "Все туры",
     "pastTours": "Прошедшие",
     "financeMonth": "Финансы месяца",
-    "income": "Выручка",
     "expenses": "Расходы",
     "profit": "Прибыль",
     "topGuides": "Топ гидов",
-    "trips": "выездов"
+    "trips": "выездов",
+    "revenue": "Выручка"
   },
   "tour": {
     "booked": "Занято мест",

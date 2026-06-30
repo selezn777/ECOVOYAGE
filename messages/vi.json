@@ -57,11 +57,11 @@
     "upcomingTours": "Tất cả tours",
     "pastTours": "Tours đã qua",
     "financeMonth": "Tài chính tháng",
-    "income": "Doanh thu",
     "expenses": "Chi phí",
     "profit": "Lợi nhuận",
     "topGuides": "Top hướng dẫn viên",
-    "trips": "chuyến"
+    "trips": "chuyến",
+    "revenue": "Doanh thu"
   },
   "tour": {
     "booked": "Chỗ đã đặt",

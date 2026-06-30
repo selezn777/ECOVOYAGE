@@ -342,30 +342,24 @@ export default async function DashboardPage({
           ) : null}
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-0 shadow-[var(--shadow-sm)]">
-          <nav className="flex w-full min-w-0" aria-label="Режим дашборда">
-            {allowedViews.map((mode) => {
-              const active = view === mode;
-              return (
-                <Link
-                  key={mode}
-                  href={withDashboardParams({
-                    view: mode,
-                    q,
-                    tour: tourExact,
-                    month,
-                    cal,
-                    day,
-                    range,
-                  })}
-                  className={`${filterChipBase} ${active ? filterChipActive : filterChipMuted}`}
-                >
-                  {VIEW_LABELS[mode]}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+        {allowedViews.length > 1 ? (
+          <div className="mt-4 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-0 shadow-[var(--shadow-sm)]">
+            <nav className="flex w-full min-w-0" aria-label="Режим дашборда">
+              {allowedViews.map((mode) => {
+                const active = view === mode;
+                return (
+                  <Link
+                    key={mode}
+                    href={withDashboardParams({ view: mode, q, tour: tourExact, month, cal, day, range })}
+                    className={`${filterChipBase} ${active ? filterChipActive : filterChipMuted}`}
+                  >
+                    {VIEW_LABELS[mode]}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        ) : null}
 
         {/* Диспетчер: Все туры (будущие + сегодня) / Прошедшие */}
         {isDispatcher ? (
@@ -434,165 +428,137 @@ export default async function DashboardPage({
 
       {(user.role === "director" || user.role === "chief_manager") && directorSalesPulse ? (
         <section className="card mb-3">
+          {/* ── Навигация по месяцу ── */}
           <div className="flex min-w-0 items-center justify-between gap-2">
-            <h2 className="text-base font-semibold text-[var(--text)]">{t("analytics")}</h2>
+            <span className="text-[13px] font-semibold text-[var(--text)] capitalize">{monthTitleRu(month)}</span>
             <div className="flex items-center gap-1">
               <a
                 href={withDashboardParams({ view, q, tour: tourExact, month: monthShift(month, -1), cal, day, range })}
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] text-[var(--muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text)] transition-colors text-sm"
-                aria-label="Предыдущий месяц"
               >‹</a>
-              <span className="min-w-[110px] text-center text-[12px] font-medium text-[var(--text)] tabular-nums">
-                {monthTitleRu(month)}
-              </span>
               <a
                 href={monthShift(month, 1) <= tourBusinessTodayYmd().slice(0, 7)
                   ? withDashboardParams({ view, q, tour: tourExact, month: monthShift(month, 1), cal, day, range })
                   : "#"}
-                aria-disabled={monthShift(month, 1) > tourBusinessTodayYmd().slice(0, 7)}
                 className={`flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] text-sm transition-colors ${
                   monthShift(month, 1) > tourBusinessTodayYmd().slice(0, 7)
                     ? "cursor-not-allowed bg-[var(--surface-soft)] text-[var(--muted2)] opacity-40"
                     : "bg-[var(--surface-soft)] text-[var(--muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text)]"
                 }`}
-                aria-label="Следующий месяц"
               >›</a>
             </div>
           </div>
-          {/* ── Финансы месяца ── */}
-          <div className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3">
-            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("financeMonth")}</div>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-lg bg-[var(--surface-elevated)] px-3 py-2 text-center">
-                <div className="text-[11px] text-[var(--muted)]">{t("income")}</div>
-                <div className="mt-0.5 text-[13px] font-bold text-[var(--accent)]">
-                  {directorSalesPulse.financeMonth.incomeVnd > 0
-                    ? `${(directorSalesPulse.financeMonth.incomeVnd / 1_000_000).toFixed(1)}M`
-                    : "—"}
-                </div>
-              </div>
-              <div className="rounded-lg bg-[var(--surface-elevated)] px-3 py-2 text-center">
-                <div className="text-[11px] text-[var(--muted)]">{t("expenses")}</div>
-                <div className="mt-0.5 text-[13px] font-bold text-[var(--danger,#ef4444)]">
-                  {directorSalesPulse.financeMonth.expenseVnd > 0
-                    ? `${(directorSalesPulse.financeMonth.expenseVnd / 1_000_000).toFixed(1)}M`
-                    : "—"}
-                </div>
-              </div>
-              <div className="rounded-lg bg-[var(--surface-elevated)] px-3 py-2 text-center">
-                <div className="text-[11px] text-[var(--muted)]">{t("profit")}</div>
-                <div className={`mt-0.5 text-[13px] font-bold ${directorSalesPulse.financeMonth.netVnd >= 0 ? "text-[var(--success,#22c55e)]" : "text-[var(--danger,#ef4444)]"}`}>
-                  {directorSalesPulse.financeMonth.incomeVnd > 0 || directorSalesPulse.financeMonth.expenseVnd > 0
-                    ? `${directorSalesPulse.financeMonth.netVnd >= 0 ? "+" : ""}${(directorSalesPulse.financeMonth.netVnd / 1_000_000).toFixed(1)}M`
-                    : "—"}
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {/* ── 5 KPI-метрик ── */}
+          {(() => {
+            const fm = directorSalesPulse.financeMonth;
+            const fmtM = (v: number) => v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v > 0 ? `${Math.round(v / 1000)}K` : "—";
+            const hasData = fm.bookingsCount > 0 || fm.revenueVnd > 0 || fm.expenseVnd > 0;
+            return (
+              <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                <div className="rounded-xl bg-[var(--surface-soft)] border border-[var(--border)] px-2 py-2.5 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("bookings")}</div>
+                  <div className="mt-1 text-[15px] font-bold tabular-nums text-[var(--text)]">{hasData ? fm.bookingsCount : "—"}</div>
+                </div>
+                <div className="rounded-xl bg-[var(--surface-soft)] border border-[var(--border)] px-2 py-2.5 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("people")}</div>
+                  <div className="mt-1 text-[15px] font-bold tabular-nums text-[var(--text)]">{hasData ? fm.totalPax : "—"}</div>
+                </div>
+                <div className="rounded-xl bg-[var(--surface-soft)] border border-[var(--border)] px-2 py-2.5 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("revenue")}</div>
+                  <div className="mt-1 text-[15px] font-bold tabular-nums text-[var(--accent)]">{fmtM(fm.revenueVnd)}</div>
+                </div>
+                <div className="rounded-xl bg-[var(--surface-soft)] border border-[var(--border)] px-2 py-2.5 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("expenses")}</div>
+                  <div className="mt-1 text-[15px] font-bold tabular-nums" style={{ color: "var(--danger, #ef4444)" }}>{fmtM(fm.expenseVnd)}</div>
+                </div>
+                <div className="rounded-xl bg-[var(--surface-soft)] border border-[var(--border)] px-2 py-2.5 text-center col-span-3 sm:col-span-1">
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("profit")}</div>
+                  <div className={`mt-1 text-[15px] font-bold tabular-nums ${fm.netVnd >= 0 ? "" : ""}`}
+                    style={{ color: hasData ? (fm.netVnd >= 0 ? "var(--success, #22c55e)" : "var(--danger, #ef4444)") : "var(--muted)" }}>
+                    {hasData ? `${fm.netVnd >= 0 ? "+" : ""}${fmtM(fm.netVnd)}` : "—"}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
-            {/* ── Топ менеджеров ── */}
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3">
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("topManagers")}</div>
-              <ul className="space-y-2">
-                {directorSalesPulse.byManager.slice(0, 10).map((r, i) => {
-                  const maxPax = directorSalesPulse.byManager[0]?.pax ?? 1;
-                  const pct = Math.round((r.pax / maxPax) * 100);
-                  const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
-                  return (
-                    <li key={r.managerId}>
-                      <div className="flex min-w-0 items-start gap-1.5">
-                        <span className="mt-0.5 shrink-0 text-sm leading-none">
-                          {medal ?? <span className="w-4 block text-center text-[10px] font-semibold text-[var(--muted2)]">{i + 1}</span>}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-[13px] font-semibold text-[var(--text)]">{r.managerName}</div>
-                          <div className="text-[11px] text-[var(--muted)]">{r.bookings} {t("bookings")} · {r.pax} {t("people")}</div>
+          {/* ── Рейтинги: менеджеры / туры / гиды ── */}
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+
+            {/* Топ менеджеров */}
+            {directorSalesPulse.byManager.length > 0 ? (
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3">
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("topManagers")}</div>
+                <ul className="space-y-2">
+                  {directorSalesPulse.byManager.slice(0, 8).map((r, i) => {
+                    const max = directorSalesPulse.byManager[0]?.bookings ?? 1;
+                    const pct = Math.round((r.bookings / max) * 100);
+                    return (
+                      <li key={r.managerId}>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <span className="w-4 shrink-0 text-center text-[10px] font-semibold text-[var(--muted2)]">{i + 1}</span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-[12px] font-semibold text-[var(--text)]">{r.managerName}</div>
+                            <div className="text-[11px] text-[var(--muted)]">{r.bookings} {t("bookings")} · {r.pax} {t("people")}</div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
-                        <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${pct}%`, opacity: 0.7 + 0.3 * (pct / 100) }} />
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-
-            {/* ── По времени записи — полноценный SVG-график ── */}
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3">
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("byBookingTime")}</div>
-              <BookingsByHourChart
-                rows={Array.from({ length: 24 }, (_, h) => {
-                  const bucket = `${String(h).padStart(2, "0")}:00`;
-                  const found = directorSalesPulse.byHour.find((r) => r.hour === bucket || r.hour === String(h).padStart(2,"0"));
-                  return {
-                    hour: h,
-                    count: found?.bookings ?? 0,
-                    totalPax: found?.pax ?? 0,
-                    solo: found?.solo ?? 0,
-                    pair: found?.pair ?? 0,
-                    family: found?.family ?? 0,
-                    group: found?.group ?? 0,
-                  };
-                })}
-              />
-            </div>
-
-            {/* ── Топ туров ── */}
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3">
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("topTours")}</div>
-              <ul className="space-y-2">
-                {directorSalesPulse.byTour.slice(0, 8).map((r, i) => {
-                  const maxB = directorSalesPulse.byTour[0]?.bookings ?? 1;
-                  const pct = Math.round((r.bookings / maxB) * 100);
-                  const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
-                  return (
-                    <li key={r.tourId}>
-                      <div className="flex min-w-0 items-start gap-1.5">
-                        <span className="mt-0.5 shrink-0 text-sm leading-none">
-                          {medal ?? <span className="w-4 block text-center text-[10px] font-semibold text-[var(--muted2)]">{i + 1}</span>}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-[13px] font-semibold text-[var(--text)]">{r.tourName}</div>
-                          <div className="text-[11px] text-[var(--muted)]">{r.bookings} {t("bookings")} · {r.pax} {t("people")}</div>
+                        <div className="mt-1 h-1 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
+                          <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${pct}%` }} />
                         </div>
-                      </div>
-                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
-                        <div
-                          className="h-full rounded-full bg-[var(--accent)]"
-                          style={{ width: `${pct}%`, opacity: 0.7 + 0.3 * (pct / 100) }}
-                        />
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ) : null}
 
-            {/* ── Топ гидов ── */}
+            {/* Топ туров */}
+            {directorSalesPulse.byTour.length > 0 ? (
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3">
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("topTours")}</div>
+                <ul className="space-y-2">
+                  {directorSalesPulse.byTour.slice(0, 8).map((r, i) => {
+                    const max = directorSalesPulse.byTour[0]?.bookings ?? 1;
+                    const pct = Math.round((r.bookings / max) * 100);
+                    return (
+                      <li key={r.tourId}>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <span className="w-4 shrink-0 text-center text-[10px] font-semibold text-[var(--muted2)]">{i + 1}</span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-[12px] font-semibold text-[var(--text)]">{r.tourName}</div>
+                            <div className="text-[11px] text-[var(--muted)]">{r.bookings} {t("bookings")} · {r.pax} {t("people")}</div>
+                          </div>
+                        </div>
+                        <div className="mt-1 h-1 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
+                          <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${pct}%` }} />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ) : null}
+
+            {/* Топ гидов */}
             {directorSalesPulse.byGuide.length > 0 ? (
               <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3">
                 <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("topGuides")}</div>
                 <ul className="space-y-2">
-                  {directorSalesPulse.byGuide.map((r, i) => {
-                    const maxT = directorSalesPulse.byGuide[0]?.trips ?? 1;
-                    const pct = Math.round((r.trips / maxT) * 100);
-                    const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+                  {directorSalesPulse.byGuide.slice(0, 8).map((r, i) => {
+                    const max = directorSalesPulse.byGuide[0]?.trips ?? 1;
+                    const pct = Math.round((r.trips / max) * 100);
                     return (
                       <li key={r.guideId}>
-                        <div className="flex min-w-0 items-start gap-1.5">
-                          <span className="mt-0.5 shrink-0 text-sm leading-none">
-                            {medal ?? <span className="w-4 block text-center text-[10px] font-semibold text-[var(--muted2)]">{i + 1}</span>}
-                          </span>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <span className="w-4 shrink-0 text-center text-[10px] font-semibold text-[var(--muted2)]">{i + 1}</span>
                           <div className="min-w-0 flex-1">
-                            <div className="truncate text-[13px] font-semibold text-[var(--text)]">{r.guideName}</div>
+                            <div className="truncate text-[12px] font-semibold text-[var(--text)]">{r.guideName}</div>
                             <div className="text-[11px] text-[var(--muted)]">{r.trips} {t("trips")} · {r.pax} {t("people")}</div>
                           </div>
                         </div>
-                        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
-                          <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${pct}%`, opacity: 0.7 + 0.3 * (pct / 100) }} />
+                        <div className="mt-1 h-1 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
+                          <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${pct}%` }} />
                         </div>
                       </li>
                     );

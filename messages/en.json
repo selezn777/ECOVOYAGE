@@ -57,11 +57,11 @@
     "upcomingTours": "All Tours",
     "pastTours": "Past Tours",
     "financeMonth": "Monthly Finance",
-    "income": "Revenue",
     "expenses": "Expenses",
     "profit": "Profit",
     "topGuides": "Top Guides",
-    "trips": "trips"
+    "trips": "trips",
+    "revenue": "Revenue"
   },
   "tour": {
     "booked": "Seats Booked",

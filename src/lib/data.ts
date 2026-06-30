@@ -842,7 +842,7 @@ export type DirectorSalesPulse = {
   byTour: Array<{ tourId: string; tourName: string; bookings: number; pax: number }>;
   byHour: Array<{ hour: string; bookings: number; pax: number; solo: number; pair: number; family: number; group: number }>;
   byGuide: Array<{ guideId: string; guideName: string; trips: number; pax: number }>;
-  financeMonth: { incomeVnd: number; expenseVnd: number; netVnd: number };
+  financeMonth: { revenueVnd: number; expenseVnd: number; netVnd: number; bookingsCount: number; totalPax: number };
 };
 
 /** Директорский срез продаж: кто, куда и во сколько записывает.
@@ -856,7 +856,7 @@ export async function getDirectorSalesPulse(windowDays = 30, fromYmd?: string): 
     byTour: [],
     byHour: [],
     byGuide: [],
-    financeMonth: { incomeVnd: 0, expenseVnd: 0, netVnd: 0 },
+    financeMonth: { revenueVnd: 0, expenseVnd: 0, netVnd: 0, bookingsCount: 0, totalPax: 0 },
   };
   if (!supabase) return emptyResult;
 
@@ -864,16 +864,15 @@ export async function getDirectorSalesPulse(windowDays = 30, fromYmd?: string): 
   const sinceIso = fromYmd
     ? new Date(`${fromYmd}T00:00:00.000Z`).toISOString()
     : new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-  // Конец периода: начало следующего месяца (если fromYmd задан как YYYY-MM-01)
+  // Конец периода: начало следующего месяца
   const untilIso = fromYmd
     ? (() => {
         const [y, m] = fromYmd.slice(0, 7).split("-").map(Number);
-        const next = new Date(Date.UTC(y, m, 1)); // m — уже следующий месяц (0-based + 1)
-        return next.toISOString();
+        return new Date(Date.UTC(y, m, 1)).toISOString();
       })()
     : new Date().toISOString();
 
-  const [bookingRes, guideRes, payRes, expRes] = await Promise.all([
+  const [bookingRes, guideRes, expRes] = await Promise.all([
     supabase
       .from("bookings")
       .select("id,tour_id,manager_id,created_at,adults,children,infants")
@@ -888,17 +887,23 @@ export async function getDirectorSalesPulse(windowDays = 30, fromYmd?: string): 
       .lt("tours.start_at", untilIso)
       .eq("is_inspection", false)
       .limit(2000),
-    supabase.from("payments").select("amount_vnd").gte("created_at", sinceIso).lt("created_at", untilIso),
     supabase.from("expenses").select("amount_vnd").gte("created_at", sinceIso).lt("created_at", untilIso),
   ]);
 
   const { data: bookingRows, error } = bookingRes;
   if (error || !bookingRows) return { ...emptyResult, windowDays: days };
 
-  // Финансы
-  const incomeVnd = (payRes.data || []).reduce((s, r) => s + Number((r as { amount_vnd: number }).amount_vnd || 0), 0);
+  // Выручка = booking_prices (прайс, выставленный туристу при бронировании)
+  const bookingIds = (bookingRows as Array<{ id: string }>).map((r) => String(r.id)).filter(Boolean);
+  let revenueVnd = 0;
+  if (bookingIds.length) {
+    const { data: priceRows } = await supabase
+      .from("booking_prices")
+      .select("amount_vnd")
+      .in("booking_id", bookingIds);
+    revenueVnd = (priceRows || []).reduce((s, r) => s + Number((r as { amount_vnd: number }).amount_vnd || 0), 0);
+  }
   const expenseVnd = (expRes.data || []).reduce((s, r) => s + Number((r as { amount_vnd: number }).amount_vnd || 0), 0);
-  const financeMonth = { incomeVnd, expenseVnd, netVnd: incomeVnd - expenseVnd };
 
   // Гиды: группируем tour_guides по guide_id
   const byGuideMap = new Map<string, { guideId: string; guideName: string; trips: number; pax: number }>();
@@ -1009,6 +1014,9 @@ export async function getDirectorSalesPulse(windowDays = 30, fromYmd?: string): 
     else                   hour.group++;
     byHourMap.set(bucket, hour);
   }
+
+  const totalPax = rows.reduce((s, r) => s + Math.max(0, Number(r.adults || 0)) + Math.max(0, Number(r.children || 0)) + Math.max(0, Number(r.infants || 0)), 0);
+  const financeMonth = { revenueVnd, expenseVnd, netVnd: revenueVnd - expenseVnd, bookingsCount: rows.length, totalPax };
 
   return {
     windowDays: days,
