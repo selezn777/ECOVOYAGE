@@ -2,10 +2,12 @@ import { Suspense } from "react";
 import { TopNav } from "@/components/top-nav";
 import { MyReportMonthPicker } from "@/components/my-report-month-picker";
 import { CommissionSharesLog } from "@/components/commission-shares-log";
+import { GuideEarningsToggle } from "@/components/guide-earnings-toggle";
 import { requireAuth } from "@/lib/auth-session";
-import { getPersonalReport, getGuideAllTimeStats, type GuideProgramStat } from "@/lib/data";
+import { getPersonalReport, getGuideAllTimeStats, getGuideDashboardEarningsStats, type GuideProgramStat } from "@/lib/data";
 import { formatVnd } from "@/lib/format";
 import { roleLabel } from "@/lib/role-labels";
+import { tourBusinessTodayYmd } from "@/lib/scheduling";
 
 export const dynamic = "force-dynamic";
 
@@ -111,9 +113,13 @@ export default async function MyReportPage({
   const { fromYmd, toYmd, label } = monthRange(monthYm);
 
   const needsAllTimeStats = ["guide","chief_guide","manager","chief_manager"].includes(user.role);
-  const [report, allTimeStats] = await Promise.all([
+  const isGuideReport = user.role === "guide" || user.role === "chief_guide";
+  const todayYmd = tourBusinessTodayYmd();
+  const guideDayYmd = monthYm === todayYmd.slice(0, 7) ? todayYmd : toYmd;
+  const [report, allTimeStats, guideStats] = await Promise.all([
     getPersonalReport(user.id, user.role, fromYmd, toYmd),
     needsAllTimeStats ? getGuideAllTimeStats(user.id) : Promise.resolve({ programs: [], inspectionTotal: 0 }),
+    isGuideReport ? getGuideDashboardEarningsStats(user.id, monthYm, guideDayYmd) : Promise.resolve(null),
   ]);
 
   return (
@@ -161,16 +167,7 @@ export default async function MyReportPage({
 
       {report.kind === "guide" && (
         <div className="flex flex-col gap-3">
-          <MoneyHero
-            label="Начислено"
-            value={report.salaryAccruedVnd > 0 ? formatVnd(report.salaryAccruedVnd) : "—"}
-            sub={report.trips > 0 ? `За ${report.trips} ${report.trips === 1 ? "выезд" : report.trips < 5 ? "выезда" : "выездов"}` : undefined}
-          />
-          <StatRow label="Выплачено" value={report.salaryPaidVnd > 0 ? formatVnd(report.salaryPaidVnd) : "—"} accent />
-          {report.salaryAccruedVnd > report.salaryPaidVnd && report.salaryAccruedVnd > 0 && (
-            <StatRow label="К выплате" value={formatVnd(report.salaryAccruedVnd - report.salaryPaidVnd)} />
-          )}
-          <StatRow label="Выездов" value={String(report.trips)} />
+          {guideStats ? <GuideEarningsToggle stats={guideStats} /> : null}
           {report.trips === 0 && (
             <p className="mt-2 text-center text-sm text-[var(--muted)]">Нет назначений в этом месяце</p>
           )}

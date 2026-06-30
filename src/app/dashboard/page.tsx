@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { GuideEarningsToggle } from "@/components/guide-earnings-toggle";
 import { ManagerSalesEarningsToggle } from "@/components/manager-sales-earnings-toggle";
 import { TopNav } from "@/components/top-nav";
 import { requireAuth, isDemoUser } from "@/lib/auth-session";
 import {
-  getGuideDashboardEarningsStats,
   getDirectorSalesPulse,
   getManagerDashboardSalesStats,
   listTours,
@@ -145,7 +143,7 @@ export default async function DashboardPage({
     (user.role === "manager" || user.role === "director" || user.role === "chief_manager");
 
   const demo = isDemoUser(user);
-  const [toursRaw, guideStats, managerSalesStats, directorSalesPulse] = await Promise.all([
+  const [toursRaw, managerSalesStats, directorSalesPulse] = await Promise.all([
     (async () => {
       if (isGuideRole && view === "my_trips") {
         const [pastAndToday, upcoming] = await Promise.all([
@@ -164,9 +162,6 @@ export default async function DashboardPage({
       const rows = await listToursForDashboard(user.id, view, demo);
       return isGuideRole ? mergeGuideDashboardExpenseBadges(rows, user.id, user.role) : rows;
     })(),
-    isGuideRole
-      ? getGuideDashboardEarningsStats(user.id, month, day || tourBusinessTodayYmd())
-      : Promise.resolve(null),
     fetchManagerSalesStats
       ? getManagerDashboardSalesStats(user.id, month, day || tourBusinessTodayYmd())
       : Promise.resolve(null),
@@ -314,12 +309,6 @@ export default async function DashboardPage({
                 {t("all")}
               </Link>
             </nav>
-          </div>
-        ) : null}
-
-        {guideStats && isGuideRole && view === "my_trips" ? (
-          <div className="mt-3">
-            <GuideEarningsToggle stats={guideStats} />
           </div>
         ) : null}
 
