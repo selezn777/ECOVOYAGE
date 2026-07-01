@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EcoVoyage - выбор директорского дашборда</title>
+  <style>
+    :root {
+      --lime: #a8ce40;
+      --green: #49a447;
+      --ink: #111827;
+      --muted: #667085;
+      --line: #dce4ee;
+      --soft: #f5f7fb;
+      --blue: #1479d4;
+      --cyan: #0ea5b7;
+      --amber: #f59e0b;
+      --red: #e63b3b;
+      --violet: #7c3aed;
+      --white: #fff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #edf1f5;
+      color: var(--ink);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main { max-width: 1360px; margin: 0 auto; padding: 24px 14px 50px; }
+    h1, h2, h3, p { margin: 0; }
+    header { display: flex; justify-content: space-between; gap: 16px; align-items: end; margin-bottom: 20px; }
+    h1 { font-size: clamp(26px, 4vw, 44px); letter-spacing: 0; }
+    h2 { margin: 30px 0 14px; font-size: 24px; }
+    h3 { font-size: 20px; letter-spacing: 0; }
+    .lead { margin-top: 8px; max-width: 780px; color: var(--muted); line-height: 1.45; }
+    .badge { display: inline-flex; align-items: center; min-height: 34px; border-radius: 999px; padding: 0 12px; background: var(--white); border: 1px solid var(--line); color: var(--muted); font-size: 13px; white-space: nowrap; }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      min-height: 88px;
+    }
+    .metric b { display: block; font-size: 13px; }
+    .metric span { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 18px;
+    }
+    .phone {
+      background: var(--white);
+      border: 1px solid #d7e0ec;
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 18px 46px rgba(16, 24, 40, .11);
+    }
+    .screen { min-height: 780px; padding: 18px; background: linear-gradient(#f8fafc, #fff); }
+    .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .brand { display: flex; align-items: center; gap: 9px; font-weight: 850; }
+    .mark { width: 36px; height: 36px; border-radius: 50%; background: var(--white); border: 1px solid var(--line); display: grid; place-items: center; color: var(--lime); font-size: 24px; font-weight: 900; }
+    .role { color: var(--muted); font-size: 12px; }
+    .title-row { display: flex; align-items: end; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .select { border: 1px solid var(--line); border-radius: 12px; background: var(--white); padding: 9px 11px; font-size: 13px; font-weight: 750; white-space: nowrap; }
+    .panel { border: 1px solid var(--line); border-radius: 16px; background: var(--white); padding: 14px; box-shadow: 0 4px 14px rgba(16,24,40,.04); }
+    .panel + .panel { margin-top: 12px; }
+    .label { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+    .money { font-size: 34px; font-weight: 950; line-height: 1; letter-spacing: 0; }
+    .sub { margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin: 12px 0; }
+    .kpi { min-height: 78px; border: 1px solid var(--line); border-radius: 14px; background: #fbfcfe; padding: 11px; }
+    .kpi strong { display: block; margin-top: 7px; font-size: 21px; line-height: 1; }
+    .kpi small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+    .hero { border-radius: 20px; padding: 17px; color: white; background: #1f2937; }
+    .hero.green { color: #132000; background: var(--lime); }
+    .hero.white { color: var(--ink); background: var(--white); border: 1px solid var(--line); }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid #edf1f6; }
+    .row:last-child { border-bottom: 0; }
+    .bar { margin-top: 6px; height: 7px; border-radius: 999px; overflow: hidden; background: #e9eef5; }
+    .bar span { display: block; height: 100%; border-radius: inherit; background: var(--lime); }
+    .line {
+      height: 150px;
+      border-radius: 16px;
+      background:
+        linear-gradient(to top, transparent 24%, rgba(102,112,133,.12) 25%, transparent 26%),
+        linear-gradient(to top, transparent 49%, rgba(102,112,133,.12) 50%, transparent 51%),
+        linear-gradient(to top, transparent 74%, rgba(102,112,133,.12) 75%, transparent 76%),
+        #fbfdff;
+      overflow: hidden;
+      position: relative;
+    }
+    .line svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .donuts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .donut { display: grid; justify-items: center; gap: 7px; color: var(--muted); font-size: 11px; font-weight: 700; text-align: center; }
+    .circle {
+      width: 82px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(var(--lime) var(--p), #e8eef5 0);
+      position: relative;
+      font-weight: 900;
+      color: var(--ink);
+    }
+    .circle:before { content: ""; position: absolute; inset: 10px; border-radius: inherit; background: white; }
+    .circle span { position: relative; z-index: 1; }
+    .bars { display: grid; gap: 9px; }
+    .heat { display: grid; grid-template-columns: 58px repeat(5, 1fr); gap: 6px; align-items: center; font-size: 11px; color: var(--muted); }
+    .cell { height: 25px; border-radius: 7px; background: #eef3f8; }
+    .c1 { background: #dff3b9; } .c2 { background: #a8ce40; } .c3 { background: #36a36a; } .c4 { background: #14746f; }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .tag { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border-radius: 8px; background: #eef3f8; color: var(--muted); font-size: 11px; font-weight: 800; }
+    .tag.red { background: #ffe2e2; color: var(--red); }
+    .tag.green { background: #e6f4ca; color: #31580b; }
+    .stack { display: grid; gap: 8px; }
+    .alert { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 14px; background: #fbfcfe; padding: 10px; }
+    .mini-chart { display: flex; height: 96px; align-items: end; gap: 6px; }
+    .mini-chart i { flex: 1; min-width: 0; border-radius: 6px 6px 3px 3px; background: linear-gradient(180deg, var(--lime), var(--cyan)); }
+    .score { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .score .kpi { min-height: 70px; }
+    @media (max-width: 760px) {
+      main { padding: 18px 10px 40px; }
+      header { display: block; }
+      .badge { margin-top: 12px; }
+      .grid { grid-template-columns: 1fr; }
+      .screen { min-height: auto; }
+      .kpis, .score { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Директорский дашборд: выбрать дизайн</h1>
+        <p class="lead">Это согласование, не боевой экран. Сначала выбираем данные и композицию, потом внедряем один выбранный вариант в приложение.</p>
+      </div>
+      <span class="badge">5 вариантов + 30 данных</span>
+    </header>
+
+    <h2>30 данных, которые стоит подтвердить</h2>
+    <section class="metrics">
+      <div class="metric"><b>1. Выручка по турам</b><span>Сумма продаж по `booking_prices` + fallback для старых броней.</span></div>
+      <div class="metric"><b>2. Фактически оплачено</b><span>Деньги, реально зачтённые по платежам.</span></div>
+      <div class="metric"><b>3. Долг туристов</b><span>Сколько ещё надо собрать.</span></div>
+      <div class="metric"><b>4. Расходы туров</b><span>Все расходы за период по турам.</span></div>
+      <div class="metric"><b>5. Чистая прибыль</b><span>Выручка минус расходы.</span></div>
+      <div class="metric"><b>6. Маржа</b><span>Процент прибыли от выручки.</span></div>
+      <div class="metric"><b>7. Касса офиса</b><span>Сколько денег в офисной кассе сейчас.</span></div>
+      <div class="metric"><b>8. Деньги у менеджеров</b><span>Принято, но ещё не сдано.</span></div>
+      <div class="metric"><b>9. Деньги у гидов</b><span>Доплаты/расчёты после тура.</span></div>
+      <div class="metric"><b>10. Непроверенные расходы</b><span>Расходы без бухгалтерского подтверждения.</span></div>
+      <div class="metric"><b>11. Брони</b><span>Количество броней за период.</span></div>
+      <div class="metric"><b>12. Туристы</b><span>Взрослые + дети + младенцы.</span></div>
+      <div class="metric"><b>13. Средний чек</b><span>Выручка / брони.</span></div>
+      <div class="metric"><b>14. Людей на бронь</b><span>Средний размер группы.</span></div>
+      <div class="metric"><b>15. Топ туров</b><span>По выручке, броням, людям, марже.</span></div>
+      <div class="metric"><b>16. Слабые туры</b><span>Мало людей или плохая маржа.</span></div>
+      <div class="metric"><b>17. Топ менеджеров</b><span>Брони, люди, деньги, долг.</span></div>
+      <div class="metric"><b>18. Топ гидов</b><span>Выезды, люди, рейтинг, закрытие кассы.</span></div>
+      <div class="metric"><b>19. Топ точек продаж</b><span>Точки/онлайн/промо по прибыли и броням.</span></div>
+      <div class="metric"><b>20. Ротация сотрудников</b><span>Кто сколько смен на точках получил.</span></div>
+      <div class="metric"><b>21. Онлайн-продажи</b><span>Отдельный канал и менеджеры онлайн.</span></div>
+      <div class="metric"><b>22. Ближайшие выезды</b><span>Сегодня/завтра, где есть риски.</span></div>
+      <div class="metric"><b>23. Загрузка автобусов</b><span>Места, автобусы, переполнение.</span></div>
+      <div class="metric"><b>24. Гиды без закрытия</b><span>Туры, где расчёт не завершён.</span></div>
+      <div class="metric"><b>25. Брони без цены</b><span>Старые/битые данные, которые портят отчёты.</span></div>
+      <div class="metric"><b>26. Отказы/возвраты</b><span>Сколько потеряли на отменах.</span></div>
+      <div class="metric"><b>27. Динамика по дням</b><span>Выручка/бронь/люди каждый день.</span></div>
+      <div class="metric"><b>28. Пиковые часы продаж</b><span>Когда менеджеры реально продают.</span></div>
+      <div class="metric"><b>29. План-факт</b><span>Цель месяца против текущего результата.</span></div>
+      <div class="metric"><b>30. Красные флаги</b><span>Что требует действия директора сегодня.</span></div>
+    </section>
+
+    <h2>5 вариантов дизайна</h2>
+    <section class="grid">
+      <article class="phone"><div class="screen">
+        <div class="top"><div class="brand"><div class="mark">E</div>EcoVoyage</div><div class="role">Июнь 2026</div></div>
+        <div class="title-row"><h3>Вариант 1: Деньги сверху</h3><div class="select">Месяц</div></div>
+        <div class="hero white">
+          <div class="label">Чистая прибыль</div>
+          <div class="money" style="color:var(--green)">+12.4M ₫</div>
+          <p class="sub">Выручка 31.8M · расходы 19.4M · маржа 39%</p>
+        </div>
+        <div class="kpis"><div class="kpi"><div class="label">Брони</div><strong>243</strong><small>+18% к маю</small></div><div class="kpi"><div class="label">Туристы</div><strong>591</strong><small>2.4 на бронь</small></div><div class="kpi"><div class="label">К сбору</div><strong>6.9M</strong><small>22 долга</small></div></div>
+        <div class="panel"><div class="label">Динамика денег</div><div class="line"><svg viewBox="0 0 320 150"><polyline points="0,112 45,82 90,96 135,54 180,68 225,30 270,50 320,22" fill="none" stroke="#a8ce40" stroke-width="6" stroke-linecap="round"/><polyline points="0,128 45,116 90,122 135,105 180,96 225,110 270,88 320,84" fill="none" stroke="#e63b3b" stroke-width="4" stroke-linecap="round"/></svg></div></div>
+        <div class="panel"><div class="label">Топы</div><div class="row"><span>Точка Galina</span><b>11.2M</b></div><div class="row"><span>Гид Тима</span><b>18 выездов</b></div><div class="row"><span>Тур Далат</span><b>86 чел.</b></div></div>
+      </div></article>
+
+      <article class="phone"><div class="screen">
+        <div class="top"><div class="brand"><div class="mark">E</div>EcoVoyage</div><div class="role">Контроль</div></div>
+        <div class="title-row"><h3>Вариант 2: Красные флаги</h3><div class="select">Сегодня</div></div>
+        <div class="score"><div class="kpi"><div class="label">Риск</div><strong style="color:var(--red)">9</strong></div><div class="kpi"><div class="label">Касса</div><strong>8.1M</strong></div><div class="kpi"><div class="label">Долг</div><strong>6.9M</strong></div><div class="kpi"><div class="label">Без цены</div><strong>17</strong></div></div>
+        <div class="panel"><div class="label">Сделать сегодня</div><div class="alert"><div><b>Закрыть доплаты гидов</b><p class="sub">4 тура после выезда без финального расчёта</p></div><span class="tag red">срочно</span></div><div class="alert"><div><b>Проверить расходы</b><p class="sub">9 строк ждут бухгалтера</p></div><span class="tag">учёт</span></div><div class="alert"><div><b>Брони без цены</b><p class="sub">портят прибыль и отчёт по туристам</p></div><span class="tag red">данные</span></div></div>
+        <div class="panel"><div class="label">Круги здоровья</div><div class="donuts"><div class="donut"><div class="circle" style="--p:78%"><span>78%</span></div>План</div><div class="donut"><div class="circle" style="--p:61%"><span>61%</span></div>Оплаты</div><div class="donut"><div class="circle" style="--p:39%"><span>39%</span></div>Маржа</div></div></div>
+      </div></article>
+
+      <article class="phone"><div class="screen">
+        <div class="top"><div class="brand"><div class="mark">E</div>EcoVoyage</div><div class="role">Продажи</div></div>
+        <div class="title-row"><h3>Вариант 3: Продажи и спрос</h3><div class="select">30 дней</div></div>
+        <div class="hero green"><div class="label">Лучший канал</div><div class="money">Galina + Online</div><p class="sub">37% всех броней · 14.6M ₫</p></div>
+        <div class="panel"><div class="label">Когда покупают</div><div class="heat"><b></b><b>Пн</b><b>Вт</b><b>Ср</b><b>Чт</b><b>Пт</b><span>09</span><i class="cell c1"></i><i class="cell c2"></i><i class="cell c1"></i><i class="cell"></i><i class="cell c2"></i><span>13</span><i class="cell c2"></i><i class="cell c4"></i><i class="cell c3"></i><i class="cell c1"></i><i class="cell c3"></i><span>18</span><i class="cell c1"></i><i class="cell c2"></i><i class="cell c4"></i><i class="cell c2"></i><i class="cell c1"></i></div></div>
+        <div class="panel"><div class="label">Точки продаж</div><div class="bars"><div><b>Galina Hotel</b><div class="bar"><span style="width:94%"></span></div></div><div><b>Online</b><div class="bar"><span style="width:76%"></span></div></div><div><b>Regalia</b><div class="bar"><span style="width:54%"></span></div></div></div></div>
+      </div></article>
+
+      <article class="phone"><div class="screen">
+        <div class="top"><div class="brand"><div class="mark">E</div>EcoVoyage</div><div class="role">Команда</div></div>
+        <div class="title-row"><h3>Вариант 4: Люди и ротация</h3><div class="select">Неделя</div></div>
+        <div class="split"><div class="panel"><div class="label">Лучший менеджер</div><div class="money" style="font-size:25px">Александра</div><p class="sub">19 чел. · 7 броней · 4.8M</p></div><div class="panel"><div class="label">Лучший гид</div><div class="money" style="font-size:25px">Тима</div><p class="sub">18 выездов · 211 чел.</p></div></div>
+        <div class="panel"><div class="label">Ротация точек</div><div class="row"><span>Александра</span><b>Galina · 7 смен</b></div><div class="row"><span>Юлия</span><b>Marriott · 8 смен</b></div><div class="row"><span>Данила</span><b>свободен · 2 смены</b></div><div class="bar"><span style="width:64%"></span></div><p class="sub">Показывает, кого пора переставить, чтобы не было перекоса.</p></div>
+        <div class="panel"><div class="label">Гиды</div><div class="mini-chart"><i style="height:80%"></i><i style="height:52%"></i><i style="height:90%"></i><i style="height:38%"></i><i style="height:64%"></i><i style="height:46%"></i></div></div>
+      </div></article>
+
+      <article class="phone"><div class="screen">
+        <div class="top"><div class="brand"><div class="mark">E</div>EcoVoyage</div><div class="role">Executive</div></div>
+        <div class="title-row"><h3>Вариант 5: Один экран</h3><div class="select">Месяц</div></div>
+        <div class="hero white"><div class="label">Главный итог</div><div class="money">591 турист</div><p class="sub">31.8M выручка · 12.4M прибыль · 6.9M к сбору</p></div>
+        <div class="donuts" style="margin:12px 0"><div class="donut"><div class="circle" style="--p:82%"><span>82%</span></div>План</div><div class="donut"><div class="circle" style="--p:71%"><span>71%</span></div>Оплаты</div><div class="donut"><div class="circle" style="--p:57%"><span>57%</span></div>Точки</div></div>
+        <div class="panel"><div class="label">Что важно</div><div class="row"><span>Топ тур</span><b>Далат 2 дня</b></div><div class="row"><span>Топ точка</span><b>Galina Hotel</b></div><div class="row"><span>Топ гид</span><b>Тима</b></div><div class="row"><span>Главный риск</span><b style="color:var(--red)">6.9M к сбору</b></div></div>
+        <div class="panel"><div class="label">Мини-график</div><div class="line"><svg viewBox="0 0 320 150"><polyline points="0,98 40,88 80,92 120,60 160,75 200,44 240,58 280,28 320,36" fill="none" stroke="#a8ce40" stroke-width="6" stroke-linecap="round"/></svg></div></div>
+      </div></article>
+    </section>
+  </main>
+</body>
+</html>
