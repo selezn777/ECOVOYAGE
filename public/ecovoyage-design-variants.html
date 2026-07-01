@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EcoVoyage - варианты интерфейса</title>
+  <style>
+    :root {
+      --lime: #a8ce40;
+      --green: #5fae2e;
+      --ink: #101828;
+      --muted: #667085;
+      --soft: #f4f7fb;
+      --line: #dde5ef;
+      --blue: #1479d4;
+      --cyan: #08a6b8;
+      --amber: #f59e0b;
+      --red: #dc2626;
+      --violet: #7c3aed;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #eef2f6;
+      color: var(--ink);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 18px 48px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(26px, 4vw, 42px); letter-spacing: 0; }
+    h2 { margin: 34px 0 16px; font-size: 24px; }
+    .lead { max-width: 720px; margin-top: 8px; color: var(--muted); font-size: 15px; line-height: 1.45; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: white;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+      gap: 18px;
+    }
+    .phone {
+      min-height: 720px;
+      border-radius: 28px;
+      background: #fff;
+      border: 1px solid #d7e0ec;
+      box-shadow: 0 14px 42px rgba(16, 24, 40, .10);
+      overflow: hidden;
+    }
+    .screen {
+      min-height: 720px;
+      padding: 18px;
+      background: linear-gradient(#f7f9fc, #fff);
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+    .mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--lime);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 22px;
+      font-weight: 900;
+    }
+    .role { color: var(--muted); font-size: 13px; }
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .title-row h3 { font-size: 24px; line-height: 1.05; }
+    .select {
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .panel {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 4px 16px rgba(16, 24, 40, .04);
+    }
+    .hero-kpi {
+      color: white;
+      background: #22303d;
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+    .hero-kpi.lime { background: var(--lime); color: #09200b; }
+    .hero-kpi.blue { background: #0f5f9f; }
+    .hero-kpi h4, .mini h4 {
+      margin: 0 0 8px;
+      color: inherit;
+      opacity: .78;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+    .money { font-size: 34px; font-weight: 900; letter-spacing: 0; }
+    .subline { margin-top: 6px; color: inherit; opacity: .78; font-size: 13px; }
+    .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+    .mini {
+      min-height: 86px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .mini strong { display: block; margin-top: 8px; font-size: 21px; }
+    .mini small { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .row { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 9px 0; border-bottom: 1px solid #edf1f6; }
+    .row:last-child { border-bottom: 0; }
+    .bar {
+      height: 8px;
+      border-radius: 999px;
+      background: #edf1f6;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .bar span { display: block; height: 100%; border-radius: inherit; background: var(--lime); }
+    .bars { display: grid; gap: 8px; margin-top: 10px; }
+    .chart {
+      height: 150px;
+      display: flex;
+      align-items: end;
+      gap: 8px;
+      padding-top: 12px;
+    }
+    .chart i {
+      flex: 1;
+      min-width: 0;
+      border-radius: 7px 7px 3px 3px;
+      background: linear-gradient(180deg, var(--lime), var(--cyan));
+    }
+    .line-chart {
+      height: 160px;
+      border-radius: 14px;
+      background:
+        linear-gradient(to top, transparent 24%, rgba(102,112,133,.12) 25%, transparent 26%),
+        linear-gradient(to top, transparent 49%, rgba(102,112,133,.12) 50%, transparent 51%),
+        linear-gradient(to top, transparent 74%, rgba(102,112,133,.12) 75%, transparent 76%),
+        #fbfdff;
+      position: relative;
+      overflow: hidden;
+    }
+    .line-chart svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .pillset { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill {
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .pill.active { background: var(--lime); border-color: var(--lime); color: #102000; }
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-top: 12px;
+    }
+    .day {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      background: #f2f5f9;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .day.on { background: var(--lime); color: #102000; }
+    .day.range { background: #e6f3c9; color: #41640d; }
+    .heat {
+      display: grid;
+      grid-template-columns: 64px repeat(5, 1fr);
+      gap: 6px;
+      align-items: center;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .cell { height: 26px; border-radius: 7px; background: #eef3f7; }
+    .c1 { background: #dff3b9; } .c2 { background: #a8ce40; } .c3 { background: #36a36a; } .c4 { background: #127c72; }
+    .waterfall { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; align-items: end; height: 150px; }
+    .wf { border-radius: 10px 10px 4px 4px; color: white; padding: 8px 6px; font-size: 11px; font-weight: 800; display: flex; align-items: end; justify-content: center; text-align: center; }
+    .team-card { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 14px; background: #fbfcfe; margin-bottom: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--lime); display: inline-block; margin-right: 6px; }
+    .matrix { display: grid; grid-template-columns: 1.2fr repeat(3, .8fr); gap: 6px; font-size: 12px; }
+    .matrix div { min-height: 34px; border-radius: 8px; background: #f4f7fb; padding: 9px 7px; }
+    .matrix .head { background: #22303d; color: white; font-weight: 800; }
+    .matrix .good { background: #e5f4c7; color: #31580b; }
+    .matrix .warn { background: #fff2cc; color: #8a5a00; }
+    .timeline { margin: 18px 0; height: 10px; border-radius: 999px; background: #dfe7f0; position: relative; }
+    .timeline span { position: absolute; left: 20%; right: 18%; top: 0; bottom: 0; background: var(--lime); border-radius: inherit; }
+    .timeline b { position: absolute; top: -8px; width: 26px; height: 26px; border-radius: 50%; background: white; border: 5px solid var(--lime); box-shadow: 0 2px 8px rgba(16,24,40,.15); }
+    .timeline b:first-of-type { left: calc(20% - 13px); }
+    .timeline b:last-of-type { right: calc(18% - 13px); }
+    .caption { margin: 10px 0 0; color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .tag { display: inline-flex; align-items: center; min-height: 26px; padding: 0 8px; border-radius: 8px; background: #eef3f7; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .tag.red { background: #fee2e2; color: var(--red); }
+    .tag.green { background: #e5f4c7; color: #31580b; }
+    @media (max-width: 760px) {
+      main { padding: 18px 10px 36px; }
+      header { display: block; }
+      .badge { margin-top: 14px; }
+      .grid { grid-template-columns: 1fr; }
+      .phone, .screen { min-height: auto; }
+      .kpis { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>EcoVoyage: варианты переделки</h1>
+        <p class="lead">Это не финальный экран, а выбор направления: дашборд директора, периоды отчёта и точки продаж с ротацией сотрудников.</p>
+      </div>
+      <span class="badge">Черновик для выбора дизайна</span>
+    </header>
+
+    <h2>5 вариантов дашборда директора</h2>
+    <section class="grid">
+      <article class="phone"><div class="screen">
+        <div class="top"><div class="brand"><div class="mark">E</div>EcoVoyage</div><div class="role">Директор</div></div>
+        <div class="title-row"><h3>Пульс месяца</h3><div class="select">Июнь 2026</div></div>
+        <div class="hero-kpi"><h4>Чистая прибыль</h4><div class="money">+ 12.4M ₫</div><p class="subline">выручка 31.8M · расходы 19.4M</p></div>
+        <div class="kpis"><div class="mini"><h4>Брони</h4><strong>243</strong><small>+18% к маю</small></div><div class="mini"><h4>Люди</h4><strong>591</strong><small>2.4 чел/бронь</small></div><div class="mini"><h4>К сбору</h4><strong>6.9M</strong><small>22 платежа</small></div></div>
+        <div class="panel"><h4>Деньги по дням</h4><div class="line-chart"><svg viewBox="0 0 320 160"><polyline points="0,118 45,92 90,104 135,62 180,72 225,38 270,54 320,24" fill="none" stroke="#a8ce40" stroke-width="6" stroke-linecap="round"/><polyline points="0,130 45,126 90,118 135,122 180,99 225,108 270,88 320,92" fill="none" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/></svg></div></div>
+        <div class="panel" style="margin-top:12px"><h4>Топ менеджеров</h4><div class="bars"><div><b>Александра</b><div class="bar"><span style="width:92%"></span></div></div><div><b>Директор</b><div class="bar"><span style="width:68%"></span></div></div><div><b>Анастасия</b><div class="bar"><span style="width:51%"></span></div></div></div></div>
+      </div></article>
+
+      <article class="phone"><div class="screen">
+        <div class="top"><div class="brand"><div class="mark">E</div>EcoVoyage</div><div class="role">Деньги</div></div>
+        <div class="title-row"><h3>Финансовый радар</h3><div class="select">30 дней</div></div>
+        <div class="panel"><h4>Прибыль: откуда взялась</h4><div class="waterfall"><div class="wf" style="height:142px;background:var(--green)">Выручка<br>31.8M</div><div class="wf" style="height:94px;background:var(--red)">Расходы<br>-19.4M</div><div class="wf" style="height:42px;background:var(--amber)">Долги<br>-6.9M</div><div class="wf" style="height:70px;background:var(--blue)">Кэш<br>5.5M</div></div></div>
+        <div class="split" style="margin-top:12px"><div class="mini"><h4>Маржа</h4><strong>39%</strong><small>цель 35%</small></div><div class="mini"><h4>Касса</h4><strong>8.1M</strong><small>подтверждено</small></div></div>
+        <div class="panel" style="margin-top:12px"><h4>Красные зоны</h4><div class="row"><span>Не закрыты доплаты гидов</span><b style="color:var(--red)">4</b></div><div class="row"><span>Брони без цены</span><b style="color:var(--amber)">17</b></div><div class="row"><span>Расходы без проверки</span><b>9</b></div></div>
+      </div></article>
+
+      <article class="phone"><div class="screen">
+        <div class="top"><div class="brand"><div class="mark">E</div>EcoVoyage</div><div class="role">Продажи</div></div>
+        <div class="title-row"><h3>Спрос и загрузка</h3><div class="select">Июнь</div></div>
+        <div class="hero-kpi blue"><h4>Самый сильный тур</h4><div class="money">Далат 2 дня</div><p class="subline">86 туристов · 18.2M ₫</p></div>
+        <div class="panel"><h4>Когда покупают</h4><div class="heat"><b></b><b>Пн</b><b>Вт</b><b>Ср</b><b>Чт</b><b>Пт</b><span>09</span><i class="cell c1"></i><i class="cell c2"></i><i class="cell c1"></i><i class="cell"></i><i class="cell c2"></i><span>13</span><i class="cell c2"></i><i class="cell c4"></i><i class="cell c3"></i><i class="cell c1"></i><i class="cell c3"></i><span>18</span><i class="cell c1"></i><i class="cell c2"></i><i class="cell c4"></i><i class="cell c2"></i><i class="cell c1"></i></div></div>
+        <div class="panel" style="margin-top:12px"><h4>Туры</h4><div class="row"><span>Далат Чудес</span><b>57 чел.</b></div><div class="row"><span>Бахо</span><b>41 чел.</b></div><div class="row"><span>Discovery</span><b>32 чел.</b></div></div>
+      </div></article>
+
+      <article class="phone"><div class="screen">
+        <div class="top"><div class="brand"><div class="mark">E</div>EcoVoyage</div><div class="role">Операции</div></div>
+        <div class="title-row"><h3>Сегодня и завтра</h3><div class="select">2 дня</div></div>
+        <div class="kpis"><div class="mini"><h4>Выезды</h4><strong>7</strong><small>3 завтра</small></div><div class="mini"><h4>Гиды</h4><strong>12/14</strong><small>2 перегруз</small></div><div class="mini"><h4>Авто</h4><strong>6</strong><small>1 без водителя</small></div></div>
+        <div class="panel"><h4>Что требует внимания</h4><div class="team-card"><div><b>Da Lat 2 дня</b><p class="caption">нет финальной сверки гида</p></div><span class="tag red">срочно</span></div><div class="team-card"><div><b>Бахо</b><p class="caption">18 туристов, 2 автобуса, гид готов</p></div><span class="tag green">ок</span></div><div class="team-card"><div><b>Discovery</b><p class="caption">касса: доплата 936K не закрыта</p></div><span class="tag">деньги</span></div></div>
+        <div class="panel" style="margin-top:12px"><h4>Загрузка гидов</h4><div class="chart"><i style="height:70%"></i><i style="height:46%"></i><i style="height:88%"></i><i style="height:38%"></i><i style="height:64%"></i><i style="height:52%"></i></div></div>
+      </div></article>
+
+      <article class="phone"><div class="screen">
+        <div class="top"><div class="brand"><div class="mark">E</div>EcoVoyage</div><div class="role">Executive</div></div>
+        <div class="title-row"><h3>Один экран</h3><div class="select">Месяц</div></div>
+        <div class="hero-kpi lime"><h4>Главный итог</h4><div class="money">591 турист</div><p class="subline">31.8M выручка · 12.4M прибыль · 6.9M к сбору</p></div>
+        <div class="split"><div class="panel"><h4>План</h4><div class="bar"><span style="width:78%"></span></div><p class="caption">78% месячной цели</p></div><div class="panel"><h4>Риск</h4><div class="bar"><span style="width:34%;background:var(--amber)"></span></div><p class="caption">34% оплат не закрыто</p></div></div>
+        <div class="panel" style="margin-top:12px"><h4>Короткая сводка</h4><div class="row"><span>Лучший менеджер</span><b>Александра</b></div><div class="row"><span>Лучший тур</span><b>Далат</b></div><div class="row"><span>Самый дорогой расход</span><b>Авто</b></div><div class="row"><span>Следующее действие</span><b>Собрать 6.9M</b></div></div>
+      </div></article>
+    </section>
+
+    <h2>5 вариантов периода и отчётов</h2>
+    <section class="grid">
+      <article class="phone"><div class="screen"><div class="title-row"><h3>Пресеты сверху</h3></div><div class="pillset"><span class="pill">Сегодня</span><span class="pill">Неделя</span><span class="pill active">Месяц</span><span class="pill">Квартал</span><span class="pill">Свой</span></div><div class="hero-kpi lime" style="margin-top:14px"><h4>Июнь 2026</h4><div class="money">+12.4M ₫</div><p class="subline">быстрый выбор без двух отдельных дат</p></div><div class="panel"><h4>Состав отчёта</h4><div class="row"><span>Поступления</span><b>31.8M</b></div><div class="row"><span>Расходы</span><b>-19.4M</b></div><div class="row"><span>Долги туристов</span><b>6.9M</b></div></div></div></article>
+      <article class="phone"><div class="screen"><div class="title-row"><h3>Календарь-лист</h3><div class="select">Готово</div></div><div class="panel"><div class="pillset"><span class="pill active">Этот месяц</span><span class="pill">Прошлый</span><span class="pill">Сезон</span></div><div class="calendar"><span class="day">1</span><span class="day">2</span><span class="day range">3</span><span class="day range">4</span><span class="day range">5</span><span class="day on">6</span><span class="day">7</span><span class="day">8</span><span class="day range">9</span><span class="day range">10</span><span class="day range">11</span><span class="day range">12</span><span class="day on">13</span><span class="day">14</span></div></div><p class="caption">Период выбирается одним блоком, без двух тяжёлых dropdown.</p></div></article>
+      <article class="phone"><div class="screen"><div class="title-row"><h3>Лента периода</h3></div><div class="panel"><h4>1 мая - 31 июля</h4><div class="timeline"><span></span><b></b><b></b></div><div class="split"><div class="mini"><h4>Начало</h4><strong>01.05</strong></div><div class="mini"><h4>Конец</h4><strong>31.07</strong></div></div></div><div class="panel" style="margin-top:12px"><h4>Сводка сразу</h4><div class="chart"><i style="height:40%"></i><i style="height:54%"></i><i style="height:80%"></i><i style="height:76%"></i><i style="height:62%"></i></div></div></div></article>
+      <article class="phone"><div class="screen"><div class="title-row"><h3>Отчётные карточки</h3></div><div class="grid" style="grid-template-columns:1fr 1fr;gap:10px"><div class="mini"><h4>Сегодня</h4><strong>1.2M</strong></div><div class="mini"><h4>Неделя</h4><strong>8.4M</strong></div><div class="mini" style="border-color:var(--lime)"><h4>Месяц</h4><strong>31.8M</strong></div><div class="mini"><h4>Сезон</h4><strong>101M</strong></div></div><div class="panel" style="margin-top:12px"><h4>Нажал карточку - получил полный отчёт</h4><p class="caption">Подходит директору: сначала результат, потом детализация.</p></div></div></article>
+      <article class="phone"><div class="screen"><div class="title-row"><h3>Умные периоды</h3></div><div class="panel"><div class="team-card"><div><b>С начала месяца</b><p class="caption">1 июн - сегодня</p></div><span class="tag green">рекоменд.</span></div><div class="team-card"><div><b>Летний сезон</b><p class="caption">1 май - 31 июл</p></div><span class="tag">сезон</span></div><div class="team-card"><div><b>Кассовая неделя</b><p class="caption">пн - вс</p></div><span class="tag">касса</span></div></div><div class="hero-kpi" style="margin-top:12px"><h4>Выбран</h4><div class="money">Летний сезон</div><p class="subline">101.1M расходов · 0M поступлений по платежам</p></div></div></article>
+    </section>
+
+    <h2>3 варианта точек продаж и ротации</h2>
+    <section class="grid">
+      <article class="phone"><div class="screen"><div class="title-row"><h3>Доска точек</h3></div><div class="panel"><h4><span class="dot"></span>Galina Hotel</h4><div class="team-card"><div><b>Александра</b><p class="caption">19 броней · 7 смен</p></div><span class="tag green">на точке</span></div><div class="team-card"><div><b>Анастасия</b><p class="caption">12 броней · 5 смен</p></div><span class="tag">резерв</span></div></div><div class="panel" style="margin-top:12px"><h4><span class="dot" style="background:var(--blue)"></span>Regalia</h4><div class="team-card"><div><b>Юлия</b><p class="caption">8 броней · 4 смены</p></div><span class="tag green">на точке</span></div></div></div></article>
+      <article class="phone"><div class="screen"><div class="title-row"><h3>Матрица ротации</h3></div><div class="matrix"><div class="head">Сотрудник</div><div class="head">Galina</div><div class="head">Regalia</div><div class="head">Marriott</div><div>Александра</div><div class="good">7</div><div>2</div><div>1</div><div>Анастасия</div><div>3</div><div class="good">5</div><div>2</div><div>Юлия</div><div>1</div><div>2</div><div class="warn">8</div></div><div class="panel" style="margin-top:12px"><h4>Баланс</h4><div class="bar"><span style="width:71%"></span></div><p class="caption">Система показывает, кого пора ротировать.</p></div></div></article>
+      <article class="phone"><div class="screen"><div class="title-row"><h3>Планировщик недели</h3></div><div class="panel"><h4>Назначения</h4><div class="row"><span>Пн · Galina</span><b>Александра</b></div><div class="row"><span>Вт · Regalia</span><b>Юлия</b></div><div class="row"><span>Ср · Marriott</span><b>Анастасия</b></div><div class="row"><span>Чт · Galina</span><b>Данила</b></div></div><div class="split" style="margin-top:12px"><div class="mini"><h4>Перегруз</h4><strong>Юлия</strong><small>8 смен</small></div><div class="mini"><h4>Свободен</h4><strong>Данила</strong><small>2 смены</small></div></div></div></article>
+    </section>
+  </main>
+</body>
+</html>

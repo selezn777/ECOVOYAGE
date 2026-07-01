@@ -167,6 +167,73 @@ function startDateOnly(startAt: string): string {
   return tourCalendarDateFromStartAtIso(startAt) || new Date(startAt).toISOString().slice(0, 10);
 }
 
+type BookingRevenueFallbackTour = {
+  id: string;
+  name?: string | null;
+  tour_type?: string | null;
+  default_offer_usd?: number | string | null;
+  default_offer_rate_to_vnd?: number | string | null;
+  default_offer_vnd?: number | string | null;
+  tour_templates?:
+    | { default_price_vnd?: number | string | null; locations?: unknown }
+    | { default_price_vnd?: number | string | null; locations?: unknown }[]
+    | null;
+};
+
+function positiveMoney(value: unknown): number {
+  const n = Math.round(Number(value ?? 0));
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+function templateDefaultPriceVnd(tour?: BookingRevenueFallbackTour | null): number {
+  const raw = Array.isArray(tour?.tour_templates) ? tour?.tour_templates[0] : tour?.tour_templates;
+  const direct = positiveMoney(raw?.default_price_vnd);
+  if (direct > 0) return direct;
+  const locations = raw?.locations;
+  if (locations && typeof locations === "object" && !Array.isArray(locations)) {
+    const loc = locations as { vnd_price?: unknown; usd_price?: unknown; rate_to_vnd?: unknown };
+    const vnd = positiveMoney(loc.vnd_price);
+    if (vnd > 0) return vnd;
+    const usd = Number(loc.usd_price ?? 0);
+    const rate = positiveMoney(loc.rate_to_vnd) || 26000;
+    if (Number.isFinite(usd) && usd > 0) return Math.round(usd * rate);
+  }
+  return 0;
+}
+
+function usdPriceFromTourName(name?: string | null): number {
+  const m = String(name ?? "").match(/(\d+(?:[.,]\d+)?)\s*\$/);
+  if (!m) return 0;
+  const usd = Number(m[1].replace(",", "."));
+  return Number.isFinite(usd) && usd > 0 ? usd : 0;
+}
+
+function estimateBookingRevenueVndFromTour(
+  booking: { adults?: number | string | null; children?: number | string | null; infants?: number | string | null },
+  tour?: BookingRevenueFallbackTour | null,
+): number {
+  const adults = Math.max(0, Math.round(Number(booking.adults ?? 0)));
+  const children = Math.max(0, Math.round(Number(booking.children ?? 0)));
+  const payingPax = Math.max(1, adults + children);
+  const tourType = String(tour?.tour_type ?? "").toLowerCase();
+  const tourOfferVnd = positiveMoney(tour?.default_offer_vnd);
+  const rate = positiveMoney(tour?.default_offer_rate_to_vnd) || 26000;
+  const tourOfferUsd = Number(tour?.default_offer_usd ?? 0);
+
+  if (tourType === "private") {
+    if (tourOfferVnd > 0) return tourOfferVnd;
+    if (Number.isFinite(tourOfferUsd) && tourOfferUsd > 0) return Math.round(tourOfferUsd * rate);
+  }
+
+  const unitFromTour =
+    tourOfferVnd ||
+    (Number.isFinite(tourOfferUsd) && tourOfferUsd > 0 ? Math.round(tourOfferUsd * rate) : 0) ||
+    templateDefaultPriceVnd(tour) ||
+    Math.round(usdPriceFromTourName(tour?.name) * rate);
+
+  return unitFromTour > 0 ? unitFromTour * payingPax : 0;
+}
+
 /**
  * Только если в тексте ошибки явно фигурирует колонка и признак «нет в схеме».
  * Нельзя матчить одно слово `column` - иначе PostgREST/Postgres подставляет его в чужие ошибки,
@@ -876,15 +943,19 @@ export async function getDirectorSalesPulse(windowDays = 30, fromYmd?: string): 
   const { data: bookingRows, error } = bookingRes;
   if (error || !bookingRows) return { ...emptyResult, windowDays: days };
 
-  // Выручка = booking_prices (прайс, выставленный туристу при бронировании)
+  // Выручка = booking_prices; для старых броней без строк цены считаем от оффера тура.
   const bookingIds = (bookingRows as Array<{ id: string }>).map((r) => String(r.id)).filter(Boolean);
   let revenueVnd = 0;
+  const priceByBooking = new Map<string, number>();
   if (bookingIds.length) {
     const { data: priceRows } = await supabase
       .from("booking_prices")
-      .select("amount_vnd")
+      .select("booking_id,amount_vnd")
       .in("booking_id", bookingIds);
-    revenueVnd = (priceRows || []).reduce((s, r) => s + Number((r as { amount_vnd: number }).amount_vnd || 0), 0);
+    for (const p of (priceRows || []) as { booking_id: string; amount_vnd: number | string }[]) {
+      const bid = String(p.booking_id);
+      priceByBooking.set(bid, (priceByBooking.get(bid) || 0) + positiveMoney(p.amount_vnd));
+    }
   }
   const expenseVnd = (expRes.data || []).reduce((s, r) => s + Number((r as { amount_vnd: number }).amount_vnd || 0), 0);
 
@@ -930,16 +1001,23 @@ export async function getDirectorSalesPulse(windowDays = 30, fromYmd?: string): 
   const managerIds = [...new Set(rows.map((r) => String(r.manager_id)).filter(Boolean))];
 
   const [tourRes, userRes] = await Promise.all([
-    tourIds.length ? supabase.from("tours").select("id,name,start_at").in("id", tourIds) : Promise.resolve({ data: [] as unknown[] }),
+    tourIds.length
+      ? supabase
+          .from("tours")
+          .select("id,name,start_at,tour_type,default_offer_usd,default_offer_rate_to_vnd,default_offer_vnd,tour_templates(default_price_vnd,locations)")
+          .in("id", tourIds)
+      : Promise.resolve({ data: [] as unknown[] }),
     managerIds.length ? supabase.from("users").select("id,full_name").in("id", managerIds) : Promise.resolve({ data: [] as unknown[] }),
   ]);
 
-  const tourMap = new Map(
-    ((tourRes.data as Array<{ id: string; name?: string | null; start_at?: string | null }> | null) ?? []).map((t) => [
-      String(t.id),
-      { name: String(t.name || "Тур"), ymd: t.start_at ? startDateOnly(String(t.start_at)) : "" },
-    ]),
-  );
+  const tourMap = new Map<string, BookingRevenueFallbackTour & { name: string; ymd: string }>();
+  for (const t of (tourRes.data as Array<BookingRevenueFallbackTour & { id: string; name?: string | null; start_at?: string | null }> | null) ?? []) {
+    tourMap.set(String(t.id), { ...t, name: String(t.name || "Тур"), ymd: t.start_at ? startDateOnly(String(t.start_at)) : "" });
+  }
+  revenueVnd = rows.reduce((sum, row) => {
+    const exact = priceByBooking.get(row.id) || 0;
+    return sum + (exact > 0 ? exact : estimateBookingRevenueVndFromTour(row, tourMap.get(String(row.tour_id))));
+  }, 0);
   const userMap = new Map(
     ((userRes.data as Array<{ id: string; full_name?: string | null }> | null) ?? []).map((u) => [
       String(u.id),
@@ -9299,13 +9377,16 @@ export async function getTouristProfileData(bookingId: string): Promise<TouristP
   const [payRes, tourRes, priceRes] = await Promise.all([
     supabase.from("payments").select("booking_id,amount_vnd,kind").in("booking_id", bkIds),
     tourIds.length
-      ? supabase.from("tours").select("id,name,start_at").in("id", tourIds)
+      ? supabase
+          .from("tours")
+          .select("id,name,start_at,tour_type,default_offer_usd,default_offer_rate_to_vnd,default_offer_vnd,tour_templates(default_price_vnd,locations)")
+          .in("id", tourIds)
       : Promise.resolve({ data: [] as unknown[], error: null }),
     supabase.from("booking_prices").select("booking_id,amount_vnd").in("booking_id", bkIds),
   ]);
 
   const payments = (payRes.data as { booking_id: string; amount_vnd: number; kind: string }[] | null) ?? [];
-  const tours = (tourRes.data as { id: string; name: string; start_at: string }[] | null) ?? [];
+  const tours = (tourRes.data as (BookingRevenueFallbackTour & { id: string; name: string; start_at: string })[] | null) ?? [];
   const prices = (priceRes.data as { booking_id: string; amount_vnd: number }[] | null) ?? [];
 
   const tourMap = new Map(tours.map((t) => [t.id, t]));
@@ -9320,7 +9401,8 @@ export async function getTouristProfileData(bookingId: string): Promise<TouristP
   const bookings: TouristHistoryRow[] = allBookings.map((b) => {
     const tour = tourMap.get(b.tour_id);
     const tourDate = tour?.start_at ? tour.start_at.slice(0, 10) : null;
-    const total = totalByBk.get(b.id) ?? 0;
+    const exactTotal = totalByBk.get(b.id) ?? 0;
+    const total = exactTotal > 0 ? exactTotal : estimateBookingRevenueVndFromTour(b, tour);
     const paid = Math.max(0, paidByBk.get(b.id) ?? 0);
     const due = Math.max(0, total - paid);
     const ps: import("@/lib/types").PaymentStatus = due === 0 ? "paid" : paid > 0 ? "partial" : "unpaid";
@@ -9800,7 +9882,10 @@ export async function searchBookingsGlobal(
       .select("id,booking_id,amount_vnd,kind,remitted_to_cash_at")
       .in("booking_id", bookingIds),
     tourIds.length
-      ? supabase.from("tours").select("id,name,start_at").in("id", tourIds)
+      ? supabase
+          .from("tours")
+          .select("id,name,start_at,tour_type,default_offer_usd,default_offer_rate_to_vnd,default_offer_vnd,tour_templates(default_price_vnd,locations)")
+          .in("id", tourIds)
       : Promise.resolve({ data: [] as unknown[], error: null }),
     supabase
       .from("booking_prices")
@@ -9817,7 +9902,7 @@ export async function searchBookingsGlobal(
     totalByBooking.set(p.booking_id, (totalByBooking.get(p.booking_id) || 0) + Number(p.amount_vnd));
   }
 
-  type TRow = { id: string; name: string; start_at: string };
+  type TRow = BookingRevenueFallbackTour & { id: string; name: string; start_at: string };
   const tourMap = new Map<string, TRow>();
   for (const t of (tourRes.data || []) as TRow[]) {
     tourMap.set(t.id, t);
@@ -9828,7 +9913,8 @@ export async function searchBookingsGlobal(
     const tourDate = tour?.start_at ? (tourCalendarDateFromStartAtIso(tour.start_at) || tour.start_at.slice(0, 10)) : "";
     const agg = payAggMap.get(row.id) || emptyPayAggEx();
     const paid = paidOfficialFromAgg(agg);
-    const total = totalByBooking.get(row.id) || 0;
+    const exactTotal = totalByBooking.get(row.id) || 0;
+    const total = exactTotal > 0 ? exactTotal : estimateBookingRevenueVndFromTour(row, tour);
     const due = Math.max(0, total - paid);
     return {
       bookingId: row.id,

@@ -29,10 +29,16 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "any",
       },
       {
-        src: "/ecovoyage-mark.png",
+        src: "/pwa-icon-192.png",
         type: "image/png",
-        sizes: "187x201",
-        purpose: "any",
+        sizes: "192x192",
+        purpose: "maskable",
+      },
+      {
+        src: "/pwa-icon-512.png",
+        type: "image/png",
+        sizes: "512x512",
+        purpose: "maskable",
       },
     ],
   };
