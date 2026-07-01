@@ -11,6 +11,7 @@ type NavIconName =
   | "tickets"
   | "team"
   | "report"
+  | "myReport"
   | "employees"
   | "workday";
 
@@ -141,6 +142,7 @@ const ICONS: Record<NavIconName, (props: React.SVGProps<SVGSVGElement>) => React
   tickets: TicketsIcon,
   team: TeamIcon,
   report: ReportIcon,
+  myReport: ReportIcon,
   employees: TeamIcon,
   workday: WorkdayIcon,
 };

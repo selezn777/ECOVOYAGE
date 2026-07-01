@@ -13,6 +13,12 @@ import type { Role } from "@/lib/types";
 
 export type NavItem = { href: string; labelKey: string; roles: readonly Role[] | null };
 
+const MY_REPORT_NAV_ITEM: NavItem = {
+  href: "/my-report",
+  labelKey: "myReport",
+  roles: null,
+};
+
 export function navItemIsActive(pathname: string, itemHref: string, allHrefs: readonly string[]): boolean {
   const p = pathname.replace(/\/+$/, "") || "/";
   const item = itemHref.replace(/\/+$/, "") || "/";
@@ -68,7 +74,8 @@ export function navForRole(role: Role): NavItem[] {
       { href: "/tickets", labelKey: "tickets", roles: null },
       { href: "/rentals", labelKey: "rentals", roles: null },
       { href: "/team", labelKey: "team", roles: null },
+      MY_REPORT_NAV_ITEM,
     ];
   }
-  return navAll.filter((item) => !item.roles || item.roles.includes(role));
+  return [...navAll.filter((item) => !item.roles || item.roles.includes(role)), MY_REPORT_NAV_ITEM];
 }
