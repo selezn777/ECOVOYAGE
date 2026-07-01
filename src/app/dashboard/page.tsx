@@ -79,18 +79,6 @@ function monthTitleRu(month: string): string {
   return dt.toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
 }
 
-function formatCompactVnd(v: number): string {
-  const abs = Math.abs(v);
-  if (abs >= 1_000_000) return `${(v / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1)}M ₫`;
-  if (abs >= 1_000) return `${Math.round(v / 1000)}K ₫`;
-  return v > 0 ? `${v} ₫` : "—";
-}
-
-function chartPercent(value: number, max: number): number {
-  if (!Number.isFinite(value) || !Number.isFinite(max) || max <= 0) return 4;
-  return Math.max(4, Math.min(100, Math.round((value / max) * 100)));
-}
-
 function withDashboardParams(base: {
   view: TourFeedMode;
   q?: string;
@@ -250,7 +238,7 @@ export default async function DashboardPage({
       <section className="card mb-3 !rounded-2xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-xl font-semibold tracking-tight">{t("title")}</h1>
-          {canCreateTour(user.role) && user.role !== "director" ? (
+          {canCreateTour(user.role) ? (
             <Link
               href="/tours/new"
               className="btn-primary inline-flex min-h-[46px] w-full min-w-0 touch-manipulation items-center justify-center rounded-2xl px-4 py-2 text-sm font-semibold sm:min-h-[42px] sm:w-auto"
@@ -361,74 +349,35 @@ export default async function DashboardPage({
             </div>
           </div>
 
+          {/* ── 5 KPI-метрик ── */}
           {(() => {
             const fm = directorSalesPulse.financeMonth;
+            const fmtM = (v: number) => v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v > 0 ? `${Math.round(v / 1000)}K` : "—";
             const hasData = fm.bookingsCount > 0 || fm.revenueVnd > 0 || fm.expenseVnd > 0;
-            const maxHour = Math.max(1, ...directorSalesPulse.byHour.map((h) => h.bookings));
-            const marginPct = fm.revenueVnd > 0 ? Math.round((fm.netVnd / fm.revenueVnd) * 100) : 0;
             return (
-              <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-[1.1fr_0.9fr]">
-                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
-                  <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">Пульт директора</div>
-                  <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-[32px] font-black leading-none tracking-tight tabular-nums sm:text-[40px]" style={{ color: hasData ? (fm.netVnd >= 0 ? "var(--success, #22c55e)" : "var(--danger, #ef4444)") : "var(--muted)" }}>
-                        {hasData ? `${fm.netVnd >= 0 ? "+" : ""}${formatCompactVnd(fm.netVnd)}` : "—"}
-                      </div>
-                      <div className="mt-1 text-sm font-medium text-[var(--muted)]">
-                        прибыль · выручка {formatCompactVnd(fm.revenueVnd)} · расходы {formatCompactVnd(fm.expenseVnd)}
-                      </div>
-                    </div>
-                    <div className="grid min-w-[160px] grid-cols-2 gap-2 text-right">
-                      <div>
-                        <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">Брони</div>
-                        <div className="text-xl font-bold tabular-nums text-[var(--text)]">{fm.bookingsCount}</div>
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">Туристы</div>
-                        <div className="text-xl font-bold tabular-nums text-[var(--text)]">{fm.totalPax}</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4 grid grid-cols-3 gap-2">
-                    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
-                      <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">Выручка</div>
-                      <div className="mt-1 text-sm font-bold text-[var(--accent)] tabular-nums">{formatCompactVnd(fm.revenueVnd)}</div>
-                    </div>
-                    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
-                      <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">Расходы</div>
-                      <div className="mt-1 text-sm font-bold tabular-nums" style={{ color: "var(--danger, #ef4444)" }}>{formatCompactVnd(fm.expenseVnd)}</div>
-                    </div>
-                    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
-                      <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">Маржа</div>
-                      <div className="mt-1 text-sm font-bold tabular-nums text-[var(--text)]">{fm.revenueVnd > 0 ? `${marginPct}%` : "—"}</div>
-                    </div>
-                  </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                <div className="rounded-xl bg-[var(--surface-soft)] border border-[var(--border)] px-2 py-2.5 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("bookings")}</div>
+                  <div className="mt-1 text-[15px] font-bold tabular-nums text-[var(--text)]">{hasData ? fm.bookingsCount : "—"}</div>
                 </div>
-
-                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("byBookingTime")}</div>
-                    <div className="text-[11px] font-medium text-[var(--muted)]">{directorSalesPulse.byHour.reduce((s, h) => s + h.bookings, 0)} {t("bookings")}</div>
+                <div className="rounded-xl bg-[var(--surface-soft)] border border-[var(--border)] px-2 py-2.5 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("people")}</div>
+                  <div className="mt-1 text-[15px] font-bold tabular-nums text-[var(--text)]">{hasData ? fm.totalPax : "—"}</div>
+                </div>
+                <div className="rounded-xl bg-[var(--surface-soft)] border border-[var(--border)] px-2 py-2.5 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("revenue")}</div>
+                  <div className="mt-1 text-[15px] font-bold tabular-nums text-[var(--accent)]">{fmtM(fm.revenueVnd)}</div>
+                </div>
+                <div className="rounded-xl bg-[var(--surface-soft)] border border-[var(--border)] px-2 py-2.5 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("expenses")}</div>
+                  <div className="mt-1 text-[15px] font-bold tabular-nums" style={{ color: "var(--danger, #ef4444)" }}>{fmtM(fm.expenseVnd)}</div>
+                </div>
+                <div className="rounded-xl bg-[var(--surface-soft)] border border-[var(--border)] px-2 py-2.5 text-center col-span-3 sm:col-span-1">
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("profit")}</div>
+                  <div className={`mt-1 text-[15px] font-bold tabular-nums ${fm.netVnd >= 0 ? "" : ""}`}
+                    style={{ color: hasData ? (fm.netVnd >= 0 ? "var(--success, #22c55e)" : "var(--danger, #ef4444)") : "var(--muted)" }}>
+                    {hasData ? `${fm.netVnd >= 0 ? "+" : ""}${fmtM(fm.netVnd)}` : "—"}
                   </div>
-                  {directorSalesPulse.byHour.length > 0 ? (
-                    <div className="mt-4 flex h-[126px] items-end gap-1.5">
-                      {directorSalesPulse.byHour.map((h) => (
-                        <div key={h.hour} className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1">
-                          <div
-                            className="w-full rounded-t-md bg-[var(--accent)]"
-                            style={{ height: `${chartPercent(h.bookings, maxHour)}%`, opacity: 0.42 + chartPercent(h.bookings, maxHour) / 180 }}
-                            title={`${h.hour}: ${h.bookings}`}
-                          />
-                          <div className="hidden text-[9px] font-medium text-[var(--muted2)] tabular-nums min-[420px]:block">{h.hour.slice(0, 2)}</div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="mt-4 flex h-[126px] items-center justify-center rounded-xl border border-dashed border-[var(--border)] text-sm text-[var(--muted)]">
-                      Нет записей за период
-                    </div>
-                  )}
                 </div>
               </div>
             );
@@ -519,16 +468,6 @@ export default async function DashboardPage({
             ) : null}
 
           </div>
-          {canCreateTour(user.role) && user.role === "director" ? (
-            <div className="mt-3 flex justify-end">
-              <Link
-                href="/tours/new"
-                className="btn-secondary inline-flex min-h-[40px] items-center justify-center rounded-xl px-3 text-xs font-semibold"
-              >
-                {t("openTour")}
-              </Link>
-            </div>
-          ) : null}
         </section>
       ) : null}
 
