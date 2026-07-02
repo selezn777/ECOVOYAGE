@@ -19,20 +19,6 @@ function pickFirst(v?: string | string[]): string {
   return Array.isArray(v) ? String(v[0] ?? "") : String(v);
 }
 
-function PeriodChevron({ direction }: { direction: "left" | "right" }) {
-  return (
-    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <path
-        d={direction === "left" ? "M12.25 15L7.25 10l5-5" : "M7.75 5l5 5-5 5"}
-        stroke="currentColor"
-        strokeWidth="1.9"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 type CompanyLocale = "ru" | "en" | "vi";
 
 const COMPANY_TEXT: Record<CompanyLocale, {
@@ -1076,6 +1062,7 @@ export default async function CompanyPage({
   const tourRows = bestTour ? toursWithMotion.filter((tour) => tour.tourId !== bestTour.tourId) : toursWithMotion;
   const guideRows = bestGuide ? data.guides.filter((g) => g.guideId !== bestGuide.guideId) : data.guides;
   const prevMonthTitle = monthTitle(data.period.prevMonth, locale);
+  const currentMonthTitle = monthTitle(data.period.month, locale);
   const nextMonthTitle = monthTitle(data.period.nextMonth, locale);
   const control = CONTROL_COPY[locale];
   const lowMargin = f.revenueVnd > 0 && f.marginPct < 20;
@@ -1111,27 +1098,29 @@ export default async function CompanyPage({
               {t.subtitle(data.period.title)}
             </p>
           </div>
-          <div className="w-full shrink-0 rounded-[22px] border border-[var(--border)] bg-[var(--surface)]/85 p-1.5 shadow-[var(--shadow-md)] ring-1 ring-white/40 backdrop-blur sm:w-[390px] dark:ring-white/[0.05]">
-            <div className="grid grid-cols-[46px_1fr_46px] items-stretch rounded-[17px] bg-[var(--surface-soft)] p-1">
+          <div className="w-full shrink-0 rounded-[22px] border border-[var(--border)] bg-[var(--surface)]/88 p-2 shadow-[var(--shadow-md)] ring-1 ring-white/40 backdrop-blur sm:w-[430px] dark:ring-white/[0.05]">
+            <div className="mb-2 px-1">
+              <div className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-[var(--muted2)]">{t.periodLabel}</div>
+            </div>
+            <div className="grid grid-cols-[0.88fr_1.2fr_0.88fr] gap-1.5">
             <Link
               href={`/company?month=${data.period.prevMonth}`}
-              className="grid min-h-[48px] place-items-center rounded-[14px] text-[var(--muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--text)] active:scale-[0.98]"
+              className="min-w-0 rounded-[15px] border border-[var(--border)] bg-[var(--surface-soft)] px-2 py-2 text-center text-[var(--muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--text)] active:scale-[0.98]"
               aria-label={t.prevMonth}
               title={prevMonthTitle}
             >
-              <PeriodChevron direction="left" />
+              <span className="block truncate text-[11px] font-extrabold">{prevMonthTitle}</span>
             </Link>
-            <div className="min-w-0 rounded-[14px] bg-[var(--surface)] px-3 py-2 text-center shadow-[0_1px_0_rgba(255,255,255,0.7)] dark:shadow-none">
-              <div className="text-[8.5px] font-extrabold uppercase tracking-[0.16em] text-[var(--muted2)]">{t.periodLabel}</div>
-              <div className="mt-0.5 truncate text-[15px] font-extrabold text-[var(--text)]">{data.period.title}</div>
+            <div className="grid min-w-0 place-items-center rounded-[16px] bg-[var(--accent)] px-3 py-2 text-center text-white shadow-[0_10px_22px_rgba(134,202,0,0.28)]">
+              <div className="truncate text-[13px] font-extrabold">{currentMonthTitle}</div>
             </div>
             <Link
               href={`/company?month=${data.period.nextMonth}`}
-              className="grid min-h-[48px] place-items-center rounded-[14px] text-[var(--muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--text)] active:scale-[0.98]"
+              className="min-w-0 rounded-[15px] border border-[var(--border)] bg-[var(--surface-soft)] px-2 py-2 text-center text-[var(--muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--text)] active:scale-[0.98]"
               aria-label={t.nextMonth}
               title={nextMonthTitle}
             >
-              <PeriodChevron direction="right" />
+              <span className="block truncate text-[11px] font-extrabold">{nextMonthTitle}</span>
             </Link>
             </div>
           </div>
