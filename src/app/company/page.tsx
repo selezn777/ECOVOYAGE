@@ -187,13 +187,17 @@ function DetailTable({
   headers,
   children,
   minWidth = 720,
+  mobile,
 }: {
   headers: string[];
   children: React.ReactNode;
   minWidth?: number;
+  mobile?: React.ReactNode;
 }) {
   return (
-    <div className="min-w-0 overflow-x-auto rounded-[12px] border border-slate-200">
+    <>
+      {mobile ? <div className="grid gap-2 md:hidden">{mobile}</div> : null}
+    <div className={`${mobile ? "hidden md:block" : ""} min-w-0 overflow-x-auto rounded-[12px] border border-slate-200`}>
       <table className="w-full border-collapse bg-white text-left text-[12px]" style={{ minWidth }}>
         <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400">
           <tr>
@@ -207,6 +211,7 @@ function DetailTable({
         <tbody className="divide-y divide-slate-100">{children}</tbody>
       </table>
     </div>
+    </>
   );
 }
 
@@ -215,6 +220,52 @@ function CellLink({ href, children }: { href: string; children: React.ReactNode 
     <Link href={href} className="font-black text-slate-950 underline decoration-[#8fd400]/50 underline-offset-4">
       {children}
     </Link>
+  );
+}
+
+function MobileDetailCard({
+  title,
+  href,
+  meta,
+  stats,
+  warning,
+}: {
+  title: string;
+  href?: string;
+  meta?: string;
+  stats: Array<{ label: string; value: string; tone?: "green" | "red" | "amber" | "blue" }>;
+  warning?: string;
+}) {
+  return (
+    <div className="min-w-0 rounded-[13px] border border-slate-200 bg-white p-3">
+      <div className="min-w-0">
+        {href ? <CellLink href={href}>{title}</CellLink> : <div className="font-black text-slate-950">{title}</div>}
+        {meta ? <div className="mt-1 text-[11px] leading-snug text-slate-500">{meta}</div> : null}
+        {warning ? <div className="mt-2 rounded-[10px] bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-700">{warning}</div> : null}
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {stats.map((s) => (
+          <div key={`${s.label}-${s.value}`} className="rounded-[10px] bg-slate-50 px-2 py-2">
+            <div className="text-[9px] font-black uppercase text-slate-400">{s.label}</div>
+            <div
+              className={`mt-0.5 truncate text-[13px] font-black ${
+                s.tone === "green"
+                  ? "text-emerald-700"
+                  : s.tone === "red"
+                    ? "text-rose-700"
+                    : s.tone === "amber"
+                      ? "text-amber-700"
+                      : s.tone === "blue"
+                        ? "text-sky-700"
+                        : "text-slate-950"
+              }`}
+            >
+              {s.value}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -299,7 +350,21 @@ export default async function CompanyPage({
             <Metric label="Маржа" value={pct(f.marginPct)} sub={`${formatVnd(f.revenueVnd)} − ${formatVnd(f.expenseVnd)}`} tone={moneyTone(f.profitVnd)} />
           </div>
           <DetailPanel title="Дни месяца под графиком" summary={`${data.trend.length} дней`}>
-            <DetailTable headers={["Дата", "Брони", "Туристы", "Выручка", "Расходы", "Прибыль"]}>
+            <DetailTable
+              headers={["Дата", "Брони", "Туристы", "Выручка", "Расходы", "Прибыль"]}
+              mobile={data.trend.map((d) => (
+                <MobileDetailCard
+                  key={d.dateYmd}
+                  title={d.dateYmd}
+                  stats={[
+                    { label: "Брони", value: String(d.bookings) },
+                    { label: "Туристы", value: String(d.tourists) },
+                    { label: "Выручка", value: compactVnd(d.revenueVnd), tone: "green" },
+                    { label: "Прибыль", value: compactVnd(d.revenueVnd - d.expenseVnd), tone: d.revenueVnd - d.expenseVnd < 0 ? "red" : "green" },
+                  ]}
+                />
+              ))}
+            >
               {data.trend.map((d) => (
                 <tr key={d.dateYmd}>
                   <td className="px-3 py-2 font-black">{d.dateYmd}</td>
@@ -378,7 +443,23 @@ export default async function CompanyPage({
             {data.managers.length === 0 ? <div className="rounded-[14px] bg-slate-50 p-4 text-[13px] text-slate-500">За период нет продаж менеджеров.</div> : null}
           </div>
           <DetailPanel title="Все менеджеры и долги" summary={`${data.managers.length} строк`}>
-            <DetailTable headers={["Сотрудник", "Роль", "Точка", "Брони", "Туристы", "Выручка", "Оплачено", "Долг"]}>
+            <DetailTable
+              headers={["Сотрудник", "Роль", "Точка", "Брони", "Туристы", "Выручка", "Оплачено", "Долг"]}
+              mobile={data.managers.map((m) => (
+                <MobileDetailCard
+                  key={m.managerId}
+                  title={m.name}
+                  href={`/team/${m.managerId}`}
+                  meta={`${roleRu(m.role)} · ${m.pointName}`}
+                  stats={[
+                    { label: "Брони", value: String(m.bookings) },
+                    { label: "Туристы", value: String(m.tourists) },
+                    { label: "Выручка", value: compactVnd(m.revenueVnd), tone: "green" },
+                    { label: "Долг", value: compactVnd(m.dueVnd), tone: m.dueVnd > 0 ? "amber" : "green" },
+                  ]}
+                />
+              ))}
+            >
               {data.managers.map((m) => (
                 <tr key={m.managerId}>
                   <td className="px-3 py-2"><CellLink href={`/team/${m.managerId}`}>{m.name}</CellLink></td>
@@ -425,7 +506,24 @@ export default async function CompanyPage({
             {data.salesPoints.length === 0 ? <div className="rounded-[14px] bg-slate-50 p-4 text-[13px] text-slate-500">Нет продаж по точкам за период.</div> : null}
           </div>
           <DetailPanel title="Разбор по точкам и онлайну" summary={`${data.salesPoints.length} точек`}>
-            <DetailTable headers={["Точка", "Сотрудники", "Брони", "Туристы", "Выручка", "Оплачено", "Долг", "Менеджеры"]} minWidth={820}>
+            <DetailTable
+              headers={["Точка", "Сотрудники", "Брони", "Туристы", "Выручка", "Оплачено", "Долг", "Менеджеры"]}
+              minWidth={820}
+              mobile={data.salesPoints.map((p) => (
+                <MobileDetailCard
+                  key={p.pointId}
+                  title={p.name}
+                  href={p.pointId === "online" ? undefined : `/sales-points/${p.pointId}`}
+                  meta={p.managerNames.join(", ") || "без назначений"}
+                  stats={[
+                    { label: "Сотр.", value: String(p.staffCount) },
+                    { label: "Брони", value: String(p.bookings) },
+                    { label: "Выручка", value: compactVnd(p.revenueVnd), tone: "green" },
+                    { label: "Долг", value: compactVnd(p.dueVnd), tone: p.dueVnd > 0 ? "amber" : "green" },
+                  ]}
+                />
+              ))}
+            >
               {data.salesPoints.map((p) => (
                 <tr key={p.pointId}>
                   <td className="px-3 py-2">
@@ -465,7 +563,24 @@ export default async function CompanyPage({
             ))}
           </div>
           <DetailPanel title="Туры с продажами или расходами" summary={`${toursWithMotion.length} строк`}>
-            <DetailTable headers={["Тур", "Дата", "Брони", "Туристы", "Загрузка", "Выручка", "Расходы", "Прибыль", "Долг"]} minWidth={900}>
+            <DetailTable
+              headers={["Тур", "Дата", "Брони", "Туристы", "Загрузка", "Выручка", "Расходы", "Прибыль", "Долг"]}
+              minWidth={900}
+              mobile={toursWithMotion.map((t) => (
+                <MobileDetailCard
+                  key={t.tourId}
+                  title={t.name}
+                  href={`/tours/${t.tourId}`}
+                  meta={`${t.dateYmd} · ${t.bookings} броней · ${t.tourists} чел.`}
+                  stats={[
+                    { label: "Загрузка", value: t.capacity > 0 ? `${t.loadPct}%` : "-" },
+                    { label: "Выручка", value: compactVnd(t.revenueVnd), tone: "green" },
+                    { label: "Прибыль", value: compactVnd(t.profitVnd), tone: t.profitVnd < 0 ? "red" : "green" },
+                    { label: "Долг", value: compactVnd(t.dueVnd), tone: t.dueVnd > 0 ? "amber" : "green" },
+                  ]}
+                />
+              ))}
+            >
               {toursWithMotion.map((t) => (
                 <tr key={t.tourId}>
                   <td className="px-3 py-2"><CellLink href={`/tours/${t.tourId}`}>{t.name}</CellLink></td>
@@ -483,7 +598,25 @@ export default async function CompanyPage({
           </DetailPanel>
           <DetailPanel title="Что срочно проверить по турам" summary={`${data.investigations.weakTours.length} сигналов`}>
             {data.investigations.weakTours.length > 0 ? (
-              <DetailTable headers={["Тур", "Дата", "Причина", "Выручка", "Прибыль", "Загрузка", "Долг"]} minWidth={820}>
+              <DetailTable
+                headers={["Тур", "Дата", "Причина", "Выручка", "Прибыль", "Загрузка", "Долг"]}
+                minWidth={820}
+                mobile={data.investigations.weakTours.map((t) => (
+                  <MobileDetailCard
+                    key={`${t.tourId}-${t.reason}`}
+                    title={t.name}
+                    href={`/tours/${t.tourId}`}
+                    meta={t.dateYmd}
+                    warning={t.reason}
+                    stats={[
+                      { label: "Выручка", value: compactVnd(t.revenueVnd), tone: "green" },
+                      { label: "Прибыль", value: compactVnd(t.profitVnd), tone: t.profitVnd < 0 ? "red" : "green" },
+                      { label: "Загрузка", value: `${t.loadPct}%`, tone: t.loadPct < 35 ? "amber" : "blue" },
+                      { label: "Долг", value: compactVnd(t.dueVnd), tone: t.dueVnd > 0 ? "amber" : "green" },
+                    ]}
+                  />
+                ))}
+              >
                 {data.investigations.weakTours.map((t) => (
                   <tr key={`${t.tourId}-${t.reason}`}>
                     <td className="px-3 py-2"><CellLink href={`/tours/${t.tourId}`}>{t.name}</CellLink></td>
@@ -536,7 +669,22 @@ export default async function CompanyPage({
             ))}
           </div>
           <DetailPanel title="Все гиды по выездам" summary={`${data.guides.length} гидов`}>
-            <DetailTable headers={["Гид", "Выезды", "Туристы", "Среднее", "Оборот туров", "Доля"]}>
+            <DetailTable
+              headers={["Гид", "Выезды", "Туристы", "Среднее", "Оборот туров", "Доля"]}
+              mobile={data.guides.map((g) => (
+                <MobileDetailCard
+                  key={g.guideId}
+                  title={g.name}
+                  href={`/team/${g.guideId}`}
+                  stats={[
+                    { label: "Выезды", value: String(g.trips) },
+                    { label: "Туристы", value: String(g.tourists) },
+                    { label: "Среднее", value: String(g.avgTouristsPerTrip) },
+                    { label: "Оборот", value: compactVnd(g.revenueVnd), tone: "green" },
+                  ]}
+                />
+              ))}
+            >
               {data.guides.map((g) => (
                 <tr key={g.guideId}>
                   <td className="px-3 py-2"><CellLink href={`/team/${g.guideId}`}>{g.name}</CellLink></td>
@@ -580,7 +728,24 @@ export default async function CompanyPage({
           </div>
           <DetailPanel title="Долги по броням" summary={`${data.investigations.debtBookings.length} строк`} open={data.investigations.debtBookings.length > 0}>
             {data.investigations.debtBookings.length > 0 ? (
-              <DetailTable headers={["Бронь", "Турист", "Тур", "Дата", "Менеджер", "Точка", "Итого", "Оплачено", "Долг"]} minWidth={980}>
+              <DetailTable
+                headers={["Бронь", "Турист", "Тур", "Дата", "Менеджер", "Точка", "Итого", "Оплачено", "Долг"]}
+                minWidth={980}
+                mobile={data.investigations.debtBookings.map((b) => (
+                  <MobileDetailCard
+                    key={b.bookingId}
+                    title={`${b.code} · ${b.customerName}`}
+                    href={`/tourists/${b.bookingId}`}
+                    meta={`${b.tourName} · ${b.dateYmd} · ${b.managerName}`}
+                    stats={[
+                      { label: "Итого", value: compactVnd(b.totalVnd) },
+                      { label: "Оплачено", value: compactVnd(b.paidVnd), tone: "green" },
+                      { label: "Долг", value: compactVnd(b.dueVnd), tone: "amber" },
+                      { label: "Туристы", value: String(b.tourists) },
+                    ]}
+                  />
+                ))}
+              >
                 {data.investigations.debtBookings.map((b) => (
                   <tr key={b.bookingId}>
                     <td className="px-3 py-2"><CellLink href={`/tourists/${b.bookingId}`}>{b.code}</CellLink></td>
@@ -602,7 +767,23 @@ export default async function CompanyPage({
           <DetailPanel title="Оценочные цены и качество базы" summary={`${data.investigations.dataIssues.length} сигналов`}>
             <div className="grid gap-3">
               {data.investigations.priceFallbackBookings.length > 0 ? (
-                <DetailTable headers={["Бронь", "Турист", "Тур", "Дата", "Менеджер", "Туристы", "Оценка"]} minWidth={820}>
+                <DetailTable
+                  headers={["Бронь", "Турист", "Тур", "Дата", "Менеджер", "Туристы", "Оценка"]}
+                  minWidth={820}
+                  mobile={data.investigations.priceFallbackBookings.map((b) => (
+                    <MobileDetailCard
+                      key={b.bookingId}
+                      title={`${b.code} · ${b.customerName}`}
+                      href={`/tourists/${b.bookingId}`}
+                      meta={`${b.tourName} · ${b.dateYmd} · ${b.managerName}`}
+                      warning="Цена была оценочной"
+                      stats={[
+                        { label: "Оценка", value: compactVnd(b.estimatedVnd), tone: "amber" },
+                        { label: "Туристы", value: String(b.tourists) },
+                      ]}
+                    />
+                  ))}
+                >
                   {data.investigations.priceFallbackBookings.map((b) => (
                     <tr key={b.bookingId}>
                       <td className="px-3 py-2"><CellLink href={`/tourists/${b.bookingId}`}>{b.code}</CellLink></td>
@@ -619,7 +800,22 @@ export default async function CompanyPage({
                 <div className="rounded-[12px] bg-emerald-50 p-3 text-[13px] font-bold text-emerald-700">Все брони имеют точные строки цены.</div>
               )}
               {data.investigations.dataIssues.length > 0 ? (
-                <DetailTable headers={["Бронь", "Турист", "Проблема", "Тур", "Дата", "Менеджер"]} minWidth={820}>
+                <DetailTable
+                  headers={["Бронь", "Турист", "Проблема", "Тур", "Дата", "Менеджер"]}
+                  minWidth={820}
+                  mobile={data.investigations.dataIssues.map((b) => (
+                    <MobileDetailCard
+                      key={`${b.bookingId}-${b.issue}`}
+                      title={`${b.code} · ${b.customerName}`}
+                      href={`/tourists/${b.bookingId}`}
+                      meta={`${b.tourName} · ${b.dateYmd} · ${b.managerName}`}
+                      warning={b.issue}
+                      stats={[
+                        { label: "Проверка", value: "открыть" },
+                      ]}
+                    />
+                  ))}
+                >
                   {data.investigations.dataIssues.map((b) => (
                     <tr key={`${b.bookingId}-${b.issue}`}>
                       <td className="px-3 py-2"><CellLink href={`/tourists/${b.bookingId}`}>{b.code}</CellLink></td>
