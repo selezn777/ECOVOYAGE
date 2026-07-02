@@ -989,6 +989,55 @@ export type DirectorCompanyDashboard = {
     topHotels: Array<{ name: string; bookings: number; tourists: number; revenueVnd: number }>;
     dataQualityPct: number;
   };
+  investigations: {
+    debtBookings: Array<{
+      bookingId: string;
+      code: string;
+      customerName: string;
+      tourId: string;
+      tourName: string;
+      dateYmd: string;
+      managerName: string;
+      pointName: string;
+      tourists: number;
+      totalVnd: number;
+      paidVnd: number;
+      dueVnd: number;
+      phone: string;
+      hotelName: string;
+    }>;
+    priceFallbackBookings: Array<{
+      bookingId: string;
+      code: string;
+      customerName: string;
+      tourId: string;
+      tourName: string;
+      dateYmd: string;
+      managerName: string;
+      tourists: number;
+      estimatedVnd: number;
+    }>;
+    weakTours: Array<{
+      tourId: string;
+      name: string;
+      dateYmd: string;
+      reason: string;
+      revenueVnd: number;
+      profitVnd: number;
+      loadPct: number;
+      dueVnd: number;
+    }>;
+    dataIssues: Array<{
+      bookingId: string;
+      code: string;
+      customerName: string;
+      tourId: string;
+      tourName: string;
+      dateYmd: string;
+      issue: string;
+      managerName: string;
+    }>;
+  };
   risks: Array<{ title: string; value: string; tone: "red" | "amber" | "green" }>;
 };
 
@@ -1055,6 +1104,12 @@ function emptyDirectorCompanyDashboard(month: string): DirectorCompanyDashboard 
       debtBookings: 0,
       topHotels: [],
       dataQualityPct: 100,
+    },
+    investigations: {
+      debtBookings: [],
+      priceFallbackBookings: [],
+      weakTours: [],
+      dataIssues: [],
     },
     risks: [],
   };
@@ -1238,6 +1293,9 @@ export async function getDirectorCompanyDashboard(month: string): Promise<Direct
   const pointMap = new Map<string, DirectorCompanyDashboard["salesPoints"][number]>();
   const tourMap = new Map<string, DirectorCompanyDashboard["tours"][number]>();
   const hotelMap = new Map<string, { name: string; bookings: number; tourists: number; revenueVnd: number }>();
+  const debtRows: DirectorCompanyDashboard["investigations"]["debtBookings"] = [];
+  const fallbackRows: DirectorCompanyDashboard["investigations"]["priceFallbackBookings"] = [];
+  const dataIssueRows: DirectorCompanyDashboard["investigations"]["dataIssues"] = [];
 
   let exactRevenueVnd = 0;
   let estimatedRevenueVnd = 0;
@@ -1343,9 +1401,10 @@ export async function getDirectorCompanyDashboard(month: string): Promise<Direct
     const user = userById.get(managerId);
     const pointId = user?.rental_point_id ? String(user.rental_point_id) : "online";
     const pointName = pointId === "online" ? "Онлайн / без точки" : (pointById.get(pointId)?.name || "Точка без названия");
+    const managerName = String(user?.full_name || "Сотрудник");
     const manager = managerMap.get(managerId) ?? {
       managerId,
-      name: String(user?.full_name || "Сотрудник"),
+      name: managerName,
       role: String(user?.role || ""),
       pointName,
       bookings: 0,
@@ -1392,6 +1451,58 @@ export async function getDirectorCompanyDashboard(month: string): Promise<Direct
       hotel.revenueVnd += revenue;
       hotelMap.set(hotelName, hotel);
     }
+
+    const bookingCode = String(b.online_code || "").trim() || "без кода";
+    const customerName = String(b.customer_name || "").trim() || "Турист";
+    const tourName = tourEntry?.name || String(tour?.name || "Тур");
+    if (due > 0) {
+      debtRows.push({
+        bookingId: String(b.id),
+        code: bookingCode,
+        customerName,
+        tourId: String(b.tour_id),
+        tourName,
+        dateYmd,
+        managerName,
+        pointName,
+        tourists: pax,
+        totalVnd: revenue,
+        paidVnd: paid,
+        dueVnd: due,
+        phone: String(b.phone_e164 || "").trim(),
+        hotelName,
+      });
+    }
+    if (exact <= 0) {
+      fallbackRows.push({
+        bookingId: String(b.id),
+        code: bookingCode,
+        customerName,
+        tourId: String(b.tour_id),
+        tourName,
+        dateYmd,
+        managerName,
+        tourists: pax,
+        estimatedVnd: estimated,
+      });
+    }
+    const issueParts: string[] = [];
+    if (!String(b.phone_e164 || "").trim()) issueParts.push("нет телефона");
+    if (!hotelName) issueParts.push("нет отеля");
+    if (exact <= 0) issueParts.push("цена оценочная");
+    if (due > 0) issueParts.push("есть долг");
+    if (issueParts.length > 0) {
+      dataIssueRows.push({
+        bookingId: String(b.id),
+        code: bookingCode,
+        customerName,
+        tourId: String(b.tour_id),
+        tourName,
+        dateYmd,
+        issue: issueParts.join(", "),
+        managerName,
+      });
+    }
   }
 
   const revenueVnd = exactRevenueVnd + estimatedRevenueVnd;
@@ -1431,6 +1542,28 @@ export async function getDirectorCompanyDashboard(month: string): Promise<Direct
   const salesPoints = [...pointMap.values()].sort((a, b) => b.revenueVnd - a.revenueVnd || b.bookings - a.bookings);
   const topTours = [...tourMap.values()].sort((a, b) => b.revenueVnd - a.revenueVnd || b.tourists - a.tourists);
   const guides = [...guideMap.values()].sort((a, b) => b.revenueVnd - a.revenueVnd || b.trips - a.trips);
+  const weakTours = [...tourMap.values()]
+    .map((t) => {
+      const reasons: string[] = [];
+      if (t.profitVnd < 0) reasons.push("минусовая прибыль");
+      if (t.capacity > 0 && t.loadPct < 35) reasons.push("низкая заполняемость");
+      if (t.dueVnd > 0) reasons.push("долг туристов");
+      if (t.revenueVnd === 0 && t.expenseVnd > 0) reasons.push("расходы без выручки");
+      return reasons.length > 0
+        ? {
+            tourId: t.tourId,
+            name: t.name,
+            dateYmd: t.dateYmd,
+            reason: reasons.join(", "),
+            revenueVnd: t.revenueVnd,
+            profitVnd: t.profitVnd,
+            loadPct: t.loadPct,
+            dueVnd: t.dueVnd,
+          }
+        : null;
+    })
+    .filter((t): t is DirectorCompanyDashboard["investigations"]["weakTours"][number] => t != null)
+    .sort((a, b) => b.dueVnd - a.dueVnd || a.profitVnd - b.profitVnd);
 
   for (const m of managers) m.sharePct = revenueVnd > 0 ? clampPercent((m.revenueVnd / revenueVnd) * 100) : 0;
   for (const p of salesPoints) p.sharePct = revenueVnd > 0 ? clampPercent((p.revenueVnd / revenueVnd) * 100) : 0;
@@ -1460,10 +1593,10 @@ export async function getDirectorCompanyDashboard(month: string): Promise<Direct
     missingPriceBookings,
   };
   result.trend = [...trendMap.values()].filter((d) => d.dateYmd).sort((a, b) => a.dateYmd.localeCompare(b.dateYmd));
-  result.managers = managers.slice(0, 12);
-  result.salesPoints = salesPoints.slice(0, 10);
-  result.tours = topTours.slice(0, 12);
-  result.guides = guides.slice(0, 10);
+  result.managers = managers;
+  result.salesPoints = salesPoints;
+  result.tours = topTours;
+  result.guides = guides;
   result.tourists = {
     adults,
     children,
@@ -1501,6 +1634,14 @@ export async function getDirectorCompanyDashboard(month: string): Promise<Direct
       tone: dataQualityPct < 75 ? "red" : dataQualityPct < 90 ? "amber" : "green",
     },
   ];
+  result.investigations = {
+    debtBookings: debtRows.sort((a, b) => b.dueVnd - a.dueVnd).slice(0, 80),
+    priceFallbackBookings: fallbackRows.sort((a, b) => b.estimatedVnd - a.estimatedVnd).slice(0, 80),
+    weakTours: weakTours.slice(0, 80),
+    dataIssues: dataIssueRows
+      .sort((a, b) => a.dateYmd.localeCompare(b.dateYmd) || a.customerName.localeCompare(b.customerName))
+      .slice(0, 120),
+  };
   return result;
 }
 

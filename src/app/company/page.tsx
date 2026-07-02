@@ -159,6 +159,65 @@ function Section({ title, eyebrow, children }: { title: string; eyebrow: string;
   );
 }
 
+function DetailPanel({
+  title,
+  summary,
+  children,
+  open = false,
+}: {
+  title: string;
+  summary: string;
+  children: React.ReactNode;
+  open?: boolean;
+}) {
+  return (
+    <details open={open} className="group mt-4 min-w-0 overflow-hidden rounded-[16px] border border-slate-200 bg-slate-50">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-3 text-[13px] font-black text-slate-950">
+        <span className="min-w-0 truncate">{title}</span>
+        <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-500 group-open:bg-[#8fd400] group-open:text-white">
+          {summary}
+        </span>
+      </summary>
+      <div className="border-t border-slate-200 bg-white p-3">{children}</div>
+    </details>
+  );
+}
+
+function DetailTable({
+  headers,
+  children,
+  minWidth = 720,
+}: {
+  headers: string[];
+  children: React.ReactNode;
+  minWidth?: number;
+}) {
+  return (
+    <div className="min-w-0 overflow-x-auto rounded-[12px] border border-slate-200">
+      <table className="w-full border-collapse bg-white text-left text-[12px]" style={{ minWidth }}>
+        <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400">
+          <tr>
+            {headers.map((h) => (
+              <th key={h} className="border-b border-slate-200 px-3 py-2">
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100">{children}</tbody>
+      </table>
+    </div>
+  );
+}
+
+function CellLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} className="font-black text-slate-950 underline decoration-[#8fd400]/50 underline-offset-4">
+      {children}
+    </Link>
+  );
+}
+
 export default async function CompanyPage({
   searchParams,
 }: {
@@ -176,7 +235,8 @@ export default async function CompanyPage({
   const duePct = f.revenueVnd > 0 ? (f.dueVnd / f.revenueVnd) * 100 : 0;
   const bestManager = data.managers[0];
   const bestPoint = data.salesPoints[0];
-  const bestTour = data.tours[0];
+  const toursWithMotion = data.tours.filter((t) => t.bookings > 0 || t.tourists > 0 || t.revenueVnd > 0 || t.expenseVnd > 0);
+  const bestTour = toursWithMotion[0];
   const bestGuide = data.guides[0];
 
   return (
@@ -238,6 +298,20 @@ export default async function CompanyPage({
             <Metric label="Возвраты" value={compactVnd(f.refundVnd)} sub="Минус к оплатам" tone="text-rose-600" />
             <Metric label="Маржа" value={pct(f.marginPct)} sub={`${formatVnd(f.revenueVnd)} − ${formatVnd(f.expenseVnd)}`} tone={moneyTone(f.profitVnd)} />
           </div>
+          <DetailPanel title="Дни месяца под графиком" summary={`${data.trend.length} дней`}>
+            <DetailTable headers={["Дата", "Брони", "Туристы", "Выручка", "Расходы", "Прибыль"]}>
+              {data.trend.map((d) => (
+                <tr key={d.dateYmd}>
+                  <td className="px-3 py-2 font-black">{d.dateYmd}</td>
+                  <td className="px-3 py-2 font-bold">{d.bookings}</td>
+                  <td className="px-3 py-2 font-bold">{d.tourists}</td>
+                  <td className="px-3 py-2 font-bold">{compactVnd(d.revenueVnd)}</td>
+                  <td className="px-3 py-2 text-rose-700 font-bold">{compactVnd(d.expenseVnd)}</td>
+                  <td className={`px-3 py-2 font-bold ${moneyTone(d.revenueVnd - d.expenseVnd)}`}>{compactVnd(d.revenueVnd - d.expenseVnd)}</td>
+                </tr>
+              ))}
+            </DetailTable>
+          </DetailPanel>
         </Section>
 
         <Section title="Риски месяца" eyebrow="Контроль">
@@ -291,7 +365,7 @@ export default async function CompanyPage({
                 </div>
               </div>
             ) : null}
-            {data.managers.map((m, idx) => (
+            {data.managers.slice(0, 8).map((m, idx) => (
               <BarRow
                 key={m.managerId}
                 label={`${idx + 1}. ${m.name}`}
@@ -303,6 +377,22 @@ export default async function CompanyPage({
             ))}
             {data.managers.length === 0 ? <div className="rounded-[14px] bg-slate-50 p-4 text-[13px] text-slate-500">За период нет продаж менеджеров.</div> : null}
           </div>
+          <DetailPanel title="Все менеджеры и долги" summary={`${data.managers.length} строк`}>
+            <DetailTable headers={["Сотрудник", "Роль", "Точка", "Брони", "Туристы", "Выручка", "Оплачено", "Долг"]}>
+              {data.managers.map((m) => (
+                <tr key={m.managerId}>
+                  <td className="px-3 py-2"><CellLink href={`/team/${m.managerId}`}>{m.name}</CellLink></td>
+                  <td className="px-3 py-2 text-slate-600">{roleRu(m.role)}</td>
+                  <td className="px-3 py-2 text-slate-600">{m.pointName}</td>
+                  <td className="px-3 py-2 font-bold">{m.bookings}</td>
+                  <td className="px-3 py-2 font-bold">{m.tourists}</td>
+                  <td className="px-3 py-2 font-bold">{compactVnd(m.revenueVnd)}</td>
+                  <td className="px-3 py-2 text-emerald-700 font-bold">{compactVnd(m.paidVnd)}</td>
+                  <td className="px-3 py-2 text-amber-700 font-bold">{compactVnd(m.dueVnd)}</td>
+                </tr>
+              ))}
+            </DetailTable>
+          </DetailPanel>
         </Section>
 
         <Section title="Точки продаж" eyebrow="Где продаем">
@@ -322,7 +412,7 @@ export default async function CompanyPage({
                 </div>
               </div>
             ) : null}
-            {data.salesPoints.map((p, idx) => (
+            {data.salesPoints.slice(0, 8).map((p, idx) => (
               <BarRow
                 key={p.pointId}
                 label={`${idx + 1}. ${p.name}`}
@@ -334,18 +424,36 @@ export default async function CompanyPage({
             ))}
             {data.salesPoints.length === 0 ? <div className="rounded-[14px] bg-slate-50 p-4 text-[13px] text-slate-500">Нет продаж по точкам за период.</div> : null}
           </div>
+          <DetailPanel title="Разбор по точкам и онлайну" summary={`${data.salesPoints.length} точек`}>
+            <DetailTable headers={["Точка", "Сотрудники", "Брони", "Туристы", "Выручка", "Оплачено", "Долг", "Менеджеры"]} minWidth={820}>
+              {data.salesPoints.map((p) => (
+                <tr key={p.pointId}>
+                  <td className="px-3 py-2">
+                    {p.pointId === "online" ? <span className="font-black text-slate-950">{p.name}</span> : <CellLink href={`/sales-points/${p.pointId}`}>{p.name}</CellLink>}
+                  </td>
+                  <td className="px-3 py-2 font-bold">{p.staffCount}</td>
+                  <td className="px-3 py-2 font-bold">{p.bookings}</td>
+                  <td className="px-3 py-2 font-bold">{p.tourists}</td>
+                  <td className="px-3 py-2 font-bold">{compactVnd(p.revenueVnd)}</td>
+                  <td className="px-3 py-2 text-emerald-700 font-bold">{compactVnd(p.paidVnd)}</td>
+                  <td className="px-3 py-2 text-amber-700 font-bold">{compactVnd(p.dueVnd)}</td>
+                  <td className="px-3 py-2 text-slate-600">{p.managerNames.join(", ") || "нет назначений"}</td>
+                </tr>
+              ))}
+            </DetailTable>
+          </DetailPanel>
         </Section>
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <Section title="Туры" eyebrow="Что приносит деньги">
           <div className="mb-3 grid gap-3 sm:grid-cols-3">
-            <Metric label="Туров" value={String(data.tours.length)} sub="С выездами в периоде" />
+            <Metric label="Туров" value={String(toursWithMotion.length)} sub={data.tours.length > toursWithMotion.length ? `С движением · всего ${data.tours.length}` : "С движением"} />
             <Metric label="Топ тур" value={bestTour ? compactVnd(bestTour.revenueVnd) : "0 đ"} sub={bestTour?.name || "нет данных"} />
             <Metric label="Заполняемость" value={bestTour ? pct(bestTour.loadPct) : "0%"} sub={bestTour ? `${bestTour.tourists}/${bestTour.capacity || "?"} мест` : "нет данных"} />
           </div>
           <div className="grid gap-3">
-            {data.tours.map((t, idx) => (
+            {toursWithMotion.slice(0, 12).map((t, idx) => (
               <BarRow
                 key={t.tourId}
                 label={`${idx + 1}. ${t.name}`}
@@ -356,6 +464,42 @@ export default async function CompanyPage({
               />
             ))}
           </div>
+          <DetailPanel title="Туры с продажами или расходами" summary={`${toursWithMotion.length} строк`}>
+            <DetailTable headers={["Тур", "Дата", "Брони", "Туристы", "Загрузка", "Выручка", "Расходы", "Прибыль", "Долг"]} minWidth={900}>
+              {toursWithMotion.map((t) => (
+                <tr key={t.tourId}>
+                  <td className="px-3 py-2"><CellLink href={`/tours/${t.tourId}`}>{t.name}</CellLink></td>
+                  <td className="px-3 py-2 text-slate-600">{t.dateYmd}</td>
+                  <td className="px-3 py-2 font-bold">{t.bookings}</td>
+                  <td className="px-3 py-2 font-bold">{t.tourists}</td>
+                  <td className="px-3 py-2 font-bold">{t.capacity > 0 ? `${t.loadPct}%` : "-"}</td>
+                  <td className="px-3 py-2 font-bold">{compactVnd(t.revenueVnd)}</td>
+                  <td className="px-3 py-2 text-rose-700 font-bold">{compactVnd(t.expenseVnd)}</td>
+                  <td className={`px-3 py-2 font-bold ${moneyTone(t.profitVnd)}`}>{compactVnd(t.profitVnd)}</td>
+                  <td className="px-3 py-2 text-amber-700 font-bold">{compactVnd(t.dueVnd)}</td>
+                </tr>
+              ))}
+            </DetailTable>
+          </DetailPanel>
+          <DetailPanel title="Что срочно проверить по турам" summary={`${data.investigations.weakTours.length} сигналов`}>
+            {data.investigations.weakTours.length > 0 ? (
+              <DetailTable headers={["Тур", "Дата", "Причина", "Выручка", "Прибыль", "Загрузка", "Долг"]} minWidth={820}>
+                {data.investigations.weakTours.map((t) => (
+                  <tr key={`${t.tourId}-${t.reason}`}>
+                    <td className="px-3 py-2"><CellLink href={`/tours/${t.tourId}`}>{t.name}</CellLink></td>
+                    <td className="px-3 py-2 text-slate-600">{t.dateYmd}</td>
+                    <td className="px-3 py-2 text-amber-700 font-bold">{t.reason}</td>
+                    <td className="px-3 py-2 font-bold">{compactVnd(t.revenueVnd)}</td>
+                    <td className={`px-3 py-2 font-bold ${moneyTone(t.profitVnd)}`}>{compactVnd(t.profitVnd)}</td>
+                    <td className="px-3 py-2 font-bold">{t.loadPct}%</td>
+                    <td className="px-3 py-2 text-amber-700 font-bold">{compactVnd(t.dueVnd)}</td>
+                  </tr>
+                ))}
+              </DetailTable>
+            ) : (
+              <div className="rounded-[12px] bg-emerald-50 p-3 text-[13px] font-bold text-emerald-700">Критичных сигналов по турам нет.</div>
+            )}
+          </DetailPanel>
         </Section>
 
         <Section title="Тур-гиды" eyebrow="Кто ведет выезды">
@@ -380,7 +524,7 @@ export default async function CompanyPage({
                 sub={`${bestGuide.trips} выездов · ${bestGuide.tourists} чел. · ${compactVnd(bestGuide.revenueVnd)}`}
               />
             ) : null}
-            {data.guides.map((g, idx) => (
+            {data.guides.slice(0, 10).map((g, idx) => (
               <BarRow
                 key={g.guideId}
                 label={`${idx + 1}. ${g.name}`}
@@ -391,6 +535,20 @@ export default async function CompanyPage({
               />
             ))}
           </div>
+          <DetailPanel title="Все гиды по выездам" summary={`${data.guides.length} гидов`}>
+            <DetailTable headers={["Гид", "Выезды", "Туристы", "Среднее", "Оборот туров", "Доля"]}>
+              {data.guides.map((g) => (
+                <tr key={g.guideId}>
+                  <td className="px-3 py-2"><CellLink href={`/team/${g.guideId}`}>{g.name}</CellLink></td>
+                  <td className="px-3 py-2 font-bold">{g.trips}</td>
+                  <td className="px-3 py-2 font-bold">{g.tourists}</td>
+                  <td className="px-3 py-2 font-bold">{g.avgTouristsPerTrip}</td>
+                  <td className="px-3 py-2 font-bold">{compactVnd(g.revenueVnd)}</td>
+                  <td className="px-3 py-2 font-bold">{pct(g.sharePct)}</td>
+                </tr>
+              ))}
+            </DetailTable>
+          </DetailPanel>
         </Section>
       </div>
 
@@ -420,6 +578,62 @@ export default async function CompanyPage({
               {data.tourists.topHotels.length === 0 ? <div className="rounded-[14px] bg-slate-50 p-4 text-[13px] text-slate-500">Отели не заполнены в бронях периода.</div> : null}
             </div>
           </div>
+          <DetailPanel title="Долги по броням" summary={`${data.investigations.debtBookings.length} строк`} open={data.investigations.debtBookings.length > 0}>
+            {data.investigations.debtBookings.length > 0 ? (
+              <DetailTable headers={["Бронь", "Турист", "Тур", "Дата", "Менеджер", "Точка", "Итого", "Оплачено", "Долг"]} minWidth={980}>
+                {data.investigations.debtBookings.map((b) => (
+                  <tr key={b.bookingId}>
+                    <td className="px-3 py-2"><CellLink href={`/tourists/${b.bookingId}`}>{b.code}</CellLink></td>
+                    <td className="px-3 py-2 font-bold">{b.customerName}</td>
+                    <td className="px-3 py-2"><CellLink href={`/tours/${b.tourId}`}>{b.tourName}</CellLink></td>
+                    <td className="px-3 py-2 text-slate-600">{b.dateYmd}</td>
+                    <td className="px-3 py-2 text-slate-600">{b.managerName}</td>
+                    <td className="px-3 py-2 text-slate-600">{b.pointName}</td>
+                    <td className="px-3 py-2 font-bold">{compactVnd(b.totalVnd)}</td>
+                    <td className="px-3 py-2 text-emerald-700 font-bold">{compactVnd(b.paidVnd)}</td>
+                    <td className="px-3 py-2 text-amber-700 font-black">{compactVnd(b.dueVnd)}</td>
+                  </tr>
+                ))}
+              </DetailTable>
+            ) : (
+              <div className="rounded-[12px] bg-emerald-50 p-3 text-[13px] font-bold text-emerald-700">Долгов по броням нет.</div>
+            )}
+          </DetailPanel>
+          <DetailPanel title="Оценочные цены и качество базы" summary={`${data.investigations.dataIssues.length} сигналов`}>
+            <div className="grid gap-3">
+              {data.investigations.priceFallbackBookings.length > 0 ? (
+                <DetailTable headers={["Бронь", "Турист", "Тур", "Дата", "Менеджер", "Туристы", "Оценка"]} minWidth={820}>
+                  {data.investigations.priceFallbackBookings.map((b) => (
+                    <tr key={b.bookingId}>
+                      <td className="px-3 py-2"><CellLink href={`/tourists/${b.bookingId}`}>{b.code}</CellLink></td>
+                      <td className="px-3 py-2 font-bold">{b.customerName}</td>
+                      <td className="px-3 py-2"><CellLink href={`/tours/${b.tourId}`}>{b.tourName}</CellLink></td>
+                      <td className="px-3 py-2 text-slate-600">{b.dateYmd}</td>
+                      <td className="px-3 py-2 text-slate-600">{b.managerName}</td>
+                      <td className="px-3 py-2 font-bold">{b.tourists}</td>
+                      <td className="px-3 py-2 text-amber-700 font-bold">{compactVnd(b.estimatedVnd)}</td>
+                    </tr>
+                  ))}
+                </DetailTable>
+              ) : (
+                <div className="rounded-[12px] bg-emerald-50 p-3 text-[13px] font-bold text-emerald-700">Все брони имеют точные строки цены.</div>
+              )}
+              {data.investigations.dataIssues.length > 0 ? (
+                <DetailTable headers={["Бронь", "Турист", "Проблема", "Тур", "Дата", "Менеджер"]} minWidth={820}>
+                  {data.investigations.dataIssues.map((b) => (
+                    <tr key={`${b.bookingId}-${b.issue}`}>
+                      <td className="px-3 py-2"><CellLink href={`/tourists/${b.bookingId}`}>{b.code}</CellLink></td>
+                      <td className="px-3 py-2 font-bold">{b.customerName}</td>
+                      <td className="px-3 py-2 text-amber-700 font-bold">{b.issue}</td>
+                      <td className="px-3 py-2"><CellLink href={`/tours/${b.tourId}`}>{b.tourName}</CellLink></td>
+                      <td className="px-3 py-2 text-slate-600">{b.dateYmd}</td>
+                      <td className="px-3 py-2 text-slate-600">{b.managerName}</td>
+                    </tr>
+                  ))}
+                </DetailTable>
+              ) : null}
+            </div>
+          </DetailPanel>
         </Section>
       </div>
     </main>
