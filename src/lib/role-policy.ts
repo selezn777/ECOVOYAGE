@@ -19,6 +19,7 @@ export const FINANCE_DATE_REPORT_ROLES: Role[] = ["director", "chief_manager"];
 
 /** Куда вести пользователя после входа и с корня `/` (если сессия есть). */
 export function defaultHomePathForRole(role: Role): string {
+  if (role === "director") return "/company";
   if (role === "accountant") return "/accounting";
   if (role === "dispatcher" || role === "booking_dispatcher") return "/dispatcher";
   return "/dashboard";

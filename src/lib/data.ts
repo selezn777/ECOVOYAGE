@@ -895,6 +895,615 @@ export type DirectorSalesPulse = {
   financeMonth: { revenueVnd: number; expenseVnd: number; netVnd: number; bookingsCount: number; totalPax: number };
 };
 
+export type DirectorCompanyDashboard = {
+  period: {
+    month: string;
+    fromYmd: string;
+    toYmd: string;
+    title: string;
+    prevMonth: string;
+    nextMonth: string;
+  };
+  finance: {
+    revenueVnd: number;
+    exactRevenueVnd: number;
+    estimatedRevenueVnd: number;
+    paidVnd: number;
+    dueVnd: number;
+    expenseVnd: number;
+    profitVnd: number;
+    marginPct: number;
+    bookingsCount: number;
+    touristsCount: number;
+    avgCheckVnd: number;
+    avgPaxPerBooking: number;
+    paidBookings: number;
+    partialBookings: number;
+    unpaidBookings: number;
+    refundVnd: number;
+    missingPriceBookings: number;
+  };
+  trend: Array<{ dateYmd: string; label: string; revenueVnd: number; expenseVnd: number; bookings: number; tourists: number }>;
+  managers: Array<{
+    managerId: string;
+    name: string;
+    role: string;
+    pointName: string;
+    bookings: number;
+    tourists: number;
+    revenueVnd: number;
+    paidVnd: number;
+    dueVnd: number;
+    avgCheckVnd: number;
+    sharePct: number;
+  }>;
+  salesPoints: Array<{
+    pointId: string;
+    name: string;
+    staffCount: number;
+    bookings: number;
+    tourists: number;
+    revenueVnd: number;
+    paidVnd: number;
+    dueVnd: number;
+    managerNames: string[];
+    sharePct: number;
+  }>;
+  tours: Array<{
+    tourId: string;
+    humanId: number | null;
+    name: string;
+    dateYmd: string;
+    bookings: number;
+    tourists: number;
+    capacity: number;
+    loadPct: number;
+    revenueVnd: number;
+    paidVnd: number;
+    dueVnd: number;
+    expenseVnd: number;
+    profitVnd: number;
+    marginPct: number;
+  }>;
+  guides: Array<{
+    guideId: string;
+    name: string;
+    trips: number;
+    tourists: number;
+    revenueVnd: number;
+    avgTouristsPerTrip: number;
+    sharePct: number;
+  }>;
+  tourists: {
+    adults: number;
+    children: number;
+    infants: number;
+    soloBookings: number;
+    pairBookings: number;
+    familyBookings: number;
+    groupBookings: number;
+    onlineBookings: number;
+    missingPhone: number;
+    missingHotel: number;
+    debtBookings: number;
+    topHotels: Array<{ name: string; bookings: number; tourists: number; revenueVnd: number }>;
+    dataQualityPct: number;
+  };
+  risks: Array<{ title: string; value: string; tone: "red" | "amber" | "green" }>;
+};
+
+function clampPercent(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function monthMetaRu(month: string): DirectorCompanyDashboard["period"] {
+  const safe = /^\d{4}-\d{2}$/.test(month) ? month : tourBusinessTodayYmd().slice(0, 7);
+  const [year, month1] = safe.split("-").map(Number);
+  const title = new Date(year, month1 - 1, 1).toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
+  const prev = new Date(year, month1 - 2, 1);
+  const next = new Date(year, month1, 1);
+  const to = new Date(Date.UTC(year, month1, 0));
+  return {
+    month: safe,
+    fromYmd: `${safe}-01`,
+    toYmd: to.toISOString().slice(0, 10),
+    title,
+    prevMonth: `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`,
+    nextMonth: `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`,
+  };
+}
+
+function emptyDirectorCompanyDashboard(month: string): DirectorCompanyDashboard {
+  return {
+    period: monthMetaRu(month),
+    finance: {
+      revenueVnd: 0,
+      exactRevenueVnd: 0,
+      estimatedRevenueVnd: 0,
+      paidVnd: 0,
+      dueVnd: 0,
+      expenseVnd: 0,
+      profitVnd: 0,
+      marginPct: 0,
+      bookingsCount: 0,
+      touristsCount: 0,
+      avgCheckVnd: 0,
+      avgPaxPerBooking: 0,
+      paidBookings: 0,
+      partialBookings: 0,
+      unpaidBookings: 0,
+      refundVnd: 0,
+      missingPriceBookings: 0,
+    },
+    trend: [],
+    managers: [],
+    salesPoints: [],
+    tours: [],
+    guides: [],
+    tourists: {
+      adults: 0,
+      children: 0,
+      infants: 0,
+      soloBookings: 0,
+      pairBookings: 0,
+      familyBookings: 0,
+      groupBookings: 0,
+      onlineBookings: 0,
+      missingPhone: 0,
+      missingHotel: 0,
+      debtBookings: 0,
+      topHotels: [],
+      dataQualityPct: 100,
+    },
+    risks: [],
+  };
+}
+
+async function resolveDirectorCompanyMonth(supabase: SupabaseClient, rawMonth: string): Promise<string> {
+  if (/^\d{4}-\d{2}$/.test(rawMonth)) return rawMonth;
+  const bookingMonths = await supabase
+    .from("bookings")
+    .select("tour_id,tours!inner(start_at,status)")
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(2000);
+  if (!bookingMonths.error) {
+    const months = new Set<string>();
+    for (const row of ((bookingMonths.data as { tours?: { start_at?: string | null; status?: string | null } | { start_at?: string | null; status?: string | null }[] | null }[] | null) ?? [])) {
+      const tour = unwrapSupabaseOne(row.tours);
+      if (!tour?.start_at || tour.status === "deleted") continue;
+      months.add(startDateOnly(String(tour.start_at)).slice(0, 7));
+    }
+    const latestBookingMonth = [...months].sort().pop();
+    if (latestBookingMonth) return latestBookingMonth;
+  }
+  const { data } = await supabase
+    .from("tours")
+    .select("start_at")
+    .neq("status", "deleted")
+    .order("start_at", { ascending: false })
+    .limit(1);
+  const latest = ((data as { start_at?: string | null }[] | null) ?? [])[0]?.start_at;
+  if (latest) return startDateOnly(String(latest)).slice(0, 7);
+  return tourBusinessTodayYmd().slice(0, 7);
+}
+
+function paidVndFromPaymentAggForDashboard(payments: PaymentRowAgg[]): { paid: number; refund: number } {
+  const agg = aggregatePaymentsEx(payments);
+  let paid = 0;
+  let refund = 0;
+  for (const v of agg.values()) {
+    paid += paidOfficialFromAgg(v);
+    refund += v.refund;
+  }
+  return { paid, refund };
+}
+
+export async function getDirectorCompanyDashboard(month: string): Promise<DirectorCompanyDashboard> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return emptyDirectorCompanyDashboard(month);
+  const resolvedMonth = await resolveDirectorCompanyMonth(supabase, month);
+  const result = emptyDirectorCompanyDashboard(resolvedMonth);
+
+  const [year, month1] = result.period.month.split("-").map(Number);
+  const { start, end } = monthRangeUtcIso(year, month1);
+
+  type TourRow = BookingRevenueFallbackTour & {
+    id: string;
+    human_id?: number | string | null;
+    name?: string | null;
+    start_at?: string | null;
+    capacity?: number | string | null;
+    status?: string | null;
+  };
+  type BookingRow = {
+    id: string;
+    tour_id: string;
+    manager_id: string;
+    customer_name?: string | null;
+    hotel_name?: string | null;
+    phone_e164?: string | null;
+    adults?: number | string | null;
+    children?: number | string | null;
+    infants?: number | string | null;
+    created_at?: string | null;
+    online_code?: string | null;
+  };
+  type UserRow = { id: string; full_name?: string | null; role?: string | null; rental_point_id?: string | null };
+
+  const { data: tourData, error: tourError } = await supabase
+    .from("tours")
+    .select("id,human_id,name,start_at,capacity,status,tour_type,default_offer_usd,default_offer_rate_to_vnd,default_offer_vnd,tour_templates(default_price_vnd,locations)")
+    .gte("start_at", start)
+    .lt("start_at", end)
+    .neq("status", "deleted")
+    .order("start_at", { ascending: true })
+    .limit(2000);
+  if (tourError || !tourData) return result;
+
+  const tours = (tourData as TourRow[]).filter((t) => t.id);
+  const tourIds = tours.map((t) => String(t.id));
+  const tourById = new Map(tours.map((t) => [String(t.id), t]));
+  if (tourIds.length === 0) {
+    result.risks = [{ title: "Туров в периоде", value: "0", tone: "amber" }];
+    return result;
+  }
+
+  const [bookingRes, expenseRes, guideRes, points] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select("id,tour_id,manager_id,customer_name,hotel_name,phone_e164,adults,children,infants,created_at,online_code")
+      .in("tour_id", tourIds)
+      .is("deleted_at", null)
+      .limit(5000),
+    supabase.from("expenses").select("tour_id,amount_vnd").in("tour_id", tourIds).limit(5000),
+    supabase.from("tour_guides").select("tour_id,guide_id,is_inspection").in("tour_id", tourIds).eq("is_inspection", false).limit(5000),
+    listRentalPoints(),
+  ]);
+
+  const bookings = ((bookingRes.data as BookingRow[] | null) ?? []).filter((b) => b.id && b.tour_id);
+  const bookingIds = bookings.map((b) => String(b.id));
+  const managerIds = [...new Set(bookings.map((b) => String(b.manager_id || "")).filter(Boolean))];
+  const guideRows = ((guideRes.data as { tour_id: string; guide_id: string }[] | null) ?? []).filter((g) => g.tour_id && g.guide_id);
+  const guideIds = [...new Set(guideRows.map((g) => String(g.guide_id)).filter(Boolean))];
+
+  const [priceRes, payResFull, userResFull, guideUserRes] = await Promise.all([
+    bookingIds.length
+      ? supabase.from("booking_prices").select("booking_id,amount_vnd").in("booking_id", bookingIds).limit(6000)
+      : Promise.resolve({ data: [] as unknown[], error: null }),
+    bookingIds.length
+      ? supabase.from("payments").select("id,booking_id,amount_vnd,kind,created_at,remitted_to_cash_at").in("booking_id", bookingIds).limit(8000)
+      : Promise.resolve({ data: [] as unknown[], error: null }),
+    managerIds.length
+      ? supabase
+          .from("users")
+          .select("id,full_name,role,rental_point_id")
+          .in("id", managerIds)
+          .limit(1000)
+      : Promise.resolve({ data: [] as unknown[], error: null }),
+    guideIds.length
+      ? supabase.from("users").select("id,full_name").in("id", guideIds).limit(1000)
+      : Promise.resolve({ data: [] as unknown[], error: null }),
+  ]);
+
+  const payRes =
+    payResFull.error && /remitted_to_cash_at|column|does not exist/i.test(String(payResFull.error.message))
+      ? await supabase.from("payments").select("id,booking_id,amount_vnd,kind,created_at").in("booking_id", bookingIds).limit(8000)
+      : payResFull;
+  const userRes =
+    userResFull.error && /rental_point_id|column|does not exist/i.test(String(userResFull.error.message))
+      ? await supabase.from("users").select("id,full_name,role").in("id", managerIds).limit(1000)
+      : userResFull;
+
+  const priceByBooking = new Map<string, number>();
+  for (const p of ((priceRes.data as { booking_id: string; amount_vnd: number | string }[] | null) ?? [])) {
+    const bid = String(p.booking_id);
+    priceByBooking.set(bid, (priceByBooking.get(bid) ?? 0) + positiveMoney(p.amount_vnd));
+  }
+
+  const paymentsByBooking = new Map<string, PaymentRowAgg[]>();
+  for (const p of ((payRes.data as PaymentRowAgg[] | null) ?? [])) {
+    const bid = String(p.booking_id);
+    const list = paymentsByBooking.get(bid) ?? [];
+    list.push({
+      id: p.id,
+      booking_id: bid,
+      amount_vnd: Number(p.amount_vnd) || 0,
+      kind: String(p.kind || ""),
+      created_at: p.created_at,
+      remitted_to_cash_at: p.remitted_to_cash_at,
+    });
+    paymentsByBooking.set(bid, list);
+  }
+
+  const userById = new Map<string, UserRow>();
+  for (const u of ((userRes.data as UserRow[] | null) ?? [])) userById.set(String(u.id), u);
+  const pointById = new Map(points.map((p) => [p.id, p]));
+  const guideNameById = new Map(
+    ((guideUserRes.data as { id: string; full_name?: string | null }[] | null) ?? []).map((u) => [
+      String(u.id),
+      String(u.full_name || "Гид"),
+    ]),
+  );
+
+  const expenseByTour = new Map<string, number>();
+  for (const e of ((expenseRes.data as { tour_id: string; amount_vnd: number | string }[] | null) ?? [])) {
+    const tourId = String(e.tour_id);
+    expenseByTour.set(tourId, (expenseByTour.get(tourId) ?? 0) + Math.max(0, Math.round(Number(e.amount_vnd) || 0)));
+  }
+
+  const trendMap = new Map<string, { dateYmd: string; label: string; revenueVnd: number; expenseVnd: number; bookings: number; tourists: number }>();
+  const managerMap = new Map<string, DirectorCompanyDashboard["managers"][number]>();
+  const pointMap = new Map<string, DirectorCompanyDashboard["salesPoints"][number]>();
+  const tourMap = new Map<string, DirectorCompanyDashboard["tours"][number]>();
+  const hotelMap = new Map<string, { name: string; bookings: number; tourists: number; revenueVnd: number }>();
+
+  let exactRevenueVnd = 0;
+  let estimatedRevenueVnd = 0;
+  let paidVnd = 0;
+  let dueVnd = 0;
+  let refundVnd = 0;
+  let adults = 0;
+  let children = 0;
+  let infants = 0;
+  let paidBookings = 0;
+  let partialBookings = 0;
+  let unpaidBookings = 0;
+  let missingPriceBookings = 0;
+  let missingPhone = 0;
+  let missingHotel = 0;
+  let onlineBookings = 0;
+  let soloBookings = 0;
+  let pairBookings = 0;
+  let familyBookings = 0;
+  let groupBookings = 0;
+
+  for (const t of tours) {
+    const tourId = String(t.id);
+    const dateYmd = t.start_at ? startDateOnly(String(t.start_at)) : "";
+    const expenseVnd = expenseByTour.get(tourId) ?? 0;
+    const entry = {
+      tourId,
+      humanId: t.human_id != null ? Math.round(Number(t.human_id) || 0) : null,
+      name: String(t.name || "Тур"),
+      dateYmd,
+      bookings: 0,
+      tourists: 0,
+      capacity: Math.max(0, Math.round(Number(t.capacity) || 0)),
+      loadPct: 0,
+      revenueVnd: 0,
+      paidVnd: 0,
+      dueVnd: 0,
+      expenseVnd,
+      profitVnd: -expenseVnd,
+      marginPct: 0,
+    };
+    tourMap.set(tourId, entry);
+    const day = trendMap.get(dateYmd) ?? { dateYmd, label: dateYmd.slice(8, 10), revenueVnd: 0, expenseVnd: 0, bookings: 0, tourists: 0 };
+    day.expenseVnd += expenseVnd;
+    trendMap.set(dateYmd, day);
+  }
+
+  for (const b of bookings) {
+    const tour = tourById.get(String(b.tour_id));
+    const tourEntry = tourMap.get(String(b.tour_id));
+    const exact = priceByBooking.get(String(b.id)) ?? 0;
+    const estimated = exact > 0 ? 0 : estimateBookingRevenueVndFromTour(b, tour);
+    const revenue = exact > 0 ? exact : estimated;
+    const pay = paidVndFromPaymentAggForDashboard(paymentsByBooking.get(String(b.id)) ?? []);
+    const paid = Math.max(0, pay.paid);
+    const due = Math.max(0, revenue - paid);
+    const paxAdults = Math.max(0, Math.round(Number(b.adults) || 0));
+    const paxChildren = Math.max(0, Math.round(Number(b.children) || 0));
+    const paxInfants = Math.max(0, Math.round(Number(b.infants) || 0));
+    const pax = paxAdults + paxChildren + paxInfants;
+    const hasKids = paxChildren > 0 || paxInfants > 0;
+    const status = paymentStatusFrom(revenue, paid);
+
+    exactRevenueVnd += exact;
+    estimatedRevenueVnd += estimated;
+    paidVnd += paid;
+    dueVnd += due;
+    refundVnd += pay.refund;
+    adults += paxAdults;
+    children += paxChildren;
+    infants += paxInfants;
+    if (status === "paid") paidBookings++;
+    else if (status === "partial") partialBookings++;
+    else unpaidBookings++;
+    if (exact <= 0) missingPriceBookings++;
+    if (!String(b.phone_e164 || "").trim()) missingPhone++;
+    if (!String(b.hotel_name || "").trim()) missingHotel++;
+    if (String(b.online_code || "").trim()) onlineBookings++;
+    if (hasKids) familyBookings++;
+    else if (paxAdults <= 1) soloBookings++;
+    else if (paxAdults === 2) pairBookings++;
+    else groupBookings++;
+
+    if (tourEntry) {
+      tourEntry.bookings += 1;
+      tourEntry.tourists += pax;
+      tourEntry.revenueVnd += revenue;
+      tourEntry.paidVnd += paid;
+      tourEntry.dueVnd += due;
+      tourEntry.profitVnd = tourEntry.revenueVnd - tourEntry.expenseVnd;
+      tourEntry.loadPct = tourEntry.capacity > 0 ? clampPercent((tourEntry.tourists / tourEntry.capacity) * 100) : 0;
+      tourEntry.marginPct = tourEntry.revenueVnd > 0 ? Math.round((tourEntry.profitVnd / tourEntry.revenueVnd) * 100) : 0;
+    }
+
+    const dateYmd = tourEntry?.dateYmd || (tour?.start_at ? startDateOnly(String(tour.start_at)) : "");
+    const day = trendMap.get(dateYmd) ?? { dateYmd, label: dateYmd.slice(8, 10), revenueVnd: 0, expenseVnd: 0, bookings: 0, tourists: 0 };
+    day.revenueVnd += revenue;
+    day.bookings += 1;
+    day.tourists += pax;
+    trendMap.set(dateYmd, day);
+
+    const managerId = String(b.manager_id || "unknown");
+    const user = userById.get(managerId);
+    const pointId = user?.rental_point_id ? String(user.rental_point_id) : "online";
+    const pointName = pointId === "online" ? "Онлайн / без точки" : (pointById.get(pointId)?.name || "Точка без названия");
+    const manager = managerMap.get(managerId) ?? {
+      managerId,
+      name: String(user?.full_name || "Сотрудник"),
+      role: String(user?.role || ""),
+      pointName,
+      bookings: 0,
+      tourists: 0,
+      revenueVnd: 0,
+      paidVnd: 0,
+      dueVnd: 0,
+      avgCheckVnd: 0,
+      sharePct: 0,
+    };
+    manager.bookings += 1;
+    manager.tourists += pax;
+    manager.revenueVnd += revenue;
+    manager.paidVnd += paid;
+    manager.dueVnd += due;
+    manager.avgCheckVnd = manager.bookings > 0 ? Math.round(manager.revenueVnd / manager.bookings) : 0;
+    managerMap.set(managerId, manager);
+
+    const point = pointMap.get(pointId) ?? {
+      pointId,
+      name: pointName,
+      staffCount: 0,
+      bookings: 0,
+      tourists: 0,
+      revenueVnd: 0,
+      paidVnd: 0,
+      dueVnd: 0,
+      managerNames: [],
+      sharePct: 0,
+    };
+    point.bookings += 1;
+    point.tourists += pax;
+    point.revenueVnd += revenue;
+    point.paidVnd += paid;
+    point.dueVnd += due;
+    if (user?.full_name && !point.managerNames.includes(String(user.full_name))) point.managerNames.push(String(user.full_name));
+    pointMap.set(pointId, point);
+
+    const hotelName = String(b.hotel_name || "").trim();
+    if (hotelName) {
+      const hotel = hotelMap.get(hotelName) ?? { name: hotelName, bookings: 0, tourists: 0, revenueVnd: 0 };
+      hotel.bookings += 1;
+      hotel.tourists += pax;
+      hotel.revenueVnd += revenue;
+      hotelMap.set(hotelName, hotel);
+    }
+  }
+
+  const revenueVnd = exactRevenueVnd + estimatedRevenueVnd;
+  const expenseVnd = [...expenseByTour.values()].reduce((sum, v) => sum + v, 0);
+  const touristsCount = adults + children + infants;
+
+  const staffCountByPoint = new Map<string, number>();
+  for (const u of userById.values()) {
+    const pointId = u.rental_point_id ? String(u.rental_point_id) : "online";
+    staffCountByPoint.set(pointId, (staffCountByPoint.get(pointId) ?? 0) + 1);
+  }
+  for (const point of pointMap.values()) point.staffCount = staffCountByPoint.get(point.pointId) ?? point.managerNames.length;
+
+  const tourRevenueById = new Map([...tourMap.values()].map((t) => [t.tourId, t.revenueVnd]));
+  const tourPaxById = new Map([...tourMap.values()].map((t) => [t.tourId, t.tourists]));
+  const guideMap = new Map<string, DirectorCompanyDashboard["guides"][number]>();
+  for (const g of guideRows) {
+    const guideId = String(g.guide_id);
+    const tourId = String(g.tour_id);
+    const guide = guideMap.get(guideId) ?? {
+      guideId,
+      name: guideNameById.get(guideId) || "Гид",
+      trips: 0,
+      tourists: 0,
+      revenueVnd: 0,
+      avgTouristsPerTrip: 0,
+      sharePct: 0,
+    };
+    guide.trips += 1;
+    guide.tourists += tourPaxById.get(tourId) ?? 0;
+    guide.revenueVnd += tourRevenueById.get(tourId) ?? 0;
+    guide.avgTouristsPerTrip = guide.trips > 0 ? Math.round((guide.tourists / guide.trips) * 10) / 10 : 0;
+    guideMap.set(guideId, guide);
+  }
+
+  const managers = [...managerMap.values()].sort((a, b) => b.revenueVnd - a.revenueVnd || b.bookings - a.bookings);
+  const salesPoints = [...pointMap.values()].sort((a, b) => b.revenueVnd - a.revenueVnd || b.bookings - a.bookings);
+  const topTours = [...tourMap.values()].sort((a, b) => b.revenueVnd - a.revenueVnd || b.tourists - a.tourists);
+  const guides = [...guideMap.values()].sort((a, b) => b.revenueVnd - a.revenueVnd || b.trips - a.trips);
+
+  for (const m of managers) m.sharePct = revenueVnd > 0 ? clampPercent((m.revenueVnd / revenueVnd) * 100) : 0;
+  for (const p of salesPoints) p.sharePct = revenueVnd > 0 ? clampPercent((p.revenueVnd / revenueVnd) * 100) : 0;
+  for (const g of guides) g.sharePct = revenueVnd > 0 ? clampPercent((g.revenueVnd / revenueVnd) * 100) : 0;
+
+  const qualityIssues = missingPriceBookings + missingPhone + missingHotel + (unpaidBookings + partialBookings);
+  const qualityBase = Math.max(1, bookings.length * 4);
+  const dataQualityPct = clampPercent(100 - (qualityIssues / qualityBase) * 100);
+
+  result.finance = {
+    revenueVnd,
+    exactRevenueVnd,
+    estimatedRevenueVnd,
+    paidVnd,
+    dueVnd,
+    expenseVnd,
+    profitVnd: revenueVnd - expenseVnd,
+    marginPct: revenueVnd > 0 ? Math.round(((revenueVnd - expenseVnd) / revenueVnd) * 100) : 0,
+    bookingsCount: bookings.length,
+    touristsCount,
+    avgCheckVnd: bookings.length > 0 ? Math.round(revenueVnd / bookings.length) : 0,
+    avgPaxPerBooking: bookings.length > 0 ? Math.round((touristsCount / bookings.length) * 10) / 10 : 0,
+    paidBookings,
+    partialBookings,
+    unpaidBookings,
+    refundVnd,
+    missingPriceBookings,
+  };
+  result.trend = [...trendMap.values()].filter((d) => d.dateYmd).sort((a, b) => a.dateYmd.localeCompare(b.dateYmd));
+  result.managers = managers.slice(0, 12);
+  result.salesPoints = salesPoints.slice(0, 10);
+  result.tours = topTours.slice(0, 12);
+  result.guides = guides.slice(0, 10);
+  result.tourists = {
+    adults,
+    children,
+    infants,
+    soloBookings,
+    pairBookings,
+    familyBookings,
+    groupBookings,
+    onlineBookings,
+    missingPhone,
+    missingHotel,
+    debtBookings: partialBookings + unpaidBookings,
+    topHotels: [...hotelMap.values()].sort((a, b) => b.revenueVnd - a.revenueVnd || b.bookings - a.bookings).slice(0, 8),
+    dataQualityPct,
+  };
+  result.risks = [
+    {
+      title: "Прибыль",
+      value: `${result.finance.marginPct}% маржа`,
+      tone: result.finance.profitVnd < 0 ? "red" : result.finance.marginPct < 20 ? "amber" : "green",
+    },
+    {
+      title: "Долг туристов",
+      value: `${partialBookings + unpaidBookings} броней`,
+      tone: partialBookings + unpaidBookings > 0 ? "amber" : "green",
+    },
+    {
+      title: "Цены fallback",
+      value: `${missingPriceBookings} броней`,
+      tone: missingPriceBookings > 0 ? "amber" : "green",
+    },
+    {
+      title: "Качество данных",
+      value: `${dataQualityPct}%`,
+      tone: dataQualityPct < 75 ? "red" : dataQualityPct < 90 ? "amber" : "green",
+    },
+  ];
+  return result;
+}
+
 /** Директорский срез продаж: кто, куда и во сколько записывает.
  *  fromYmd — начало периода YYYY-MM-DD (если не передан — windowDays от сегодня). */
 export async function getDirectorSalesPulse(windowDays = 30, fromYmd?: string): Promise<DirectorSalesPulse> {

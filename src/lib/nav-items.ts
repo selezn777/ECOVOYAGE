@@ -1,7 +1,6 @@
 import {
   ACCOUNTING_PANEL_ROLES,
   CASH_VIEW_ROLES,
-  ACCOUNTING_REPORTS_ACCESS_ROLES,
   DISPATCHER_PAGE_ROLES,
   FINANCE_PAGE_ROLES,
   RENTALS_PAGE_ROLES,
@@ -12,6 +11,12 @@ import {
 import type { Role } from "@/lib/types";
 
 export type NavItem = { href: string; labelKey: string; roles: readonly Role[] | null };
+
+const DIRECTOR_COMPANY_NAV_ITEM: NavItem = {
+  href: "/company",
+  labelKey: "company",
+  roles: null,
+};
 
 const MY_REPORT_NAV_ITEM: NavItem = {
   href: "/my-report",
@@ -51,11 +56,11 @@ export const navAll: NavItem[] = [
 
 export function navForRole(role: Role): NavItem[] {
   if (role === "director") {
-    const base = navAll.filter((item) => !item.roles || item.roles.includes(role));
-    if (ACCOUNTING_REPORTS_ACCESS_ROLES.includes(role)) {
-      return [...base, { href: "/accounting/reports", labelKey: "report", roles: null }];
-    }
-    return base;
+    return [
+      DIRECTOR_COMPANY_NAV_ITEM,
+      { href: "/dashboard", labelKey: "tours", roles: null },
+      { href: "/team", labelKey: "team", roles: null },
+    ];
   }
   if (role === "accountant") {
     return [

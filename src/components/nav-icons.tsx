@@ -1,6 +1,7 @@
 /** Иконки для нижней мобильной навигации. Один стиль: viewBox 20x20, stroke=currentColor. */
 
 type NavIconName =
+  | "company"
   | "tours"
   | "tourists"
   | "cash"
@@ -30,6 +31,16 @@ function ToursIcon(props: React.SVGProps<SVGSVGElement>) {
     <svg {...sharedProps} {...props}>
       <circle cx="10" cy="10" r="7.25" />
       <path d="M12.6 7.4l-1.4 3.8-3.8 1.4 1.4-3.8 3.8-1.4z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function CompanyIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...sharedProps} {...props}>
+      <rect x="3" y="7" width="14" height="10" rx="2" />
+      <path d="M6 7V4.5A1.5 1.5 0 017.5 3h5A1.5 1.5 0 0114 4.5V7" />
+      <path d="M7 10h.01M10 10h.01M13 10h.01M7 13h.01M10 13h.01M13 13h.01" />
     </svg>
   );
 }
@@ -132,6 +143,7 @@ function WorkdayIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 const ICONS: Record<NavIconName, (props: React.SVGProps<SVGSVGElement>) => React.ReactNode> = {
+  company: CompanyIcon,
   tours: ToursIcon,
   tourists: TouristsIcon,
   cash: CashIcon,

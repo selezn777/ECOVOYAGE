@@ -86,7 +86,7 @@ export function TopNav({ user }: { user?: SessionUser }) {
                       {t("profile")}
                     </Link>
                   ) : null}
-                  {user ? (
+                  {user && user.role !== "director" ? (
                     <Link
                       href="/my-report"
                       onClick={() => setMenuOpen(false)}
@@ -118,8 +118,8 @@ export function TopNav({ user }: { user?: SessionUser }) {
           </div>
         ) : null}
 
-        {/* Переключатель роли (только директор / test) */}
-        {(user?.baseRole === "director" || user?.login === "test") ? (
+        {/* Переключатель роли оставляем только для тестового демо-аккаунта. */}
+        {user?.login === "test" ? (
           <DirectorViewAsControl effectiveRole={user.role} />
         ) : null}
 
