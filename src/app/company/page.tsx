@@ -19,6 +19,20 @@ function pickFirst(v?: string | string[]): string {
   return Array.isArray(v) ? String(v[0] ?? "") : String(v);
 }
 
+function PeriodChevron({ direction }: { direction: "left" | "right" }) {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path
+        d={direction === "left" ? "M12.25 15L7.25 10l5-5" : "M7.75 5l5 5-5 5"}
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 type CompanyLocale = "ru" | "en" | "vi";
 
 const COMPANY_TEXT: Record<CompanyLocale, {
@@ -166,7 +180,7 @@ const COMPANY_TEXT: Record<CompanyLocale, {
     partialShort: "частично",
     unpaidShort: "не оплачено",
     managersTitle: "Менеджеры",
-    managersEyebrow: "Кто продает",
+    managersEyebrow: "",
     salesLeader: "Лидер продаж",
     noManagerSales: "За период нет продаж менеджеров.",
     allManagers: "Менеджеры: продажи и сборы",
@@ -273,7 +287,7 @@ const COMPANY_TEXT: Record<CompanyLocale, {
     partialShort: "partial",
     unpaidShort: "unpaid",
     managersTitle: "Managers",
-    managersEyebrow: "Who sells",
+    managersEyebrow: "",
     salesLeader: "Sales leader",
     noManagerSales: "No manager sales in this period.",
     allManagers: "Managers: sales and collection",
@@ -380,7 +394,7 @@ const COMPANY_TEXT: Record<CompanyLocale, {
     partialShort: "một phần",
     unpaidShort: "chưa thu",
     managersTitle: "Quản lý",
-    managersEyebrow: "Ai bán",
+    managersEyebrow: "",
     salesLeader: "Bán tốt nhất",
     noManagerSales: "Không có doanh số quản lý trong kỳ.",
     allManagers: "Quản lý: bán hàng và thu tiền",
@@ -571,6 +585,128 @@ function companyCopy(locale: CompanyLocale) {
   return COMPANY_TEXT[locale];
 }
 
+const CONTROL_COPY: Record<CompanyLocale, {
+  monthClean: string;
+  needsAttention: string;
+  urgentCount: (n: number) => string;
+  closed: string;
+  watch: string;
+  action: string;
+  touristPayments: string;
+  touristPaymentsOk: string;
+  touristPaymentsAction: string;
+  touristPaymentsMeta: (partial: number, unpaid: number) => string;
+  marginAndCosts: string;
+  marginGood: string;
+  marginLow: string;
+  marginBad: string;
+  marginAction: string;
+  pricing: string;
+  pricingOk: string;
+  pricingAction: string;
+  touristCards: string;
+  touristCardsOk: string;
+  touristCardsAction: string;
+  touristCardsMeta: (phones: number, hotels: number) => string;
+  weakTours: string;
+  weakToursOk: string;
+  weakToursAction: string;
+  refundsWatch: string;
+  refundsOk: string;
+  refundsAction: string;
+}> = {
+  ru: {
+    monthClean: "Критичных действий нет",
+    needsAttention: "Нужно внимание",
+    urgentCount: (n) => `${n} пунктов в работе`,
+    closed: "Закрыто",
+    watch: "Следить",
+    action: "Действие",
+    touristPayments: "Оплаты туристов",
+    touristPaymentsOk: "Все брони закрыты по оплате",
+    touristPaymentsAction: "Открыть список броней к сбору ниже",
+    touristPaymentsMeta: (partial, unpaid) => `${partial} частично · ${unpaid} не оплачено`,
+    marginAndCosts: "Маржа и расходы",
+    marginGood: "Маржа здоровая",
+    marginLow: "Проверить себестоимость туров",
+    marginBad: "Расходы выше выручки",
+    marginAction: "Смотреть туры с низкой прибылью ниже",
+    pricing: "Цены и прайс",
+    pricingOk: "Все продажи с точной ценой",
+    pricingAction: "Заполнить строки цены, иначе прибыль будет спорной",
+    touristCards: "Карточки туристов",
+    touristCardsOk: "База достаточно чистая",
+    touristCardsAction: "Дочистить телефоны и отели",
+    touristCardsMeta: (phones, hotels) => `${phones} без телефона · ${hotels} без отеля`,
+    weakTours: "Туры под риском",
+    weakToursOk: "Нет туров с красными сигналами",
+    weakToursAction: "Разобрать загрузку, прибыль и сборы по турам ниже",
+    refundsWatch: "Возвраты есть",
+    refundsOk: "Возвратов нет",
+    refundsAction: "Проверить причины отмен и удержания",
+  },
+  en: {
+    monthClean: "No critical actions",
+    needsAttention: "Needs attention",
+    urgentCount: (n) => `${n} items to handle`,
+    closed: "Closed",
+    watch: "Watch",
+    action: "Action",
+    touristPayments: "Tourist payments",
+    touristPaymentsOk: "All bookings are collected",
+    touristPaymentsAction: "Open bookings to collect below",
+    touristPaymentsMeta: (partial, unpaid) => `${partial} partial · ${unpaid} unpaid`,
+    marginAndCosts: "Margin and costs",
+    marginGood: "Healthy margin",
+    marginLow: "Check tour cost structure",
+    marginBad: "Costs exceed revenue",
+    marginAction: "Review low-profit tours below",
+    pricing: "Prices and rate card",
+    pricingOk: "All sales have exact prices",
+    pricingAction: "Fill price rows or profit stays arguable",
+    touristCards: "Tourist cards",
+    touristCardsOk: "Database is clean enough",
+    touristCardsAction: "Clean missing phones and hotels",
+    touristCardsMeta: (phones, hotels) => `${phones} no phone · ${hotels} no hotel`,
+    weakTours: "Tours at risk",
+    weakToursOk: "No tours with red signals",
+    weakToursAction: "Review load, profit and collections below",
+    refundsWatch: "Refunds exist",
+    refundsOk: "No refunds",
+    refundsAction: "Check cancellation and retention reasons",
+  },
+  vi: {
+    monthClean: "Không có việc gấp",
+    needsAttention: "Cần chú ý",
+    urgentCount: (n) => `${n} mục cần xử lý`,
+    closed: "Đã ổn",
+    watch: "Theo dõi",
+    action: "Hành động",
+    touristPayments: "Thanh toán của khách",
+    touristPaymentsOk: "Tất cả booking đã thu",
+    touristPaymentsAction: "Mở danh sách booking cần thu bên dưới",
+    touristPaymentsMeta: (partial, unpaid) => `${partial} một phần · ${unpaid} chưa trả`,
+    marginAndCosts: "Biên lợi nhuận và chi phí",
+    marginGood: "Biên lợi nhuận tốt",
+    marginLow: "Kiểm tra giá vốn tour",
+    marginBad: "Chi phí cao hơn doanh thu",
+    marginAction: "Xem tour lợi nhuận thấp bên dưới",
+    pricing: "Giá và bảng giá",
+    pricingOk: "Tất cả đơn có giá chính xác",
+    pricingAction: "Bổ sung dòng giá, nếu không lợi nhuận không chắc",
+    touristCards: "Hồ sơ khách",
+    touristCardsOk: "Dữ liệu đủ sạch",
+    touristCardsAction: "Bổ sung SĐT và khách sạn còn thiếu",
+    touristCardsMeta: (phones, hotels) => `${phones} thiếu SĐT · ${hotels} thiếu KS`,
+    weakTours: "Tour có rủi ro",
+    weakToursOk: "Không có tour tín hiệu đỏ",
+    weakToursAction: "Xem tải tour, lợi nhuận và khoản thu bên dưới",
+    refundsWatch: "Có hoàn tiền",
+    refundsOk: "Không có hoàn tiền",
+    refundsAction: "Kiểm tra lý do hủy và giữ tiền",
+  },
+};
+
 function Ring({ value, label, sub, tone = "green" }: { value: number; label: string; sub: string; tone?: "green" | "blue" | "amber" }) {
   const color = tone === "blue" ? "#0ea5e9" : tone === "amber" ? "var(--warn)" : "var(--accent)";
   return (
@@ -596,10 +732,149 @@ function clampUi(value: number): number {
 
 function Metric({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: string }) {
   return (
-    <div className="min-w-0 rounded-[14px] border border-[var(--border)] bg-[var(--surface)] p-3">
+    <div className="min-w-0 rounded-[13px] border border-[var(--border)] bg-[var(--surface)] p-2.5">
       <div className="text-[10px] font-bold uppercase text-[var(--muted2)]">{label}</div>
-      <div className={`mt-1 truncate text-[18px] font-extrabold text-[var(--text)] ${tone || ""}`}>{value}</div>
-      {sub ? <div className="mt-1 min-h-[28px] text-[11px] leading-snug text-[var(--muted)]">{sub}</div> : null}
+      <div className={`mt-1 truncate text-[16px] font-extrabold text-[var(--text)] ${tone || ""}`}>{value}</div>
+      {sub ? <div className="mt-1 text-[10.5px] leading-snug text-[var(--muted)]">{sub}</div> : null}
+    </div>
+  );
+}
+
+function FinanceCheckRow({
+  items,
+}: {
+  items: Array<{ label: string; value: string; sub: string; tone?: "green" | "blue" | "amber" | "red" }>;
+}) {
+  return (
+    <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      {items.map((item) => {
+        const dot =
+          item.tone === "red"
+            ? "bg-[var(--danger)]"
+            : item.tone === "amber"
+              ? "bg-[var(--warn)]"
+              : item.tone === "blue"
+                ? "bg-sky-500"
+                : "bg-[var(--accent)]";
+        const valueTone =
+          item.tone === "red"
+            ? "text-[var(--danger)]"
+            : item.tone === "amber"
+              ? "text-[var(--warn)]"
+              : item.tone === "blue"
+                ? "text-sky-700 dark:text-sky-300"
+                : "text-[var(--text)]";
+        return (
+          <div key={item.label} className="flex min-w-0 items-center gap-2.5 rounded-[12px] border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-2">
+            <span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} />
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-baseline justify-between gap-2">
+                <span className="truncate text-[10px] font-extrabold uppercase tracking-wide text-[var(--muted2)]">{item.label}</span>
+                <span className={`shrink-0 text-[13px] font-extrabold tabular-nums ${valueTone}`}>{item.value}</span>
+              </div>
+              <div className="mt-0.5 truncate text-[10.5px] font-medium text-[var(--muted)]">{item.sub}</div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ControlBoard({
+  status,
+  items,
+}: {
+  status: { title: string; sub: string; tone: "green" | "amber" | "red" };
+  items: Array<{
+    title: string;
+    value: string;
+    meta: string;
+    action: string;
+    tone: "green" | "amber" | "red" | "blue";
+    ok: boolean;
+  }>;
+}) {
+  const statusClass =
+    status.tone === "red"
+      ? "border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/35 dark:text-red-100"
+      : status.tone === "amber"
+        ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/35 dark:text-amber-100"
+        : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/35 dark:text-emerald-100";
+  return (
+    <div className="space-y-2.5">
+      <div className={`rounded-[16px] border px-3 py-3 ${statusClass}`}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="truncate text-[14px] font-extrabold">{status.title}</div>
+            <div className="mt-0.5 truncate text-[11px] font-semibold opacity-80">{status.sub}</div>
+          </div>
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/70 text-[16px] font-extrabold dark:bg-white/10">
+            {status.tone === "green" ? "✓" : "!"}
+          </span>
+        </div>
+      </div>
+      <div className="grid gap-2">
+        {items.map((item) => (
+          <ControlItem key={item.title} item={item} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ControlItem({
+  item,
+}: {
+  item: {
+    title: string;
+    value: string;
+    meta: string;
+    action: string;
+    tone: "green" | "amber" | "red" | "blue";
+    ok: boolean;
+  };
+}) {
+  const toneClass =
+    item.tone === "red"
+      ? "bg-red-500"
+      : item.tone === "amber"
+        ? "bg-[var(--warn)]"
+        : item.tone === "blue"
+          ? "bg-sky-500"
+          : "bg-[var(--accent)]";
+  const valueClass =
+    item.tone === "red"
+      ? "text-red-700 dark:text-red-300"
+      : item.tone === "amber"
+        ? "text-amber-700 dark:text-amber-300"
+        : item.tone === "blue"
+          ? "text-sky-700 dark:text-sky-300"
+          : "text-[var(--text)]";
+  return (
+    <div className="min-w-0 rounded-[14px] border border-[var(--border)] bg-[var(--surface-soft)] p-3">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${toneClass}`} />
+            <div className="truncate text-[13px] font-extrabold text-[var(--text)]">{item.title}</div>
+          </div>
+          <div className="mt-1 truncate text-[11px] font-medium text-[var(--muted)]">{item.meta}</div>
+        </div>
+        <div className={`shrink-0 text-right text-[14px] font-extrabold tabular-nums ${valueClass}`}>{item.value}</div>
+      </div>
+      <div className="mt-2 flex min-w-0 items-center justify-between gap-2 border-t border-[var(--border)] pt-2">
+        <span className="truncate text-[11px] font-semibold text-[var(--muted)]">{item.action}</span>
+        <span
+          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+            item.ok
+              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+              : "bg-[var(--surface)] text-[var(--text)] ring-1 ring-[var(--border)]"
+          }`}
+        >
+          {item.ok ? "OK" : "→"}
+        </span>
+      </div>
     </div>
   );
 }
@@ -653,8 +928,8 @@ function Section({ title, eyebrow, children }: { title: string; eyebrow: string;
     <section className="min-w-0 rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-md)] md:p-5">
       <div className="mb-4 flex min-w-0 items-end justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[10px] font-extrabold uppercase text-[var(--accent-dark)]">{eyebrow}</div>
-          <h2 className="mt-1 truncate text-[18px] font-extrabold text-[var(--text)]">{title}</h2>
+          {eyebrow ? <div className="text-[10px] font-extrabold uppercase text-[var(--accent-dark)]">{eyebrow}</div> : null}
+          <h2 className={`${eyebrow ? "mt-1" : ""} truncate text-[18px] font-extrabold text-[var(--text)]`}>{title}</h2>
         </div>
       </div>
       {children}
@@ -802,6 +1077,24 @@ export default async function CompanyPage({
   const guideRows = bestGuide ? data.guides.filter((g) => g.guideId !== bestGuide.guideId) : data.guides;
   const prevMonthTitle = monthTitle(data.period.prevMonth, locale);
   const nextMonthTitle = monthTitle(data.period.nextMonth, locale);
+  const control = CONTROL_COPY[locale];
+  const lowMargin = f.revenueVnd > 0 && f.marginPct < 20;
+  const negativeProfit = f.profitVnd < 0;
+  const paymentNeedsAction = f.dueVnd > 0 || f.partialBookings > 0 || f.unpaidBookings > 0;
+  const pricingNeedsAction = f.missingPriceBookings > 0 || f.estimatedRevenueVnd > 0;
+  const dataNeedsAction = data.tourists.missingPhone > 0 || data.tourists.missingHotel > 0 || data.tourists.dataQualityPct < 90;
+  const weakToursCount = data.investigations.weakTours.length;
+  const refundsNeedWatch = f.refundVnd > 0;
+  const controlActionCount = [
+    paymentNeedsAction,
+    negativeProfit || lowMargin,
+    pricingNeedsAction,
+    dataNeedsAction,
+    weakToursCount > 0,
+    refundsNeedWatch,
+  ].filter(Boolean).length;
+  const controlStatusTone: "green" | "amber" | "red" =
+    negativeProfit || f.unpaidBookings > 0 ? "red" : controlActionCount > 0 ? "amber" : "green";
 
   return (
     <main className="company-dashboard mx-auto w-full max-w-[1180px] px-3 pb-[92px] pt-3 sm:px-4 md:pb-8">
@@ -818,27 +1111,29 @@ export default async function CompanyPage({
               {t.subtitle(data.period.title)}
             </p>
           </div>
-          <div className="grid w-full shrink-0 grid-cols-[52px_1fr_52px] overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--surface)]/90 shadow-[var(--shadow-md)] sm:w-[390px]">
+          <div className="w-full shrink-0 rounded-[22px] border border-[var(--border)] bg-[var(--surface)]/85 p-1.5 shadow-[var(--shadow-md)] ring-1 ring-white/40 backdrop-blur sm:w-[390px] dark:ring-white/[0.05]">
+            <div className="grid grid-cols-[46px_1fr_46px] items-stretch rounded-[17px] bg-[var(--surface-soft)] p-1">
             <Link
               href={`/company?month=${data.period.prevMonth}`}
-              className="flex min-h-[58px] min-w-0 flex-col items-center justify-center border-r border-[var(--border)] px-2 text-center transition-colors hover:bg-[var(--surface-elevated)]"
+              className="grid min-h-[48px] place-items-center rounded-[14px] text-[var(--muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--text)] active:scale-[0.98]"
               aria-label={t.prevMonth}
               title={prevMonthTitle}
             >
-              <span className="text-[18px] font-extrabold leading-none text-[var(--text)]">‹</span>
+              <PeriodChevron direction="left" />
             </Link>
-            <div className="min-w-0 bg-[var(--surface-soft)] px-3 py-2.5 text-center">
-              <div className="text-[9px] font-extrabold uppercase tracking-wide text-[var(--muted2)]">{t.periodLabel}</div>
-              <div className="mt-1 truncate text-[16px] font-extrabold text-[var(--text)]">{data.period.title}</div>
+            <div className="min-w-0 rounded-[14px] bg-[var(--surface)] px-3 py-2 text-center shadow-[0_1px_0_rgba(255,255,255,0.7)] dark:shadow-none">
+              <div className="text-[8.5px] font-extrabold uppercase tracking-[0.16em] text-[var(--muted2)]">{t.periodLabel}</div>
+              <div className="mt-0.5 truncate text-[15px] font-extrabold text-[var(--text)]">{data.period.title}</div>
             </div>
             <Link
               href={`/company?month=${data.period.nextMonth}`}
-              className="flex min-h-[58px] min-w-0 flex-col items-center justify-center border-l border-[var(--border)] px-2 text-center transition-colors hover:bg-[var(--surface-elevated)]"
+              className="grid min-h-[48px] place-items-center rounded-[14px] text-[var(--muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--text)] active:scale-[0.98]"
               aria-label={t.nextMonth}
               title={nextMonthTitle}
             >
-              <span className="text-[18px] font-extrabold leading-none text-[var(--text)]">›</span>
+              <PeriodChevron direction="right" />
             </Link>
+            </div>
           </div>
         </div>
 
@@ -860,12 +1155,24 @@ export default async function CompanyPage({
               <Ring value={duePct} label={t.debt} sub={`${f.partialBookings + f.unpaidBookings} ${t.bookings}`} tone="amber" />
             </div>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Metric label={t.exactPrices} value={vnd(f.exactRevenueVnd)} sub={t.fromBookingPrices} />
-            <Metric label={t.estimatedPrices} value={vnd(f.estimatedRevenueVnd)} sub={t.missingPriceBookings(f.missingPriceBookings)} />
-            <Metric label={t.refunds} value={vnd(f.refundVnd)} sub={t.minusPayments} tone="text-rose-600" />
-            <Metric label={t.margin} value={pct(f.marginPct)} sub={`${formatVnd(f.revenueVnd)} - ${formatVnd(f.expenseVnd)}`} tone={moneyTone(f.profitVnd)} />
-          </div>
+          <FinanceCheckRow
+            items={[
+              { label: t.exactPrices, value: vnd(f.exactRevenueVnd), sub: t.fromBookingPrices, tone: "green" },
+              {
+                label: t.estimatedPrices,
+                value: f.estimatedRevenueVnd > 0 ? vnd(f.estimatedRevenueVnd) : "0",
+                sub: t.missingPriceBookings(f.missingPriceBookings),
+                tone: f.estimatedRevenueVnd > 0 ? "amber" : "green",
+              },
+              {
+                label: t.refunds,
+                value: f.refundVnd > 0 ? vnd(f.refundVnd) : "0",
+                sub: t.minusPayments,
+                tone: f.refundVnd > 0 ? "red" : "green",
+              },
+              { label: t.margin, value: pct(f.marginPct), sub: `${formatVnd(f.revenueVnd)} - ${formatVnd(f.expenseVnd)}`, tone: f.profitVnd < 0 ? "red" : "blue" },
+            ]}
+          />
           <DetailPanel title={t.dayDetails} summary={`${data.trend.length} ${t.days}`}>
             <DetailTable
               headers={[t.date, t.bookings, t.tourists, t.revenue, t.expenses, t.profit]}
@@ -897,26 +1204,63 @@ export default async function CompanyPage({
         </Section>
 
         <Section title={t.riskTitle} eyebrow={t.riskEyebrow}>
-          <div className="grid gap-3">
-            {data.risks.map((r) => (
-              <div key={r.title} className="flex items-center justify-between gap-3 rounded-[14px] border border-[var(--border)] bg-[var(--surface-soft)] p-3">
-                <div className="min-w-0">
-                  <div className="truncate text-[13px] font-extrabold text-[var(--text)]">{r.title}</div>
-                </div>
-                <div
-                  className={`shrink-0 rounded-full px-3 py-1 text-[12px] font-extrabold ${
-                    r.tone === "red"
-                      ? "bg-rose-50 text-rose-700"
-                      : r.tone === "amber"
-                        ? "bg-amber-50 text-amber-700"
-                        : "bg-emerald-50 text-emerald-700"
-                  }`}
-                >
-                  {r.value}
-                </div>
-              </div>
-            ))}
-          </div>
+          <ControlBoard
+            status={{
+              title: controlActionCount > 0 ? control.needsAttention : control.monthClean,
+              sub: control.urgentCount(controlActionCount),
+              tone: controlStatusTone,
+            }}
+            items={[
+              {
+                title: control.touristPayments,
+                value: paymentNeedsAction ? vnd(f.dueVnd) : "0",
+                meta: paymentNeedsAction ? control.touristPaymentsMeta(f.partialBookings, f.unpaidBookings) : control.touristPaymentsOk,
+                action: paymentNeedsAction ? control.touristPaymentsAction : control.closed,
+                tone: f.unpaidBookings > 0 ? "red" : paymentNeedsAction ? "amber" : "green",
+                ok: !paymentNeedsAction,
+              },
+              {
+                title: control.marginAndCosts,
+                value: pct(f.marginPct),
+                meta: `${t.profit} ${vnd(f.profitVnd)} · ${t.expenses} ${vnd(f.expenseVnd)}`,
+                action: negativeProfit ? control.marginBad : lowMargin ? control.marginLow : control.marginGood,
+                tone: negativeProfit ? "red" : lowMargin ? "amber" : "green",
+                ok: !negativeProfit && !lowMargin,
+              },
+              {
+                title: control.pricing,
+                value: String(f.missingPriceBookings),
+                meta: pricingNeedsAction ? `${t.estimatedPrices}: ${vnd(f.estimatedRevenueVnd)}` : control.pricingOk,
+                action: pricingNeedsAction ? control.pricingAction : control.closed,
+                tone: pricingNeedsAction ? "amber" : "green",
+                ok: !pricingNeedsAction,
+              },
+              {
+                title: control.touristCards,
+                value: pct(data.tourists.dataQualityPct),
+                meta: dataNeedsAction ? control.touristCardsMeta(data.tourists.missingPhone, data.tourists.missingHotel) : control.touristCardsOk,
+                action: dataNeedsAction ? control.touristCardsAction : control.closed,
+                tone: data.tourists.dataQualityPct < 75 ? "red" : dataNeedsAction ? "amber" : "green",
+                ok: !dataNeedsAction,
+              },
+              {
+                title: control.weakTours,
+                value: String(weakToursCount),
+                meta: weakToursCount > 0 ? `${t.urgentTours}: ${weakToursCount}` : control.weakToursOk,
+                action: weakToursCount > 0 ? control.weakToursAction : control.closed,
+                tone: weakToursCount > 0 ? "amber" : "green",
+                ok: weakToursCount === 0,
+              },
+              {
+                title: t.refunds,
+                value: refundsNeedWatch ? vnd(f.refundVnd) : "0",
+                meta: refundsNeedWatch ? control.refundsWatch : control.refundsOk,
+                action: refundsNeedWatch ? control.refundsAction : control.closed,
+                tone: refundsNeedWatch ? "blue" : "green",
+                ok: !refundsNeedWatch,
+              },
+            ]}
+          />
           <div className="mt-4 grid grid-cols-3 gap-2 rounded-[16px] border border-[var(--border)] bg-[var(--surface)] p-3 text-center">
             <div>
               <div className="text-[18px] font-extrabold text-emerald-700">{f.paidBookings}</div>
