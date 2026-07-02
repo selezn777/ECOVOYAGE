@@ -153,12 +153,12 @@ const COMPANY_TEXT: Record<CompanyLocale, {
     expenseBars: "расходы",
     collected: "Собрано",
     margin: "Маржа",
-    exactPrices: "Точные цены",
-    estimatedPrices: "Оценка цены",
+    exactPrices: "Выручка по броням",
+    estimatedPrices: "Неполные оплаты",
     refunds: "Возвраты",
-    fromBookingPrices: "Из booking_prices",
-    missingPriceBookings: (n) => `${n} броней без строки цены`,
-    minusPayments: "Минус к оплатам",
+    fromBookingPrices: "Итоговая сумма проданных броней",
+    missingPriceBookings: (n) => `${n} броней с незакрытой оплатой`,
+    minusPayments: "Уменьшают выручку периода",
     dayDetails: "Дни месяца",
     riskEyebrow: "Контроль",
     riskTitle: "Что проверить",
@@ -205,9 +205,9 @@ const COMPANY_TEXT: Record<CompanyLocale, {
     noHotels: "Отели не заполнены в бронях периода.",
     debtsByBookings: "К сбору по броням",
     noDebts: "К сбору по броням нет.",
-    pricesAndQuality: "Оценочные цены и качество базы",
-    allExactPrices: "Все брони имеют точные строки цены.",
-    fallbackWarning: "Цена была оценочной",
+    pricesAndQuality: "Сверка броней и данных",
+    allExactPrices: "Во всех бронях цены заполнены.",
+    fallbackWarning: "Цену нужно проверить",
     open: "открыть",
     rows: "строк",
     points: "точек",
@@ -260,12 +260,12 @@ const COMPANY_TEXT: Record<CompanyLocale, {
     expenseBars: "expenses",
     collected: "Collected",
     margin: "Margin",
-    exactPrices: "Exact prices",
-    estimatedPrices: "Estimated prices",
+    exactPrices: "Booking revenue",
+    estimatedPrices: "Open payments",
     refunds: "Refunds",
-    fromBookingPrices: "From booking_prices",
-    missingPriceBookings: (n) => `${n} bookings without price rows`,
-    minusPayments: "Minus from payments",
+    fromBookingPrices: "Final value of sold bookings",
+    missingPriceBookings: (n) => `${n} bookings not fully paid`,
+    minusPayments: "Reduces period revenue",
     dayDetails: "Month days",
     riskEyebrow: "Control",
     riskTitle: "What to check",
@@ -312,9 +312,9 @@ const COMPANY_TEXT: Record<CompanyLocale, {
     noHotels: "Hotels are not filled for this period.",
     debtsByBookings: "To collect by booking",
     noDebts: "Nothing to collect by booking.",
-    pricesAndQuality: "Estimated prices and data quality",
-    allExactPrices: "All bookings have exact price rows.",
-    fallbackWarning: "Price was estimated",
+    pricesAndQuality: "Booking and data reconciliation",
+    allExactPrices: "All bookings have filled prices.",
+    fallbackWarning: "Price needs review",
     open: "open",
     rows: "rows",
     points: "points",
@@ -367,12 +367,12 @@ const COMPANY_TEXT: Record<CompanyLocale, {
     expenseBars: "chi phí",
     collected: "Đã thu",
     margin: "Biên LN",
-    exactPrices: "Giá chính xác",
-    estimatedPrices: "Giá ước tính",
+    exactPrices: "Doanh thu booking",
+    estimatedPrices: "Thanh toán mở",
     refunds: "Hoàn tiền",
-    fromBookingPrices: "Từ booking_prices",
-    missingPriceBookings: (n) => `${n} booking thiếu dòng giá`,
-    minusPayments: "Trừ vào thanh toán",
+    fromBookingPrices: "Tổng giá trị booking đã bán",
+    missingPriceBookings: (n) => `${n} booking chưa thu đủ`,
+    minusPayments: "Giảm doanh thu kỳ này",
     dayDetails: "Ngày trong tháng",
     riskEyebrow: "Kiểm soát",
     riskTitle: "Cần kiểm tra",
@@ -419,9 +419,9 @@ const COMPANY_TEXT: Record<CompanyLocale, {
     noHotels: "Booking trong kỳ chưa có khách sạn.",
     debtsByBookings: "Cần thu theo booking",
     noDebts: "Không còn khoản cần thu theo booking.",
-    pricesAndQuality: "Giá ước tính và chất lượng dữ liệu",
-    allExactPrices: "Tất cả booking có dòng giá chính xác.",
-    fallbackWarning: "Giá đã được ước tính",
+    pricesAndQuality: "Đối soát booking và dữ liệu",
+    allExactPrices: "Tất cả booking đã có giá.",
+    fallbackWarning: "Cần kiểm tra giá",
     open: "mở",
     rows: "dòng",
     points: "điểm",
@@ -487,6 +487,12 @@ function moneyTone(value: number): string {
   return "text-[var(--success)]";
 }
 
+function shortDateLabel(dateYmd: string, locale: CompanyLocale): string {
+  const [, month, day] = dateYmd.split("-");
+  if (!month || !day) return dateYmd;
+  return locale === "en" ? `${month}/${day}` : `${day}.${month}`;
+}
+
 function MoneyChart({
   rows,
   labels,
@@ -498,7 +504,8 @@ function MoneyChart({
 }) {
   const max = Math.max(1, ...rows.map((r) => Math.max(r.revenueVnd, r.expenseVnd)));
   const activeRows = rows.filter((r) => r.revenueVnd > 0 || r.expenseVnd > 0);
-  const peak = activeRows.sort((a, b) => b.revenueVnd - a.revenueVnd)[0];
+  const topDays = [...activeRows].sort((a, b) => b.revenueVnd - a.revenueVnd).slice(0, 4);
+  const peak = topDays[0];
   const width = 360;
   const height = 150;
   const padX = 12;
@@ -506,8 +513,18 @@ function MoneyChart({
   const chartHeight = height - padBottom - 14;
   const slot = rows.length > 0 ? (width - padX * 2) / rows.length : width;
   const barW = Math.max(4, Math.min(14, slot * 0.45));
+  const baseY = height - padBottom;
+  const revenuePoints = rows.map((r, i) => {
+    const x = padX + slot * i + slot / 2;
+    const y = baseY - Math.max(2, (r.revenueVnd / max) * chartHeight);
+    return { x, y, row: r };
+  });
+  const linePath = revenuePoints.map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(" ");
+  const areaPath = revenuePoints.length > 0
+    ? `${linePath} L${revenuePoints[revenuePoints.length - 1].x.toFixed(1)} ${baseY} L${revenuePoints[0].x.toFixed(1)} ${baseY} Z`
+    : "";
   return (
-    <div className="company-chart rounded-[22px] border border-[var(--border)] bg-[linear-gradient(180deg,var(--surface)_0%,var(--surface-soft)_100%)] p-4 shadow-[var(--shadow-sm)]">
+    <div className="company-chart rounded-[22px] border border-[var(--border)] bg-[linear-gradient(180deg,var(--surface)_0%,var(--surface-soft)_100%)] p-4 shadow-[var(--shadow-md)] ring-1 ring-white/45 dark:ring-white/[0.04]">
       <div className="mb-3 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="text-[13px] font-extrabold text-[var(--text)]">{labels.chartTitle}</div>
@@ -515,20 +532,34 @@ function MoneyChart({
         {peak ? (
           <div className="shrink-0 rounded-[14px] border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-3 py-2 text-right">
             <div className="text-[10px] font-extrabold uppercase text-[var(--muted2)]">{labels.peakDay}</div>
-            <div className="text-[13px] font-extrabold text-[var(--text)]">{peak.dateYmd.slice(8, 10)} · {compactVnd(peak.revenueVnd, locale)}</div>
+            <div className="text-[13px] font-extrabold text-[var(--text)]">{shortDateLabel(peak.dateYmd, locale)} · {compactVnd(peak.revenueVnd, locale)}</div>
           </div>
         ) : null}
       </div>
       <svg viewBox={`0 0 ${width} ${height}`} className="h-[184px] w-full" role="img" aria-label={labels.chartTitle}>
+        <defs>
+          <linearGradient id="companyRevenueArea" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.02" />
+          </linearGradient>
+          <linearGradient id="companyRevenueLine" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stopColor="var(--accent)" />
+            <stop offset="55%" stopColor="#16a34a" />
+            <stop offset="100%" stopColor="#0ea5e9" />
+          </linearGradient>
+        </defs>
         <path d={`M${padX} 18H${width - padX}`} stroke="var(--border)" strokeWidth="1" opacity="0.55" />
         <path d={`M${padX} 58H${width - padX}`} stroke="var(--border)" strokeWidth="1" opacity="0.55" />
         <path d={`M${padX} 98H${width - padX}`} stroke="var(--border)" strokeWidth="1" opacity="0.55" />
-        <path d={`M${padX} ${height - padBottom}H${width - padX}`} stroke="var(--border)" strokeWidth="1.2" />
+        <path d={`M${padX} ${baseY}H${width - padX}`} stroke="var(--border)" strokeWidth="1.2" />
+        {areaPath ? <path d={areaPath} fill="url(#companyRevenueArea)" /> : null}
         {rows.map((r, i) => {
           const center = padX + slot * i + slot / 2;
           const revenueH = Math.max(2, (r.revenueVnd / max) * chartHeight);
           const expenseH = r.expenseVnd > 0 ? Math.max(2, (r.expenseVnd / max) * chartHeight) : 0;
-          const showLabel = i === 0 || i === rows.length - 1 || r.dateYmd === peak?.dateYmd;
+          const day = Number(r.dateYmd.slice(8, 10));
+          const nearLast = rows.length - i <= 2;
+          const showLabel = i === 0 || i === rows.length - 1 || (!nearLast && day % 5 === 0) || (r.dateYmd === peak?.dateYmd && !nearLast);
           return (
             <g key={r.dateYmd}>
               <rect
@@ -552,17 +583,34 @@ function MoneyChart({
               ) : null}
               {showLabel ? (
                 <text x={center} y={height - 6} textAnchor="middle" className="fill-[var(--muted2)] text-[9px] font-bold">
-                  {r.label}
+                  {shortDateLabel(r.dateYmd, locale)}
                 </text>
               ) : null}
             </g>
           );
         })}
+        {linePath ? <path d={linePath} fill="none" stroke="url(#companyRevenueLine)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /> : null}
+        {revenuePoints.map((point) => point.row.dateYmd === peak?.dateYmd ? (
+          <g key={`peak-${point.row.dateYmd}`}>
+            <circle cx={point.x} cy={point.y} r="5" fill="var(--surface)" stroke="var(--accent)" strokeWidth="3" />
+            <circle cx={point.x} cy={point.y} r="2" fill="var(--accent)" />
+          </g>
+        ) : null)}
       </svg>
       <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-bold text-[var(--muted)]">
         <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[var(--accent)]" />{labels.revenueBars}</span>
         <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[var(--danger)]" />{labels.expenseBars}</span>
       </div>
+      {topDays.length > 0 ? (
+        <div className="mt-3 grid gap-1.5 sm:grid-cols-4">
+          {topDays.map((day) => (
+            <div key={day.dateYmd} className="min-w-0 rounded-[12px] bg-[var(--surface)] px-2.5 py-2 ring-1 ring-[var(--border)]">
+              <div className="truncate text-[10px] font-extrabold text-[var(--muted2)]">{shortDateLabel(day.dateYmd, locale)}</div>
+              <div className="mt-0.5 truncate text-[12px] font-extrabold tabular-nums text-[var(--text)]">{compactVnd(day.revenueVnd, locale)}</div>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -571,125 +619,85 @@ function companyCopy(locale: CompanyLocale) {
   return COMPANY_TEXT[locale];
 }
 
-const CONTROL_COPY: Record<CompanyLocale, {
-  monthClean: string;
-  needsAttention: string;
-  urgentCount: (n: number) => string;
-  closed: string;
-  watch: string;
-  action: string;
-  touristPayments: string;
-  touristPaymentsOk: string;
-  touristPaymentsAction: string;
-  touristPaymentsMeta: (partial: number, unpaid: number) => string;
-  marginAndCosts: string;
-  marginGood: string;
-  marginLow: string;
-  marginBad: string;
-  marginAction: string;
-  pricing: string;
-  pricingOk: string;
-  pricingAction: string;
-  touristCards: string;
-  touristCardsOk: string;
-  touristCardsAction: string;
-  touristCardsMeta: (phones: number, hotels: number) => string;
-  weakTours: string;
-  weakToursOk: string;
-  weakToursAction: string;
-  refundsWatch: string;
-  refundsOk: string;
-  refundsAction: string;
+const FOCUS_COPY: Record<CompanyLocale, {
+  money: string;
+  sales: string;
+  operations: string;
+  clients: string;
+  moneyGood: string;
+  moneyWarn: string;
+  moneyBad: string;
+  salesGood: string;
+  salesWarn: string;
+  opsGood: string;
+  opsWarn: string;
+  clientsGood: string;
+  clientsWarn: string;
+  leader: string;
+  topPoint: string;
+  activeTours: string;
+  riskTours: string;
+  missingData: string;
 }> = {
   ru: {
-    monthClean: "Критичных действий нет",
-    needsAttention: "Нужно внимание",
-    urgentCount: (n) => `${n} пунктов в работе`,
-    closed: "Закрыто",
-    watch: "Следить",
-    action: "Действие",
-    touristPayments: "Оплаты туристов",
-    touristPaymentsOk: "Все брони закрыты по оплате",
-    touristPaymentsAction: "Открыть список броней к сбору ниже",
-    touristPaymentsMeta: (partial, unpaid) => `${partial} частично · ${unpaid} не оплачено`,
-    marginAndCosts: "Маржа и расходы",
-    marginGood: "Маржа здоровая",
-    marginLow: "Проверить себестоимость туров",
-    marginBad: "Расходы выше выручки",
-    marginAction: "Смотреть туры с низкой прибылью ниже",
-    pricing: "Цены и прайс",
-    pricingOk: "Все продажи с точной ценой",
-    pricingAction: "Заполнить строки цены, иначе прибыль будет спорной",
-    touristCards: "Карточки туристов",
-    touristCardsOk: "База достаточно чистая",
-    touristCardsAction: "Дочистить телефоны и отели",
-    touristCardsMeta: (phones, hotels) => `${phones} без телефона · ${hotels} без отеля`,
-    weakTours: "Туры под риском",
-    weakToursOk: "Нет туров с красными сигналами",
-    weakToursAction: "Разобрать загрузку, прибыль и сборы по турам ниже",
-    refundsWatch: "Возвраты есть",
-    refundsOk: "Возвратов нет",
-    refundsAction: "Проверить причины отмен и удержания",
+    money: "Деньги",
+    sales: "Продажи",
+    operations: "Туры",
+    clients: "Сверка денег",
+    moneyGood: "Прибыль, сборы и расходы в норме по выбранному периоду.",
+    moneyWarn: "Есть отклонения по сборам или марже.",
+    moneyBad: "Расходы выше выручки по выбранному периоду.",
+    salesGood: "Продажи распределены между менеджерами и точками.",
+    salesWarn: "Большая доля продаж сосредоточена у одного менеджера или канала.",
+    opsGood: "Загрузка и финансовые отклонения по турам в норме.",
+    opsWarn: "Есть туры с отклонениями по загрузке, прибыли или сбору.",
+    clientsGood: "Оплаты, возвраты и остатки сходятся по периоду.",
+    clientsWarn: "Есть незакрытые оплаты, возвраты или суммы к сбору.",
+    leader: "Лидер",
+    topPoint: "Точка",
+    activeTours: "Активных туров",
+    riskTours: "Отклонения",
+    missingData: "Сигналы",
   },
   en: {
-    monthClean: "No critical actions",
-    needsAttention: "Needs attention",
-    urgentCount: (n) => `${n} items to handle`,
-    closed: "Closed",
-    watch: "Watch",
-    action: "Action",
-    touristPayments: "Tourist payments",
-    touristPaymentsOk: "All bookings are collected",
-    touristPaymentsAction: "Open bookings to collect below",
-    touristPaymentsMeta: (partial, unpaid) => `${partial} partial · ${unpaid} unpaid`,
-    marginAndCosts: "Margin and costs",
-    marginGood: "Healthy margin",
-    marginLow: "Check tour cost structure",
-    marginBad: "Costs exceed revenue",
-    marginAction: "Review low-profit tours below",
-    pricing: "Prices and rate card",
-    pricingOk: "All sales have exact prices",
-    pricingAction: "Fill price rows or profit stays arguable",
-    touristCards: "Tourist cards",
-    touristCardsOk: "Database is clean enough",
-    touristCardsAction: "Clean missing phones and hotels",
-    touristCardsMeta: (phones, hotels) => `${phones} no phone · ${hotels} no hotel`,
-    weakTours: "Tours at risk",
-    weakToursOk: "No tours with red signals",
-    weakToursAction: "Review load, profit and collections below",
-    refundsWatch: "Refunds exist",
-    refundsOk: "No refunds",
-    refundsAction: "Check cancellation and retention reasons",
+    money: "Money",
+    sales: "Sales",
+    operations: "Tours",
+    clients: "Money check",
+    moneyGood: "Profit, collection and costs are normal for the selected period.",
+    moneyWarn: "There are deviations in collection or margin.",
+    moneyBad: "Costs exceed revenue for the selected period.",
+    salesGood: "Sales are distributed across managers and points.",
+    salesWarn: "A large sales share is concentrated in one manager or channel.",
+    opsGood: "Tour load and financial deviations are normal.",
+    opsWarn: "Some tours have deviations in load, profit or collection.",
+    clientsGood: "Payments, refunds and balances match for the period.",
+    clientsWarn: "Open payments, refunds or collection balances exist.",
+    leader: "Leader",
+    topPoint: "Point",
+    activeTours: "Active tours",
+    riskTours: "Deviations",
+    missingData: "Signals",
   },
   vi: {
-    monthClean: "Không có việc gấp",
-    needsAttention: "Cần chú ý",
-    urgentCount: (n) => `${n} mục cần xử lý`,
-    closed: "Đã ổn",
-    watch: "Theo dõi",
-    action: "Hành động",
-    touristPayments: "Thanh toán của khách",
-    touristPaymentsOk: "Tất cả booking đã thu",
-    touristPaymentsAction: "Mở danh sách booking cần thu bên dưới",
-    touristPaymentsMeta: (partial, unpaid) => `${partial} một phần · ${unpaid} chưa trả`,
-    marginAndCosts: "Biên lợi nhuận và chi phí",
-    marginGood: "Biên lợi nhuận tốt",
-    marginLow: "Kiểm tra giá vốn tour",
-    marginBad: "Chi phí cao hơn doanh thu",
-    marginAction: "Xem tour lợi nhuận thấp bên dưới",
-    pricing: "Giá và bảng giá",
-    pricingOk: "Tất cả đơn có giá chính xác",
-    pricingAction: "Bổ sung dòng giá, nếu không lợi nhuận không chắc",
-    touristCards: "Hồ sơ khách",
-    touristCardsOk: "Dữ liệu đủ sạch",
-    touristCardsAction: "Bổ sung SĐT và khách sạn còn thiếu",
-    touristCardsMeta: (phones, hotels) => `${phones} thiếu SĐT · ${hotels} thiếu KS`,
-    weakTours: "Tour có rủi ro",
-    weakToursOk: "Không có tour tín hiệu đỏ",
-    weakToursAction: "Xem tải tour, lợi nhuận và khoản thu bên dưới",
-    refundsWatch: "Có hoàn tiền",
-    refundsOk: "Không có hoàn tiền",
-    refundsAction: "Kiểm tra lý do hủy và giữ tiền",
+    money: "Tiền",
+    sales: "Bán hàng",
+    operations: "Tour",
+    clients: "Đối soát tiền",
+    moneyGood: "Lợi nhuận, thu tiền và chi phí bình thường trong kỳ.",
+    moneyWarn: "Có sai lệch về khoản thu hoặc biên lợi nhuận.",
+    moneyBad: "Chi phí cao hơn doanh thu trong kỳ.",
+    salesGood: "Doanh số được phân bổ giữa quản lý và điểm bán.",
+    salesWarn: "Doanh số tập trung nhiều vào một người hoặc kênh.",
+    opsGood: "Tải tour và sai lệch tài chính ở mức bình thường.",
+    opsWarn: "Một số tour có sai lệch về tải, lợi nhuận hoặc khoản thu.",
+    clientsGood: "Thanh toán, hoàn tiền và số dư khớp trong kỳ.",
+    clientsWarn: "Có thanh toán mở, hoàn tiền hoặc khoản cần thu.",
+    leader: "Dẫn đầu",
+    topPoint: "Điểm",
+    activeTours: "Tour hoạt động",
+    riskTours: "Sai lệch",
+    missingData: "Tín hiệu",
   },
 };
 
@@ -767,99 +775,87 @@ function FinanceCheckRow({
   );
 }
 
-function ControlBoard({
-  status,
-  items,
+function DirectorFocus({
+  cards,
 }: {
-  status: { title: string; sub: string; tone: "green" | "amber" | "red" };
-  items: Array<{
+  cards: Array<{
     title: string;
     value: string;
-    meta: string;
-    action: string;
+    verdict: string;
+    facts: string[];
     tone: "green" | "amber" | "red" | "blue";
-    ok: boolean;
   }>;
 }) {
-  const statusClass =
-    status.tone === "red"
-      ? "border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/35 dark:text-red-100"
-      : status.tone === "amber"
-        ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/35 dark:text-amber-100"
-        : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/35 dark:text-emerald-100";
   return (
-    <div className="space-y-2.5">
-      <div className={`rounded-[16px] border px-3 py-3 ${statusClass}`}>
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <div className="truncate text-[14px] font-extrabold">{status.title}</div>
-            <div className="mt-0.5 truncate text-[11px] font-semibold opacity-80">{status.sub}</div>
-          </div>
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/70 text-[16px] font-extrabold dark:bg-white/10">
-            {status.tone === "green" ? "✓" : "!"}
-          </span>
-        </div>
-      </div>
-      <div className="grid gap-2">
-        {items.map((item) => (
-          <ControlItem key={item.title} item={item} />
-        ))}
-      </div>
+    <div className="grid gap-3">
+      {cards.map((card) => (
+        <DirectorFocusCard key={card.title} card={card} />
+      ))}
     </div>
   );
 }
 
-function ControlItem({
-  item,
+function DirectorFocusCard({
+  card,
 }: {
-  item: {
+  card: {
     title: string;
     value: string;
-    meta: string;
-    action: string;
+    verdict: string;
+    facts: string[];
     tone: "green" | "amber" | "red" | "blue";
-    ok: boolean;
   };
 }) {
   const toneClass =
-    item.tone === "red"
+    card.tone === "red"
       ? "bg-red-500"
-      : item.tone === "amber"
+      : card.tone === "amber"
         ? "bg-[var(--warn)]"
-        : item.tone === "blue"
+        : card.tone === "blue"
           ? "bg-sky-500"
           : "bg-[var(--accent)]";
   const valueClass =
-    item.tone === "red"
+    card.tone === "red"
       ? "text-red-700 dark:text-red-300"
-      : item.tone === "amber"
+      : card.tone === "amber"
         ? "text-amber-700 dark:text-amber-300"
-        : item.tone === "blue"
+        : card.tone === "blue"
           ? "text-sky-700 dark:text-sky-300"
           : "text-[var(--text)]";
+  const glow =
+    card.tone === "red"
+      ? "rgba(239,68,68,0.16)"
+      : card.tone === "amber"
+        ? "rgba(245,158,11,0.18)"
+        : card.tone === "blue"
+          ? "rgba(14,165,233,0.16)"
+          : "rgba(134,202,0,0.18)";
   return (
-    <div className="min-w-0 rounded-[14px] border border-[var(--border)] bg-[var(--surface-soft)] p-3">
+    <div
+      className="relative min-w-0 overflow-hidden rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-3 shadow-[var(--shadow-md)] ring-1 ring-white/45 dark:ring-white/[0.04]"
+      style={{ background: `linear-gradient(135deg, var(--surface) 0%, var(--surface) 58%, ${glow} 100%)` }}
+    >
+      <div className={`absolute inset-x-0 top-0 h-1 ${toneClass}`} />
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
-            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${toneClass}`} />
-            <div className="truncate text-[13px] font-extrabold text-[var(--text)]">{item.title}</div>
+            <span className={`h-8 w-1.5 shrink-0 rounded-full ${toneClass}`} />
+            <div>
+              <div className="truncate text-[13px] font-extrabold text-[var(--text)]">{card.title}</div>
+            </div>
           </div>
-          <div className="mt-1 truncate text-[11px] font-medium text-[var(--muted)]">{item.meta}</div>
+          <div className="mt-2 text-[12px] font-bold leading-snug text-[var(--text)]">{card.verdict}</div>
         </div>
-        <div className={`shrink-0 text-right text-[14px] font-extrabold tabular-nums ${valueClass}`}>{item.value}</div>
+        <div className={`shrink-0 rounded-[14px] bg-[var(--surface)] px-3 py-2 text-right text-[15px] font-extrabold tabular-nums shadow-[var(--shadow-sm)] ring-1 ring-[var(--border)] ${valueClass}`}>
+          {card.value}
+        </div>
       </div>
-      <div className="mt-2 flex min-w-0 items-center justify-between gap-2 border-t border-[var(--border)] pt-2">
-        <span className="truncate text-[11px] font-semibold text-[var(--muted)]">{item.action}</span>
-        <span
-          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
-            item.ok
-              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-              : "bg-[var(--surface)] text-[var(--text)] ring-1 ring-[var(--border)]"
-          }`}
-        >
-          {item.ok ? "OK" : "→"}
-        </span>
+      <div className="mt-3 grid gap-1.5 sm:grid-cols-3">
+        {card.facts.map((fact) => (
+          <div key={fact} className="min-w-0 rounded-[11px] bg-[var(--surface-soft)] px-2.5 py-2 text-[10.5px] font-bold leading-snug text-[var(--muted)] ring-1 ring-[var(--border)]">
+            {fact}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -1060,28 +1056,28 @@ export default async function CompanyPage({
   const managerRows = bestManager ? data.managers.filter((m) => m.managerId !== bestManager.managerId) : data.managers;
   const pointRows = bestPoint ? data.salesPoints.filter((p) => p.pointId !== bestPoint.pointId) : data.salesPoints;
   const tourRows = bestTour ? toursWithMotion.filter((tour) => tour.tourId !== bestTour.tourId) : toursWithMotion;
-  const guideRows = bestGuide ? data.guides.filter((g) => g.guideId !== bestGuide.guideId) : data.guides;
   const prevMonthTitle = monthTitle(data.period.prevMonth, locale);
   const currentMonthTitle = monthTitle(data.period.month, locale);
   const nextMonthTitle = monthTitle(data.period.nextMonth, locale);
-  const control = CONTROL_COPY[locale];
+  const focus = FOCUS_COPY[locale];
   const lowMargin = f.revenueVnd > 0 && f.marginPct < 20;
   const negativeProfit = f.profitVnd < 0;
   const paymentNeedsAction = f.dueVnd > 0 || f.partialBookings > 0 || f.unpaidBookings > 0;
-  const pricingNeedsAction = f.missingPriceBookings > 0 || f.estimatedRevenueVnd > 0;
-  const dataNeedsAction = data.tourists.missingPhone > 0 || data.tourists.missingHotel > 0 || data.tourists.dataQualityPct < 90;
   const weakToursCount = data.investigations.weakTours.length;
-  const refundsNeedWatch = f.refundVnd > 0;
-  const controlActionCount = [
-    paymentNeedsAction,
-    negativeProfit || lowMargin,
-    pricingNeedsAction,
-    dataNeedsAction,
-    weakToursCount > 0,
-    refundsNeedWatch,
-  ].filter(Boolean).length;
-  const controlStatusTone: "green" | "amber" | "red" =
-    negativeProfit || f.unpaidBookings > 0 ? "red" : controlActionCount > 0 ? "amber" : "green";
+  const guideTripTotal = data.guides.reduce((sum, g) => sum + g.trips, 0);
+  const guideTouristTotal = data.guides.reduce((sum, g) => sum + g.tourists, 0);
+  const guideAvgGroup = guideTripTotal > 0 ? Math.round((guideTouristTotal / guideTripTotal) * 10) / 10 : 0;
+  const pricedLoadTours = toursWithMotion.filter((tour) => tour.capacity > 0);
+  const avgLoadPct = pricedLoadTours.length > 0 ? Math.round(pricedLoadTours.reduce((sum, tour) => sum + tour.loadPct, 0) / pricedLoadTours.length) : 0;
+  const negativeTourCount = toursWithMotion.filter((tour) => tour.profitVnd < 0).length;
+  const lowLoadTourCount = toursWithMotion.filter((tour) => tour.capacity > 0 && tour.loadPct < 35).length;
+  const collectionTourCount = toursWithMotion.filter((tour) => tour.dueVnd > 0).length;
+  const noRevenueExpenseTourCount = toursWithMotion.filter((tour) => tour.revenueVnd === 0 && tour.expenseVnd > 0).length;
+  const operationsNeedsAction = negativeTourCount > 0 || lowLoadTourCount > 0 || collectionTourCount > 0 || noRevenueExpenseTourCount > 0;
+  const salesConcentration = bestManager && f.revenueVnd > 0 ? Math.round((bestManager.revenueVnd / f.revenueVnd) * 100) : 0;
+  const openPaymentBookings = f.partialBookings + f.unpaidBookings;
+  const reconciliationSignals = openPaymentBookings + (f.refundVnd > 0 ? 1 : 0) + collectionTourCount;
+  const reconciliationNeedsAction = reconciliationSignals > 0;
 
   return (
     <main className="company-dashboard mx-auto w-full max-w-[1180px] px-3 pb-[92px] pt-3 sm:px-4 md:pb-8">
@@ -1098,30 +1094,46 @@ export default async function CompanyPage({
               {t.subtitle(data.period.title)}
             </p>
           </div>
-          <div className="w-full shrink-0 rounded-[22px] border border-[var(--border)] bg-[var(--surface)]/88 p-2 shadow-[var(--shadow-md)] ring-1 ring-white/40 backdrop-blur sm:w-[430px] dark:ring-white/[0.05]">
-            <div className="mb-2 px-1">
-              <div className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-[var(--muted2)]">{t.periodLabel}</div>
-            </div>
-            <div className="grid grid-cols-[0.88fr_1.2fr_0.88fr] gap-1.5">
-            <Link
-              href={`/company?month=${data.period.prevMonth}`}
-              className="min-w-0 rounded-[15px] border border-[var(--border)] bg-[var(--surface-soft)] px-2 py-2 text-center text-[var(--muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--text)] active:scale-[0.98]"
-              aria-label={t.prevMonth}
-              title={prevMonthTitle}
-            >
-              <span className="block truncate text-[11px] font-extrabold">{prevMonthTitle}</span>
-            </Link>
-            <div className="grid min-w-0 place-items-center rounded-[16px] bg-[var(--accent)] px-3 py-2 text-center text-white shadow-[0_10px_22px_rgba(134,202,0,0.28)]">
-              <div className="truncate text-[13px] font-extrabold">{currentMonthTitle}</div>
-            </div>
-            <Link
-              href={`/company?month=${data.period.nextMonth}`}
-              className="min-w-0 rounded-[15px] border border-[var(--border)] bg-[var(--surface-soft)] px-2 py-2 text-center text-[var(--muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--text)] active:scale-[0.98]"
-              aria-label={t.nextMonth}
-              title={nextMonthTitle}
-            >
-              <span className="block truncate text-[11px] font-extrabold">{nextMonthTitle}</span>
-            </Link>
+          <div className="w-full shrink-0 rounded-[24px] border border-[var(--border)] bg-[var(--surface)]/90 p-3 shadow-[var(--shadow-lg)] ring-1 ring-white/50 backdrop-blur sm:w-[430px] dark:ring-white/[0.05]">
+            <div className="flex items-center justify-between gap-3">
+              <Link
+                href={`/company?month=${data.period.prevMonth}`}
+                className="group grid h-12 w-12 shrink-0 place-items-center rounded-[17px] border border-[var(--border)] bg-[var(--surface-soft)] text-[18px] font-extrabold text-[var(--muted)] shadow-[var(--shadow-sm)] transition hover:border-[var(--accent)]/45 hover:bg-[var(--accent-soft)] hover:text-[var(--accent-dark)] active:scale-[0.98]"
+                aria-label={t.prevMonth}
+                title={prevMonthTitle}
+              >
+                ‹
+              </Link>
+              <div className="min-w-0 flex-1 text-center">
+                <div className="mx-auto inline-flex rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-3 py-1 text-[9px] font-extrabold uppercase tracking-[0.16em] text-[var(--accent-dark)]">
+                  {t.periodLabel}
+                </div>
+                <div className="mt-2 truncate text-[22px] font-black leading-none text-[var(--text)]">{currentMonthTitle}</div>
+                <div className="mt-2 grid grid-cols-2 gap-1.5 text-[10px] font-extrabold text-[var(--muted)]">
+                  <Link
+                    href={`/company?month=${data.period.prevMonth}`}
+                    className="truncate rounded-full bg-[var(--surface-soft)] px-2 py-1.5 transition hover:bg-[var(--accent-soft)] hover:text-[var(--accent-dark)]"
+                    title={prevMonthTitle}
+                  >
+                    {prevMonthTitle}
+                  </Link>
+                  <Link
+                    href={`/company?month=${data.period.nextMonth}`}
+                    className="truncate rounded-full bg-[var(--surface-soft)] px-2 py-1.5 transition hover:bg-[var(--accent-soft)] hover:text-[var(--accent-dark)]"
+                    title={nextMonthTitle}
+                  >
+                    {nextMonthTitle}
+                  </Link>
+                </div>
+              </div>
+              <Link
+                href={`/company?month=${data.period.nextMonth}`}
+                className="group grid h-12 w-12 shrink-0 place-items-center rounded-[17px] border border-[var(--border)] bg-[var(--surface-soft)] text-[18px] font-extrabold text-[var(--muted)] shadow-[var(--shadow-sm)] transition hover:border-[var(--accent)]/45 hover:bg-[var(--accent-soft)] hover:text-[var(--accent-dark)] active:scale-[0.98]"
+                aria-label={t.nextMonth}
+                title={nextMonthTitle}
+              >
+                ›
+              </Link>
             </div>
           </div>
         </div>
@@ -1149,9 +1161,9 @@ export default async function CompanyPage({
               { label: t.exactPrices, value: vnd(f.exactRevenueVnd), sub: t.fromBookingPrices, tone: "green" },
               {
                 label: t.estimatedPrices,
-                value: f.estimatedRevenueVnd > 0 ? vnd(f.estimatedRevenueVnd) : "0",
-                sub: t.missingPriceBookings(f.missingPriceBookings),
-                tone: f.estimatedRevenueVnd > 0 ? "amber" : "green",
+                value: f.dueVnd > 0 ? vnd(f.dueVnd) : "0",
+                sub: t.missingPriceBookings(openPaymentBookings),
+                tone: f.dueVnd > 0 ? "amber" : "green",
               },
               {
                 label: t.refunds,
@@ -1193,77 +1205,55 @@ export default async function CompanyPage({
         </Section>
 
         <Section title={t.riskTitle} eyebrow={t.riskEyebrow}>
-          <ControlBoard
-            status={{
-              title: controlActionCount > 0 ? control.needsAttention : control.monthClean,
-              sub: control.urgentCount(controlActionCount),
-              tone: controlStatusTone,
-            }}
-            items={[
+          <DirectorFocus
+            cards={[
               {
-                title: control.touristPayments,
-                value: paymentNeedsAction ? vnd(f.dueVnd) : "0",
-                meta: paymentNeedsAction ? control.touristPaymentsMeta(f.partialBookings, f.unpaidBookings) : control.touristPaymentsOk,
-                action: paymentNeedsAction ? control.touristPaymentsAction : control.closed,
-                tone: f.unpaidBookings > 0 ? "red" : paymentNeedsAction ? "amber" : "green",
-                ok: !paymentNeedsAction,
+                title: focus.money,
+                value: vnd(f.profitVnd),
+                verdict: negativeProfit ? focus.moneyBad : paymentNeedsAction || lowMargin ? focus.moneyWarn : focus.moneyGood,
+                facts: [
+                  `${t.margin}: ${pct(f.marginPct)} · ${t.expenses}: ${vnd(f.expenseVnd)}`,
+                  `${t.collected}: ${pct(paidPct)} · ${t.debt}: ${vnd(f.dueVnd)}`,
+                  `${t.paidShort}: ${f.paidBookings} · ${t.partialShort}: ${f.partialBookings} · ${t.unpaidShort}: ${f.unpaidBookings}`,
+                ],
+                tone: negativeProfit ? "red" : paymentNeedsAction || lowMargin ? "amber" : "green",
               },
               {
-                title: control.marginAndCosts,
-                value: pct(f.marginPct),
-                meta: `${t.profit} ${vnd(f.profitVnd)} · ${t.expenses} ${vnd(f.expenseVnd)}`,
-                action: negativeProfit ? control.marginBad : lowMargin ? control.marginLow : control.marginGood,
-                tone: negativeProfit ? "red" : lowMargin ? "amber" : "green",
-                ok: !negativeProfit && !lowMargin,
+                title: focus.sales,
+                value: bestManager ? vnd(bestManager.revenueVnd) : "0",
+                verdict: bestManager && salesConcentration > 55 ? focus.salesWarn : focus.salesGood,
+                facts: [
+                  `${focus.leader}: ${bestManager ? `${bestManager.name} · ${salesConcentration}%` : t.noData}`,
+                  `${focus.topPoint}: ${bestPoint ? `${bestPoint.name} · ${pct(bestPoint.sharePct)}` : t.noData}`,
+                  `${t.bookings}: ${f.bookingsCount} · ${t.tourists}: ${f.touristsCount}`,
+                ],
+                tone: bestManager && salesConcentration > 55 ? "amber" : "blue",
               },
               {
-                title: control.pricing,
-                value: String(f.missingPriceBookings),
-                meta: pricingNeedsAction ? `${t.estimatedPrices}: ${vnd(f.estimatedRevenueVnd)}` : control.pricingOk,
-                action: pricingNeedsAction ? control.pricingAction : control.closed,
-                tone: pricingNeedsAction ? "amber" : "green",
-                ok: !pricingNeedsAction,
+                title: focus.operations,
+                value: pct(avgLoadPct),
+                verdict: operationsNeedsAction ? focus.opsWarn : focus.opsGood,
+                facts: [
+                  `${focus.activeTours}: ${toursWithMotion.length}`,
+                  `${t.profit}: ${negativeTourCount} · ${t.load}: ${lowLoadTourCount}`,
+                  `${t.debt}: ${collectionTourCount}`,
+                  `${focus.riskTours}: ${weakToursCount} · ${t.expenses}: ${noRevenueExpenseTourCount}`,
+                ],
+                tone: operationsNeedsAction ? "amber" : "green",
               },
               {
-                title: control.touristCards,
-                value: pct(data.tourists.dataQualityPct),
-                meta: dataNeedsAction ? control.touristCardsMeta(data.tourists.missingPhone, data.tourists.missingHotel) : control.touristCardsOk,
-                action: dataNeedsAction ? control.touristCardsAction : control.closed,
-                tone: data.tourists.dataQualityPct < 75 ? "red" : dataNeedsAction ? "amber" : "green",
-                ok: !dataNeedsAction,
-              },
-              {
-                title: control.weakTours,
-                value: String(weakToursCount),
-                meta: weakToursCount > 0 ? `${t.urgentTours}: ${weakToursCount}` : control.weakToursOk,
-                action: weakToursCount > 0 ? control.weakToursAction : control.closed,
-                tone: weakToursCount > 0 ? "amber" : "green",
-                ok: weakToursCount === 0,
-              },
-              {
-                title: t.refunds,
-                value: refundsNeedWatch ? vnd(f.refundVnd) : "0",
-                meta: refundsNeedWatch ? control.refundsWatch : control.refundsOk,
-                action: refundsNeedWatch ? control.refundsAction : control.closed,
-                tone: refundsNeedWatch ? "blue" : "green",
-                ok: !refundsNeedWatch,
+                title: focus.clients,
+                value: f.dueVnd > 0 ? vnd(f.dueVnd) : "0",
+                verdict: reconciliationNeedsAction ? focus.clientsWarn : focus.clientsGood,
+                facts: [
+                  `${focus.missingData}: ${reconciliationSignals}`,
+                  `${t.partialShort}: ${f.partialBookings} · ${t.unpaidShort}: ${f.unpaidBookings}`,
+                  `${t.refunds}: ${vnd(f.refundVnd)} · ${t.debt}: ${collectionTourCount}`,
+                ],
+                tone: reconciliationNeedsAction ? "amber" : "green",
               },
             ]}
           />
-          <div className="mt-4 grid grid-cols-3 gap-2 rounded-[16px] border border-[var(--border)] bg-[var(--surface)] p-3 text-center">
-            <div>
-              <div className="text-[18px] font-extrabold text-emerald-700">{f.paidBookings}</div>
-              <div className="text-[10px] font-bold uppercase text-[var(--muted2)]">{t.paidShort}</div>
-            </div>
-            <div>
-              <div className="text-[18px] font-extrabold text-amber-600">{f.partialBookings}</div>
-              <div className="text-[10px] font-bold uppercase text-[var(--muted2)]">{t.partialShort}</div>
-            </div>
-            <div>
-              <div className="text-[18px] font-extrabold text-rose-600">{f.unpaidBookings}</div>
-              <div className="text-[10px] font-bold uppercase text-[var(--muted2)]">{t.unpaidShort}</div>
-            </div>
-          </div>
         </Section>
       </div>
 
@@ -1510,41 +1500,59 @@ export default async function CompanyPage({
         </Section>
 
         <Section title={t.guidesTitle} eyebrow={t.guidesEyebrow}>
-          <div className="mb-4 flex h-[180px] items-end gap-2 rounded-[16px] border border-[var(--border)] bg-[var(--surface-soft)] p-3">
-            {data.guides.slice(0, 8).map((g) => (
-              <div key={g.guideId} className="flex min-w-0 flex-1 flex-col items-center gap-2">
-                <div
-                  className="w-full rounded-t-[10px] bg-[#8fd400]"
-                  style={{ height: `${Math.max(18, clampUi(g.sharePct) * 1.35)}px` }}
-                  title={`${g.name}: ${vnd(g.revenueVnd)}`}
-                />
-                <div className="w-full truncate text-center text-[10px] font-bold text-[var(--muted)]">{g.name}</div>
-              </div>
-            ))}
-            {data.guides.length === 0 ? <div className="m-auto text-[13px] text-[var(--muted)]">{t.noGuides}</div> : null}
+          <div className="mb-3 grid gap-2 sm:grid-cols-4">
+            <Metric label={t.guides} value={String(data.guides.length)} sub={t.allGuides} />
+            <Metric label={t.trips} value={String(guideTripTotal)} sub={focus.activeTours} />
+            <Metric label={t.tourists} value={String(guideTouristTotal)} sub={`${t.average} ${guideAvgGroup}`} />
+            <Metric
+              label={t.topGuide}
+              value={bestGuide ? bestGuide.name : t.noData}
+              sub={bestGuide ? `${bestGuide.trips} ${t.trips} · ${bestGuide.tourists} ${t.tourists} · ${t.paid} ${vnd(bestGuide.salaryVnd)}` : t.noGuides}
+            />
           </div>
-          <div className="grid gap-3">
-            {bestGuide ? (
-              <Metric
-                label={t.topGuide}
-                value={bestGuide.name}
-                sub={`${bestGuide.trips} ${t.trips} · ${bestGuide.tourists} ${t.tourists} · ${vnd(bestGuide.revenueVnd)}`}
-              />
-            ) : null}
-            {guideRows.slice(0, 9).map((g, idx) => (
-              <BarRow
+          <div className="grid gap-2">
+            {data.guides.slice(0, 10).map((g, idx) => (
+              <Link
                 key={g.guideId}
-                label={`${idx + 2}. ${g.name}`}
-                value={`${g.trips} ${t.tour}`}
-                sub={`${g.tourists} ${t.tourists} · ${t.average} ${g.avgTouristsPerTrip} · ${t.turnover} ${vnd(g.revenueVnd)}`}
-                percent={g.sharePct}
-                tone={idx === 0 ? "green" : "blue"}
-              />
+                href={`/team/${g.guideId}`}
+                className="group min-w-0 rounded-[16px] border border-[var(--border)] bg-[var(--surface)] p-3 shadow-[var(--shadow-sm)] transition hover:border-[var(--accent)]/50 hover:bg-[var(--accent-soft)]"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--accent)] text-[11px] font-extrabold text-white shadow-[0_8px_18px_rgba(134,202,0,0.28)]">
+                        {idx + 1}
+                      </span>
+                      <div className="truncate text-[14px] font-extrabold text-[var(--text)]">{g.name}</div>
+                    </div>
+                    <div className="mt-1 truncate text-[11px] font-bold text-[var(--muted)]">
+                      {g.trips} {t.trips} · {g.tourists} {t.tourists}
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="text-[14px] font-extrabold tabular-nums text-[var(--accent-dark)]">{vnd(g.salaryVnd)}</div>
+                    <div className="text-[9px] font-bold uppercase tracking-wide text-[var(--muted2)]">{t.paid}</div>
+                  </div>
+                </div>
+                <div className="mt-3 grid grid-cols-3 gap-1.5 text-center">
+                  {[
+                    { label: t.trips, value: String(g.trips) },
+                    { label: t.tourists, value: String(g.tourists) },
+                    { label: t.average, value: String(g.avgTouristsPerTrip) },
+                  ].map((item) => (
+                    <div key={item.label} className="min-w-0 rounded-[10px] bg-[var(--surface-soft)] px-1.5 py-2">
+                      <div className="truncate text-[10.5px] font-extrabold tabular-nums text-[var(--text)]">{item.value}</div>
+                      <div className="mt-0.5 truncate text-[8.5px] font-bold uppercase text-[var(--muted2)]">{item.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </Link>
             ))}
+            {data.guides.length === 0 ? <div className="rounded-[14px] bg-[var(--surface-soft)] p-4 text-[13px] text-[var(--muted)]">{t.noGuides}</div> : null}
           </div>
           <DetailPanel title={t.allGuides} summary={`${data.guides.length} ${t.guides}`}>
             <DetailTable
-              headers={[t.guide, t.trips, t.tourists, t.average, t.turnover, t.share]}
+              headers={[t.guide, t.trips, t.tourists, t.average, t.paid, t.turnover]}
               mobile={data.guides.map((g) => (
                 <MobileDetailCard
                   key={g.guideId}
@@ -1554,7 +1562,7 @@ export default async function CompanyPage({
                     { label: t.trips, value: String(g.trips) },
                     { label: t.tourists, value: String(g.tourists) },
                     { label: t.average, value: String(g.avgTouristsPerTrip) },
-                    { label: t.turnover, value: vnd(g.revenueVnd), tone: "green" },
+                    { label: t.paid, value: vnd(g.salaryVnd), tone: "green" },
                   ]}
                 />
               ))}
@@ -1565,8 +1573,8 @@ export default async function CompanyPage({
                   <td className="px-3 py-2 font-bold">{g.trips}</td>
                   <td className="px-3 py-2 font-bold">{g.tourists}</td>
                   <td className="px-3 py-2 font-bold">{g.avgTouristsPerTrip}</td>
+                  <td className="px-3 py-2 font-bold">{vnd(g.salaryVnd)}</td>
                   <td className="px-3 py-2 font-bold">{vnd(g.revenueVnd)}</td>
-                  <td className="px-3 py-2 font-bold">{pct(g.sharePct)}</td>
                 </tr>
               ))}
             </DetailTable>
@@ -1581,7 +1589,6 @@ export default async function CompanyPage({
               <Metric label={t.adults} value={String(data.tourists.adults)} sub={t.mainFlow} />
               <Metric label={t.children} value={String(data.tourists.children)} sub={`${t.infants} ${data.tourists.infants}`} />
               <Metric label={t.online} value={String(data.tourists.onlineBookings)} sub={`${t.bookings} online`} />
-              <Metric label={t.quality} value={pct(data.tourists.dataQualityPct)} sub={`${t.missingPhone} ${data.tourists.missingPhone} · ${t.missingHotel} ${data.tourists.missingHotel}`} />
               <Metric label={t.soloPairs} value={`${data.tourists.soloBookings}/${data.tourists.pairBookings}`} sub={t.noChildren} />
               <Metric label={t.familiesGroups} value={`${data.tourists.familyBookings}/${data.tourists.groupBookings}`} sub={`${t.debtIn} ${data.tourists.debtBookings} ${t.bookings}`} />
             </div>

@@ -285,7 +285,7 @@ export function HeaderAvatar({ user }: { user: SessionUser }) {
         accept="image/jpeg,image/png,image/webp,image/gif"
         tabIndex={-1}
         aria-hidden="true"
-        style={{ position: "absolute", opacity: 0, pointerEvents: "none", width: "1px", height: "1px" }}
+        style={{ position: "fixed", left: "-10000px", top: "0", opacity: 0, pointerEvents: "none", width: "0", height: "0", overflow: "hidden" }}
         onChange={(e) => void onFile(e)}
       />
 

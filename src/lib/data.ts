@@ -971,6 +971,7 @@ export type DirectorCompanyDashboard = {
     trips: number;
     tourists: number;
     revenueVnd: number;
+    salaryVnd: number;
     avgTouristsPerTrip: number;
     sharePct: number;
   }>;
@@ -1205,7 +1206,7 @@ export async function getDirectorCompanyDashboard(month: string): Promise<Direct
     return result;
   }
 
-  const [bookingRes, expenseRes, guideRes, points] = await Promise.all([
+  const [bookingRes, expenseRes, guideRes, guideSalaryRes, points] = await Promise.all([
     supabase
       .from("bookings")
       .select("id,tour_id,manager_id,customer_name,hotel_name,phone_e164,adults,children,infants,created_at,online_code")
@@ -1214,6 +1215,7 @@ export async function getDirectorCompanyDashboard(month: string): Promise<Direct
       .limit(5000),
     supabase.from("expenses").select("tour_id,amount_vnd").in("tour_id", tourIds).limit(5000),
     supabase.from("tour_guides").select("tour_id,guide_id,is_inspection").in("tour_id", tourIds).eq("is_inspection", false).limit(5000),
+    supabase.from("guide_salary_records").select("tour_id,guide_id,amount_vnd,status").in("tour_id", tourIds).limit(5000),
     listRentalPoints(),
   ]);
 
@@ -1286,6 +1288,14 @@ export async function getDirectorCompanyDashboard(month: string): Promise<Direct
   for (const e of ((expenseRes.data as { tour_id: string; amount_vnd: number | string }[] | null) ?? [])) {
     const tourId = String(e.tour_id);
     expenseByTour.set(tourId, (expenseByTour.get(tourId) ?? 0) + Math.max(0, Math.round(Number(e.amount_vnd) || 0)));
+  }
+
+  const salaryByGuide = new Map<string, number>();
+  for (const row of ((guideSalaryRes.data as { guide_id?: string | null; amount_vnd?: number | string | null; status?: string | null }[] | null) ?? [])) {
+    const guideId = String(row.guide_id || "");
+    if (!guideId) continue;
+    if (String(row.status || "").toLowerCase() === "rejected") continue;
+    salaryByGuide.set(guideId, (salaryByGuide.get(guideId) ?? 0) + Math.max(0, Math.round(Number(row.amount_vnd) || 0)));
   }
 
   const trendMap = new Map<string, { dateYmd: string; label: string; revenueVnd: number; expenseVnd: number; bookings: number; tourists: number }>();
@@ -1528,12 +1538,14 @@ export async function getDirectorCompanyDashboard(month: string): Promise<Direct
       trips: 0,
       tourists: 0,
       revenueVnd: 0,
+      salaryVnd: 0,
       avgTouristsPerTrip: 0,
       sharePct: 0,
     };
     guide.trips += 1;
     guide.tourists += tourPaxById.get(tourId) ?? 0;
     guide.revenueVnd += tourRevenueById.get(tourId) ?? 0;
+    guide.salaryVnd = salaryByGuide.get(guideId) ?? 0;
     guide.avgTouristsPerTrip = guide.trips > 0 ? Math.round((guide.tourists / guide.trips) * 10) / 10 : 0;
     guideMap.set(guideId, guide);
   }

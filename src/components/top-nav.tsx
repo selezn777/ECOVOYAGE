@@ -44,23 +44,24 @@ export function TopNav({ user }: { user?: SessionUser }) {
 
   return (
     <header className="mb-3 relative z-[100]">
-      <div className="card flex min-w-0 w-full flex-col gap-2 !px-3.5 !py-3 sm:!px-4">
+      <div className="flex min-w-0 w-full flex-col gap-2 overflow-hidden rounded-[24px] border border-[var(--border)] bg-[linear-gradient(135deg,var(--surface)_0%,var(--surface)_58%,var(--accent-soft)_100%)] px-3.5 py-3 shadow-[var(--shadow-lg)] ring-1 ring-white/45 sm:px-4 dark:ring-white/[0.04]">
 
         {/* Строка: лого + меню */}
-        <div className="flex min-w-0 items-center justify-between gap-2">
-          <Link href={homeHref} className="flex min-w-0 items-center gap-2.5 touch-manipulation">
-            <AppLogo size={32} />
-            <span className="truncate text-[13px] font-bold tracking-[-0.03em] text-[var(--text)]">EcoVoyage</span>
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <Link href={homeHref} className="group flex min-w-0 items-center gap-2.5 touch-manipulation">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[17px] border border-[var(--accent)]/25 bg-white/80 shadow-[var(--shadow-sm)] ring-1 ring-white/70 dark:bg-white/10 dark:ring-white/[0.05]">
+              <AppLogo size={36} />
+            </span>
           </Link>
           <div className="relative shrink-0" ref={menuRef}>
             <div className="flex items-center gap-1">
-              <ThemeToggle compact className="!min-h-[36px] !min-w-[36px]" />
+              <ThemeToggle compact className="!min-h-[40px] !min-w-[40px] !rounded-[14px] !bg-[var(--surface)]/85" />
               <button
                 type="button"
                 aria-label={menuOpen ? t("closeMenu") : t("openMenu")}
                 aria-expanded={menuOpen}
                 onClick={() => setMenuOpen((s) => !s)}
-                className="btn-secondary !min-h-[36px] !rounded-[10px] !px-2.5 !text-[13px]"
+                className="btn-secondary !min-h-[40px] !rounded-[14px] !bg-[var(--surface)]/85 !px-3 !text-[13px] !font-extrabold"
               >
                 <span className="inline-flex items-center gap-1.5">
                   <svg viewBox="0 0 20 20" className="h-[15px] w-[15px]" fill="none" aria-hidden>
@@ -73,7 +74,7 @@ export function TopNav({ user }: { user?: SessionUser }) {
 
             {/* Dropdown меню */}
             {menuOpen ? (
-              <div className="absolute right-0 top-[calc(100%+6px)] z-50 max-h-[min(78vh,480px)] w-[min(88vw,256px)] overflow-y-auto overscroll-contain rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-2 shadow-[var(--shadow-lg)]">
+              <div className="absolute right-0 top-[calc(100%+8px)] z-50 max-h-[min(78vh,480px)] w-[min(88vw,272px)] overflow-y-auto overscroll-contain rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-2 shadow-[var(--shadow-lg)] ring-1 ring-white/45 dark:ring-white/[0.04]">
                 <div className="button-cluster">
                   {user ? <StaffNotificationsModalTrigger user={user} /> : null}
                   <ReportIssueButton />
@@ -105,11 +106,13 @@ export function TopNav({ user }: { user?: SessionUser }) {
 
         {/* Юзер-стрип */}
         {user ? (
-          <div className="top-nav-user-strip">
+          <div className="flex w-full min-w-0 items-center gap-3 rounded-[18px] border border-[var(--border)] bg-[var(--surface)]/82 px-3 py-2.5 text-left shadow-[var(--shadow-sm)] ring-1 ring-white/45 dark:ring-white/[0.04]">
             <HeaderAvatar user={user} />
             <div className="min-w-0 flex-1 overflow-hidden leading-snug">
-              <div className="truncate text-[13px] font-semibold tracking-[-0.02em] text-[var(--text)]">{user.fullName}</div>
-              <div className="mt-0.5 text-[11px] font-medium text-[var(--muted)]">{roleLabel(user.role)}</div>
+              <div className="truncate text-[15px] font-extrabold text-[var(--text)]">{user.fullName}</div>
+              <div className="mt-0.5 inline-flex max-w-full rounded-full bg-[var(--accent-soft)] px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-[var(--accent-dark)]">
+                <span className="truncate">{roleLabel(user.role)}</span>
+              </div>
               {user.managerMode ? (
                 <div className="mt-0.5 text-[10px] text-[var(--muted2)]">{t("managerMode")}</div>
               ) : null}
@@ -125,7 +128,7 @@ export function TopNav({ user }: { user?: SessionUser }) {
 
         {/* Навигация: desktop md+ — равноширинные вкладки */}
         {user ? (
-          <div className="hidden md:flex w-full min-w-0 overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--surface-soft)] divide-x divide-[var(--border)]">
+          <div className="hidden md:flex w-full min-w-0 gap-1.5 overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--surface)]/82 p-1.5 shadow-[var(--shadow-sm)]">
             {nav.map((item) => {
               const active = navItemIsActive(pathname, item.href, navHrefs);
               return (
@@ -133,10 +136,10 @@ export function TopNav({ user }: { user?: SessionUser }) {
                   key={item.href}
                   href={item.href}
                   prefetch
-                  className={`flex flex-1 basis-0 min-w-0 touch-manipulation items-center justify-center py-2 text-[12.5px] font-semibold tracking-[-0.01em] transition-all duration-150 text-center leading-tight ${
+                  className={`flex flex-1 basis-0 min-w-0 touch-manipulation items-center justify-center rounded-[14px] px-3 py-2.5 text-center text-[13px] font-extrabold leading-tight transition-all duration-150 ${
                     active
-                      ? "bg-[var(--accent)] text-white"
-                      : "text-[var(--muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text)]"
+                      ? "bg-[var(--accent)] text-white shadow-[0_10px_22px_rgba(134,202,0,0.25)]"
+                      : "text-[var(--muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-dark)]"
                   }`}
                 >
                   {t(item.labelKey as Parameters<typeof t>[0])}
