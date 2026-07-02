@@ -90,7 +90,7 @@ export async function allocateHandoverAmountToBooking(
   if (amountVnd > cap) {
     return {
       ok: false,
-      error: `По этой брони можно сдать не больше ${cap.toLocaleString("ru-RU")} ₫ (долг в кассе и не сданные доплаты гида).`,
+      error: `По этой брони можно сдать не больше ${cap.toLocaleString("ru-RU")} ₫ (остаток к оплате и не сданные доплаты гида).`,
     };
   }
 

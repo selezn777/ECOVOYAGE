@@ -64,7 +64,7 @@ html.dark {
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-noto-sans);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -81,7 +81,7 @@ html {
 body {
   min-height: 100dvh;
   color: var(--text);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-noto-sans), "Noto Sans", system-ui, sans-serif;
   background: #f5f7fb;
   overscroll-behavior-y: none;
   overflow: visible;

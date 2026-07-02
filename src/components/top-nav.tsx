@@ -118,8 +118,8 @@ export function TopNav({ user }: { user?: SessionUser }) {
           </div>
         ) : null}
 
-        {/* Переключатель роли оставляем только для тестового демо-аккаунта. */}
-        {user?.login === "test" ? (
+        {/* Директору нужен быстрый просмотр интерфейса разных ролей. */}
+        {user?.baseRole === "director" || user?.login === "test" ? (
           <DirectorViewAsControl effectiveRole={user.role} />
         ) : null}
 

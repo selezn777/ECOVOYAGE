@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { TopNav } from "@/components/top-nav";
 import { requireAuth } from "@/lib/auth-session";
 import { formatVnd } from "@/lib/format";
 import { getDirectorCompanyDashboard, type DirectorCompanyDashboard } from "@/lib/data";
+import { roleLabel } from "@/lib/role-labels";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -17,83 +19,571 @@ function pickFirst(v?: string | string[]): string {
   return Array.isArray(v) ? String(v[0] ?? "") : String(v);
 }
 
-function compactVnd(value: number): string {
+type CompanyLocale = "ru" | "en" | "vi";
+
+const COMPANY_TEXT: Record<CompanyLocale, {
+  brand: string;
+  title: string;
+  subtitle: (period: string) => string;
+  prevMonth: string;
+  nextMonth: string;
+  periodLabel: string;
+  revenue: string;
+  profit: string;
+  paid: string;
+  avgCheck: string;
+  bookings: string;
+  tourists: string;
+  expenses: string;
+  debt: string;
+  paxInBooking: string;
+  financeEyebrow: string;
+  financeTitle: string;
+  chartTitle: string;
+  peakDay: string;
+  days: string;
+  revenueBars: string;
+  expenseBars: string;
+  collected: string;
+  margin: string;
+  exactPrices: string;
+  estimatedPrices: string;
+  refunds: string;
+  fromBookingPrices: string;
+  missingPriceBookings: (n: number) => string;
+  minusPayments: string;
+  dayDetails: string;
+  riskEyebrow: string;
+  riskTitle: string;
+  paidShort: string;
+  partialShort: string;
+  unpaidShort: string;
+  managersTitle: string;
+  managersEyebrow: string;
+  salesLeader: string;
+  noManagerSales: string;
+  allManagers: string;
+  pointsTitle: string;
+  pointsEyebrow: string;
+  topPoint: string;
+  staff: string;
+  share: string;
+  noSalesPoints: string;
+  pointDetails: string;
+  toursTitle: string;
+  toursEyebrow: string;
+  toursWithMotion: string;
+  topTour: string;
+  load: string;
+  allToursWithMotion: string;
+  urgentTours: string;
+  noCriticalTours: string;
+  guidesTitle: string;
+  guidesEyebrow: string;
+  noGuides: string;
+  topGuide: string;
+  allGuides: string;
+  touristsTitle: string;
+  touristsEyebrow: string;
+  adults: string;
+  children: string;
+  infants: string;
+  online: string;
+  quality: string;
+  missingPhone: string;
+  missingHotel: string;
+  soloPairs: string;
+  familiesGroups: string;
+  topHotels: string;
+  noHotels: string;
+  debtsByBookings: string;
+  noDebts: string;
+  pricesAndQuality: string;
+  allExactPrices: string;
+  fallbackWarning: string;
+  open: string;
+  rows: string;
+  points: string;
+  guides: string;
+  noAssignments: string;
+  date: string;
+  tour: string;
+  guide: string;
+  role: string;
+  point: string;
+  employee: string;
+  manager: string;
+  reason: string;
+  total: string;
+  issue: string;
+  estimate: string;
+  trips: string;
+  average: string;
+  turnover: string;
+  check: string;
+  noData: string;
+  seats: string;
+  mainFlow: string;
+  noChildren: string;
+  debtIn: string;
+  dataIssueSignals: string;
+}> = {
+  ru: {
+    brand: "EcoVoyage",
+    title: "Моя компания",
+    subtitle: (period) => period,
+    prevMonth: "Предыдущий месяц",
+    nextMonth: "Следующий месяц",
+    periodLabel: "Период",
+    revenue: "Выручка",
+    profit: "Прибыль",
+    paid: "Оплачено",
+    avgCheck: "Средний чек",
+    bookings: "броней",
+    tourists: "туристов",
+    expenses: "Расходы",
+    debt: "К сбору",
+    paxInBooking: "чел. в брони",
+    financeEyebrow: "Финансы",
+    financeTitle: "Деньги месяца",
+    chartTitle: "Выручка и расходы по дням",
+    peakDay: "Пик",
+    days: "дней",
+    revenueBars: "выручка",
+    expenseBars: "расходы",
+    collected: "Собрано",
+    margin: "Маржа",
+    exactPrices: "Точные цены",
+    estimatedPrices: "Оценка цены",
+    refunds: "Возвраты",
+    fromBookingPrices: "Из booking_prices",
+    missingPriceBookings: (n) => `${n} броней без строки цены`,
+    minusPayments: "Минус к оплатам",
+    dayDetails: "Дни месяца",
+    riskEyebrow: "Контроль",
+    riskTitle: "Что проверить",
+    paidShort: "оплачено",
+    partialShort: "частично",
+    unpaidShort: "не оплачено",
+    managersTitle: "Менеджеры",
+    managersEyebrow: "Кто продает",
+    salesLeader: "Лидер продаж",
+    noManagerSales: "За период нет продаж менеджеров.",
+    allManagers: "Менеджеры: продажи и сборы",
+    pointsTitle: "Точки продаж",
+    pointsEyebrow: "Где продаем",
+    topPoint: "Топ точка",
+    staff: "сотр.",
+    share: "доля",
+    noSalesPoints: "Нет продаж по точкам за период.",
+    pointDetails: "Разбор по точкам и онлайну",
+    toursTitle: "Туры",
+    toursEyebrow: "Что приносит деньги",
+    toursWithMotion: "С движением",
+    topTour: "Топ тур",
+    load: "Заполняемость",
+    allToursWithMotion: "Туры с продажами или расходами",
+    urgentTours: "Что срочно проверить по турам",
+    noCriticalTours: "Критичных сигналов по турам нет.",
+    guidesTitle: "Тур-гиды",
+    guidesEyebrow: "Кто ведет выезды",
+    noGuides: "Нет назначенных гидов за период.",
+    topGuide: "Топ-гид",
+    allGuides: "Все гиды по выездам",
+    touristsTitle: "Туристы и база",
+    touristsEyebrow: "Качество данных",
+    adults: "Взрослые",
+    children: "Дети",
+    infants: "Младенцы",
+    online: "Онлайн",
+    quality: "Качество",
+    missingPhone: "Нет телефона",
+    missingHotel: "нет отеля",
+    soloPairs: "Соло/пары",
+    familiesGroups: "Семьи/группы",
+    topHotels: "Топ отелей по обороту",
+    noHotels: "Отели не заполнены в бронях периода.",
+    debtsByBookings: "К сбору по броням",
+    noDebts: "К сбору по броням нет.",
+    pricesAndQuality: "Оценочные цены и качество базы",
+    allExactPrices: "Все брони имеют точные строки цены.",
+    fallbackWarning: "Цена была оценочной",
+    open: "открыть",
+    rows: "строк",
+    points: "точек",
+    guides: "гидов",
+    noAssignments: "без назначений",
+    date: "Дата",
+    tour: "Тур",
+    guide: "Гид",
+    role: "Роль",
+    point: "Точка",
+    employee: "Сотрудник",
+    manager: "Менеджер",
+    reason: "Причина",
+    total: "Итого",
+    issue: "Проблема",
+    estimate: "Оценка",
+    trips: "Выезды",
+    average: "Среднее",
+    turnover: "Оборот",
+    check: "Проверка",
+    noData: "нет данных",
+    seats: "мест",
+    mainFlow: "Основной поток",
+    noChildren: "Тип брони без детей",
+    debtIn: "К сбору в",
+    dataIssueSignals: "сигналов",
+  },
+  en: {
+    brand: "EcoVoyage",
+    title: "My Company",
+    subtitle: (period) => period,
+    prevMonth: "Previous month",
+    nextMonth: "Next month",
+    periodLabel: "Period",
+    revenue: "Revenue",
+    profit: "Profit",
+    paid: "Paid",
+    avgCheck: "Avg. check",
+    bookings: "bookings",
+    tourists: "tourists",
+    expenses: "Expenses",
+    debt: "To collect",
+    paxInBooking: "pax per booking",
+    financeEyebrow: "Finance",
+    financeTitle: "Month Money",
+    chartTitle: "Revenue and expenses by day",
+    peakDay: "Peak",
+    days: "days",
+    revenueBars: "revenue",
+    expenseBars: "expenses",
+    collected: "Collected",
+    margin: "Margin",
+    exactPrices: "Exact prices",
+    estimatedPrices: "Estimated prices",
+    refunds: "Refunds",
+    fromBookingPrices: "From booking_prices",
+    missingPriceBookings: (n) => `${n} bookings without price rows`,
+    minusPayments: "Minus from payments",
+    dayDetails: "Month days",
+    riskEyebrow: "Control",
+    riskTitle: "What to check",
+    paidShort: "paid",
+    partialShort: "partial",
+    unpaidShort: "unpaid",
+    managersTitle: "Managers",
+    managersEyebrow: "Who sells",
+    salesLeader: "Sales leader",
+    noManagerSales: "No manager sales in this period.",
+    allManagers: "Managers: sales and collection",
+    pointsTitle: "Sales Points",
+    pointsEyebrow: "Where we sell",
+    topPoint: "Top point",
+    staff: "staff",
+    share: "share",
+    noSalesPoints: "No sales by points in this period.",
+    pointDetails: "Sales points and online",
+    toursTitle: "Tours",
+    toursEyebrow: "What earns money",
+    toursWithMotion: "With activity",
+    topTour: "Top tour",
+    load: "Load",
+    allToursWithMotion: "Tours with sales or expenses",
+    urgentTours: "Tours to check urgently",
+    noCriticalTours: "No critical tour signals.",
+    guidesTitle: "Tour Guides",
+    guidesEyebrow: "Who runs trips",
+    noGuides: "No guides assigned in this period.",
+    topGuide: "Top guide",
+    allGuides: "All guides by trips",
+    touristsTitle: "Tourists and Data",
+    touristsEyebrow: "Data quality",
+    adults: "Adults",
+    children: "Children",
+    infants: "Infants",
+    online: "Online",
+    quality: "Quality",
+    missingPhone: "No phone",
+    missingHotel: "no hotel",
+    soloPairs: "Solo/pairs",
+    familiesGroups: "Families/groups",
+    topHotels: "Top hotels by revenue",
+    noHotels: "Hotels are not filled for this period.",
+    debtsByBookings: "To collect by booking",
+    noDebts: "Nothing to collect by booking.",
+    pricesAndQuality: "Estimated prices and data quality",
+    allExactPrices: "All bookings have exact price rows.",
+    fallbackWarning: "Price was estimated",
+    open: "open",
+    rows: "rows",
+    points: "points",
+    guides: "guides",
+    noAssignments: "no assignments",
+    date: "Date",
+    tour: "Tour",
+    guide: "Guide",
+    role: "Role",
+    point: "Point",
+    employee: "Employee",
+    manager: "Manager",
+    reason: "Reason",
+    total: "Total",
+    issue: "Issue",
+    estimate: "Estimate",
+    trips: "Trips",
+    average: "Average",
+    turnover: "Turnover",
+    check: "Check",
+    noData: "no data",
+    seats: "seats",
+    mainFlow: "Main flow",
+    noChildren: "Booking type without children",
+    debtIn: "To collect in",
+    dataIssueSignals: "signals",
+  },
+  vi: {
+    brand: "EcoVoyage",
+    title: "Công ty",
+    subtitle: (period) => period,
+    prevMonth: "Tháng trước",
+    nextMonth: "Tháng sau",
+    periodLabel: "Kỳ",
+    revenue: "Doanh thu",
+    profit: "Lợi nhuận",
+    paid: "Đã thu",
+    avgCheck: "TB/booking",
+    bookings: "booking",
+    tourists: "khách",
+    expenses: "Chi phí",
+    debt: "Cần thu",
+    paxInBooking: "khách/booking",
+    financeEyebrow: "Tài chính",
+    financeTitle: "Tiền trong tháng",
+    chartTitle: "Doanh thu và chi phí theo ngày",
+    peakDay: "Đỉnh",
+    days: "ngày",
+    revenueBars: "doanh thu",
+    expenseBars: "chi phí",
+    collected: "Đã thu",
+    margin: "Biên LN",
+    exactPrices: "Giá chính xác",
+    estimatedPrices: "Giá ước tính",
+    refunds: "Hoàn tiền",
+    fromBookingPrices: "Từ booking_prices",
+    missingPriceBookings: (n) => `${n} booking thiếu dòng giá`,
+    minusPayments: "Trừ vào thanh toán",
+    dayDetails: "Ngày trong tháng",
+    riskEyebrow: "Kiểm soát",
+    riskTitle: "Cần kiểm tra",
+    paidShort: "đã thu",
+    partialShort: "một phần",
+    unpaidShort: "chưa thu",
+    managersTitle: "Quản lý",
+    managersEyebrow: "Ai bán",
+    salesLeader: "Bán tốt nhất",
+    noManagerSales: "Không có doanh số quản lý trong kỳ.",
+    allManagers: "Quản lý: bán hàng và thu tiền",
+    pointsTitle: "Điểm bán",
+    pointsEyebrow: "Bán ở đâu",
+    topPoint: "Điểm top",
+    staff: "NV",
+    share: "tỷ lệ",
+    noSalesPoints: "Không có doanh số theo điểm trong kỳ.",
+    pointDetails: "Điểm bán và online",
+    toursTitle: "Tour",
+    toursEyebrow: "Nguồn doanh thu",
+    toursWithMotion: "Có phát sinh",
+    topTour: "Tour top",
+    load: "Lấp đầy",
+    allToursWithMotion: "Tour có doanh thu hoặc chi phí",
+    urgentTours: "Tour cần kiểm tra gấp",
+    noCriticalTours: "Không có tín hiệu tour nghiêm trọng.",
+    guidesTitle: "HDV",
+    guidesEyebrow: "Ai dẫn tour",
+    noGuides: "Chưa có HDV trong kỳ.",
+    topGuide: "HDV top",
+    allGuides: "Tất cả HDV theo chuyến",
+    touristsTitle: "Khách và dữ liệu",
+    touristsEyebrow: "Chất lượng dữ liệu",
+    adults: "Người lớn",
+    children: "Trẻ em",
+    infants: "Em bé",
+    online: "Online",
+    quality: "Chất lượng",
+    missingPhone: "Thiếu SĐT",
+    missingHotel: "thiếu KS",
+    soloPairs: "Solo/cặp",
+    familiesGroups: "Gia đình/nhóm",
+    topHotels: "Khách sạn top theo doanh thu",
+    noHotels: "Booking trong kỳ chưa có khách sạn.",
+    debtsByBookings: "Cần thu theo booking",
+    noDebts: "Không còn khoản cần thu theo booking.",
+    pricesAndQuality: "Giá ước tính và chất lượng dữ liệu",
+    allExactPrices: "Tất cả booking có dòng giá chính xác.",
+    fallbackWarning: "Giá đã được ước tính",
+    open: "mở",
+    rows: "dòng",
+    points: "điểm",
+    guides: "HDV",
+    noAssignments: "chưa gán",
+    date: "Ngày",
+    tour: "Tour",
+    guide: "HDV",
+    role: "Vai trò",
+    point: "Điểm",
+    employee: "Nhân viên",
+    manager: "Quản lý",
+    reason: "Lý do",
+    total: "Tổng",
+    issue: "Vấn đề",
+    estimate: "Ước tính",
+    trips: "Chuyến",
+    average: "Trung bình",
+    turnover: "Doanh số",
+    check: "Kiểm tra",
+    noData: "chưa có dữ liệu",
+    seats: "chỗ",
+    mainFlow: "Luồng chính",
+    noChildren: "Loại booking không trẻ em",
+    debtIn: "Cần thu trong",
+    dataIssueSignals: "tín hiệu",
+  },
+};
+
+function companyLocale(raw: string): CompanyLocale {
+  return raw === "en" || raw === "vi" ? raw : "ru";
+}
+
+function compactVnd(value: number, locale: CompanyLocale = "ru"): string {
   const n = Math.round(Number(value) || 0);
   const sign = n < 0 ? "-" : "";
   const abs = Math.abs(n);
-  if (abs >= 1_000_000_000) return `${sign}${(abs / 1_000_000_000).toLocaleString("ru-RU", { maximumFractionDigits: 1 })}B đ`;
-  if (abs >= 1_000_000) return `${sign}${(abs / 1_000_000).toLocaleString("ru-RU", { maximumFractionDigits: 1 })}M đ`;
-  if (abs >= 1_000) return `${sign}${(abs / 1_000).toLocaleString("ru-RU", { maximumFractionDigits: 0 })}K đ`;
-  return `${n.toLocaleString("ru-RU")} đ`;
+  const numberLocale = locale === "en" ? "en-US" : locale === "vi" ? "vi-VN" : "ru-RU";
+  if (abs >= 1_000_000_000) return `${sign}${(abs / 1_000_000_000).toLocaleString(numberLocale, { maximumFractionDigits: 1 })}B đ`;
+  if (abs >= 1_000_000) return `${sign}${(abs / 1_000_000).toLocaleString(numberLocale, { maximumFractionDigits: 1 })}M đ`;
+  if (abs >= 1_000) return `${sign}${(abs / 1_000).toLocaleString(numberLocale, { maximumFractionDigits: 0 })}K đ`;
+  return `${n.toLocaleString(numberLocale)} đ`;
 }
 
 function pct(value: number): string {
   return `${Math.round(Number(value) || 0)}%`;
 }
 
-function roleRu(role: string): string {
-  if (role === "director") return "директор";
-  if (role === "chief_manager") return "ст. менеджер";
-  if (role === "manager") return "менеджер";
-  return role || "сотрудник";
+function monthTitle(month: string, locale: CompanyLocale): string {
+  if (!/^\d{4}-\d{2}$/.test(month)) return month;
+  const [year, month1] = month.split("-").map(Number);
+  const localeName = locale === "en" ? "en-US" : locale === "vi" ? "vi-VN" : "ru-RU";
+  return new Date(year, month1 - 1, 1).toLocaleDateString(localeName, { month: "short", year: "numeric" });
+}
+
+function roleName(role: string, locale: CompanyLocale): string {
+  return roleLabel(role, locale);
 }
 
 function moneyTone(value: number): string {
   if (value < 0) return "text-rose-600";
   if (value === 0) return "text-[var(--muted)]";
-  return "text-emerald-700";
+  return "text-[var(--success)]";
 }
 
-function SparkLine({ rows }: { rows: DirectorCompanyDashboard["trend"] }) {
-  const values = rows.map((r) => r.revenueVnd);
-  const max = Math.max(1, ...values);
-  const width = 320;
-  const height = 112;
-  const points = rows.length
-    ? rows
-        .map((r, i) => {
-          const x = rows.length === 1 ? width / 2 : (i / (rows.length - 1)) * width;
-          const y = height - (r.revenueVnd / max) * (height - 18) - 8;
-          return `${x.toFixed(1)},${y.toFixed(1)}`;
-        })
-        .join(" ")
-    : `0,${height} ${width},${height}`;
-  const area = rows.length ? `0,${height} ${points} ${width},${height}` : "";
+function MoneyChart({
+  rows,
+  labels,
+  locale,
+}: {
+  rows: DirectorCompanyDashboard["trend"];
+  labels: Pick<ReturnType<typeof companyCopy>, "chartTitle" | "revenueBars" | "expenseBars" | "peakDay">;
+  locale: CompanyLocale;
+}) {
+  const max = Math.max(1, ...rows.map((r) => Math.max(r.revenueVnd, r.expenseVnd)));
+  const activeRows = rows.filter((r) => r.revenueVnd > 0 || r.expenseVnd > 0);
+  const peak = activeRows.sort((a, b) => b.revenueVnd - a.revenueVnd)[0];
+  const width = 360;
+  const height = 150;
+  const padX = 12;
+  const padBottom = 24;
+  const chartHeight = height - padBottom - 14;
+  const slot = rows.length > 0 ? (width - padX * 2) / rows.length : width;
+  const barW = Math.max(4, Math.min(14, slot * 0.45));
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-[138px] w-full" role="img" aria-label="График выручки по дням">
-      <defs>
-        <linearGradient id="companyLineFill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#8fd400" stopOpacity="0.32" />
-          <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.03" />
-        </linearGradient>
-      </defs>
-      <path d="M0 104H320" stroke="#e5e7eb" strokeWidth="1" />
-      <path d="M0 68H320" stroke="#eef2f7" strokeWidth="1" />
-      <path d="M0 32H320" stroke="#eef2f7" strokeWidth="1" />
-      {area ? <polygon points={area} fill="url(#companyLineFill)" /> : null}
-      <polyline points={points} fill="none" stroke="#8fd400" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-      {rows.map((r, i) => {
-        const x = rows.length === 1 ? width / 2 : (i / (rows.length - 1)) * width;
-        const y = height - (r.revenueVnd / max) * (height - 18) - 8;
-        return <circle key={`${r.dateYmd}-${i}`} cx={x} cy={y} r="3.5" fill="#ffffff" stroke="#8fd400" strokeWidth="2" />;
-      })}
-    </svg>
+    <div className="company-chart rounded-[22px] border border-[var(--border)] bg-[linear-gradient(180deg,var(--surface)_0%,var(--surface-soft)_100%)] p-4 shadow-[var(--shadow-sm)]">
+      <div className="mb-3 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="text-[13px] font-extrabold text-[var(--text)]">{labels.chartTitle}</div>
+        </div>
+        {peak ? (
+          <div className="shrink-0 rounded-[14px] border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-3 py-2 text-right">
+            <div className="text-[10px] font-extrabold uppercase text-[var(--muted2)]">{labels.peakDay}</div>
+            <div className="text-[13px] font-extrabold text-[var(--text)]">{peak.dateYmd.slice(8, 10)} · {compactVnd(peak.revenueVnd, locale)}</div>
+          </div>
+        ) : null}
+      </div>
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-[184px] w-full" role="img" aria-label={labels.chartTitle}>
+        <path d={`M${padX} 18H${width - padX}`} stroke="var(--border)" strokeWidth="1" opacity="0.55" />
+        <path d={`M${padX} 58H${width - padX}`} stroke="var(--border)" strokeWidth="1" opacity="0.55" />
+        <path d={`M${padX} 98H${width - padX}`} stroke="var(--border)" strokeWidth="1" opacity="0.55" />
+        <path d={`M${padX} ${height - padBottom}H${width - padX}`} stroke="var(--border)" strokeWidth="1.2" />
+        {rows.map((r, i) => {
+          const center = padX + slot * i + slot / 2;
+          const revenueH = Math.max(2, (r.revenueVnd / max) * chartHeight);
+          const expenseH = r.expenseVnd > 0 ? Math.max(2, (r.expenseVnd / max) * chartHeight) : 0;
+          const showLabel = i === 0 || i === rows.length - 1 || r.dateYmd === peak?.dateYmd;
+          return (
+            <g key={r.dateYmd}>
+              <rect
+                x={center - barW - 1}
+                y={height - padBottom - revenueH}
+                width={barW}
+                height={revenueH}
+                rx="4"
+                fill="var(--accent)"
+              />
+              {expenseH > 0 ? (
+                <rect
+                  x={center + 1}
+                  y={height - padBottom - expenseH}
+                  width={barW}
+                  height={expenseH}
+                  rx="4"
+                  fill="var(--danger)"
+                  opacity="0.82"
+                />
+              ) : null}
+              {showLabel ? (
+                <text x={center} y={height - 6} textAnchor="middle" className="fill-[var(--muted2)] text-[9px] font-bold">
+                  {r.label}
+                </text>
+              ) : null}
+            </g>
+          );
+        })}
+      </svg>
+      <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-bold text-[var(--muted)]">
+        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[var(--accent)]" />{labels.revenueBars}</span>
+        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[var(--danger)]" />{labels.expenseBars}</span>
+      </div>
+    </div>
   );
 }
 
+function companyCopy(locale: CompanyLocale) {
+  return COMPANY_TEXT[locale];
+}
+
 function Ring({ value, label, sub, tone = "green" }: { value: number; label: string; sub: string; tone?: "green" | "blue" | "amber" }) {
-  const color = tone === "blue" ? "#0ea5e9" : tone === "amber" ? "#f59e0b" : "#8fd400";
+  const color = tone === "blue" ? "#0ea5e9" : tone === "amber" ? "var(--warn)" : "var(--accent)";
   return (
-    <div className="flex min-w-0 items-center gap-3 rounded-[14px] border border-slate-200 bg-white p-3">
+    <div className="flex min-w-0 items-center gap-3 rounded-[14px] border border-[var(--border)] bg-[var(--surface)] p-3">
       <div
         className="grid h-16 w-16 shrink-0 place-items-center rounded-full"
-        style={{ background: `conic-gradient(${color} ${clampUi(value)}%, #eef2f7 0)` }}
+        style={{ background: `conic-gradient(${color} ${clampUi(value)}%, var(--surface-elevated) 0)` }}
       >
-        <div className="grid h-11 w-11 place-items-center rounded-full bg-white text-[12px] font-bold text-slate-900">{pct(value)}</div>
+        <div className="grid h-11 w-11 place-items-center rounded-full bg-[var(--surface)] text-[12px] font-bold text-[var(--text)]">{pct(value)}</div>
       </div>
       <div className="min-w-0">
-        <div className="truncate text-[13px] font-bold text-slate-900">{label}</div>
-        <div className="mt-1 text-[11px] leading-snug text-slate-500">{sub}</div>
+        <div className="truncate text-[13px] font-bold text-[var(--text)]">{label}</div>
+        <div className="mt-1 text-[11px] leading-snug text-[var(--muted)]">{sub}</div>
       </div>
     </div>
   );
@@ -106,10 +596,23 @@ function clampUi(value: number): number {
 
 function Metric({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: string }) {
   return (
-    <div className="min-w-0 rounded-[14px] border border-slate-200 bg-white p-3">
-      <div className="text-[10px] font-bold uppercase text-slate-400">{label}</div>
-      <div className={`mt-1 truncate text-[20px] font-black text-slate-950 ${tone || ""}`}>{value}</div>
-      {sub ? <div className="mt-1 min-h-[28px] text-[11px] leading-snug text-slate-500">{sub}</div> : null}
+    <div className="min-w-0 rounded-[14px] border border-[var(--border)] bg-[var(--surface)] p-3">
+      <div className="text-[10px] font-bold uppercase text-[var(--muted2)]">{label}</div>
+      <div className={`mt-1 truncate text-[18px] font-extrabold text-[var(--text)] ${tone || ""}`}>{value}</div>
+      {sub ? <div className="mt-1 min-h-[28px] text-[11px] leading-snug text-[var(--muted)]">{sub}</div> : null}
+    </div>
+  );
+}
+
+function ExecutiveMetric({ label, value, sub, tone = "default" }: { label: string; value: string; sub: string; tone?: "default" | "good" | "warn" | "bad" }) {
+  const accent =
+    tone === "good" ? "bg-[var(--success)]" : tone === "warn" ? "bg-[var(--warn)]" : tone === "bad" ? "bg-[var(--danger)]" : "bg-[var(--accent)]";
+  return (
+    <div className="relative min-w-0 overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--surface)]/90 p-3 shadow-[var(--shadow-sm)]">
+      <div className={`absolute inset-x-0 top-0 h-1 ${accent}`} />
+      <div className="text-[10px] font-extrabold uppercase tracking-wide text-[var(--muted2)]">{label}</div>
+      <div className="mt-2 truncate text-[18px] font-extrabold leading-none text-[var(--text)]">{value}</div>
+      <div className="mt-2 min-h-[28px] text-[10.5px] font-semibold leading-snug text-[var(--muted)]">{sub}</div>
     </div>
   );
 }
@@ -128,17 +631,17 @@ function BarRow({
   tone?: "green" | "blue" | "amber" | "red";
 }) {
   const color =
-    tone === "blue" ? "bg-sky-500" : tone === "amber" ? "bg-amber-500" : tone === "red" ? "bg-rose-500" : "bg-[#8fd400]";
+    tone === "blue" ? "bg-sky-500" : tone === "amber" ? "bg-[var(--warn)]" : tone === "red" ? "bg-[var(--danger)]" : "bg-[var(--accent)]";
   return (
-    <div className="min-w-0 rounded-[12px] border border-slate-200 bg-white p-3">
+    <div className="min-w-0 rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-3">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="truncate text-[13px] font-bold text-slate-900">{label}</div>
-          <div className="mt-1 text-[11px] leading-snug text-slate-500">{sub}</div>
+          <div className="truncate text-[13px] font-bold text-[var(--text)]">{label}</div>
+          <div className="mt-1 text-[11px] leading-snug text-[var(--muted)]">{sub}</div>
         </div>
-        <div className="shrink-0 text-right text-[13px] font-black text-slate-950">{value}</div>
+        <div className="shrink-0 text-right text-[13px] font-extrabold text-[var(--text)]">{value}</div>
       </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${clampUi(percent)}%` }} />
       </div>
     </div>
@@ -147,11 +650,11 @@ function BarRow({
 
 function Section({ title, eyebrow, children }: { title: string; eyebrow: string; children: React.ReactNode }) {
   return (
-    <section className="min-w-0 rounded-[20px] border border-slate-200 bg-white p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] md:p-5">
+    <section className="min-w-0 rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-md)] md:p-5">
       <div className="mb-4 flex min-w-0 items-end justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[10px] font-black uppercase text-[#7fbf00]">{eyebrow}</div>
-          <h2 className="mt-1 truncate text-[22px] font-black text-slate-950">{title}</h2>
+          <div className="text-[10px] font-extrabold uppercase text-[var(--accent-dark)]">{eyebrow}</div>
+          <h2 className="mt-1 truncate text-[18px] font-extrabold text-[var(--text)]">{title}</h2>
         </div>
       </div>
       {children}
@@ -171,14 +674,14 @@ function DetailPanel({
   open?: boolean;
 }) {
   return (
-    <details open={open} className="group mt-4 min-w-0 overflow-hidden rounded-[16px] border border-slate-200 bg-slate-50">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-3 text-[13px] font-black text-slate-950">
+    <details open={open} className="group mt-4 min-w-0 overflow-hidden rounded-[16px] border border-[var(--border)] bg-[var(--surface-soft)]">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-3 text-[13px] font-extrabold text-[var(--text)]">
         <span className="min-w-0 truncate">{title}</span>
-        <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-500 group-open:bg-[#8fd400] group-open:text-white">
+        <span className="shrink-0 rounded-full bg-[var(--surface)] px-2.5 py-1 text-[11px] font-bold text-[var(--muted)] group-open:bg-[var(--accent)] group-open:text-white">
           {summary}
         </span>
       </summary>
-      <div className="border-t border-slate-200 bg-white p-3">{children}</div>
+      <div className="border-t border-[var(--border)] bg-[var(--surface)] p-3">{children}</div>
     </details>
   );
 }
@@ -197,18 +700,18 @@ function DetailTable({
   return (
     <>
       {mobile ? <div className="grid gap-2 md:hidden">{mobile}</div> : null}
-    <div className={`${mobile ? "hidden md:block" : ""} min-w-0 overflow-x-auto rounded-[12px] border border-slate-200`}>
-      <table className="w-full border-collapse bg-white text-left text-[12px]" style={{ minWidth }}>
-        <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400">
+    <div className={`${mobile ? "hidden md:block" : ""} min-w-0 overflow-x-auto rounded-[12px] border border-[var(--border)]`}>
+      <table className="w-full border-collapse bg-[var(--surface)] text-left text-[12px]" style={{ minWidth }}>
+        <thead className="bg-[var(--surface-soft)] text-[10px] font-extrabold uppercase text-[var(--muted2)]">
           <tr>
             {headers.map((h) => (
-              <th key={h} className="border-b border-slate-200 px-3 py-2">
+              <th key={h} className="border-b border-[var(--border)] px-3 py-2">
                 {h}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">{children}</tbody>
+        <tbody className="divide-y divide-[var(--border)]">{children}</tbody>
       </table>
     </div>
     </>
@@ -217,7 +720,7 @@ function DetailTable({
 
 function CellLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className="font-black text-slate-950 underline decoration-[#8fd400]/50 underline-offset-4">
+    <Link href={href} className="font-extrabold text-[var(--text)] underline decoration-[var(--accent)]/60 underline-offset-4">
       {children}
     </Link>
   );
@@ -237,27 +740,27 @@ function MobileDetailCard({
   warning?: string;
 }) {
   return (
-    <div className="min-w-0 rounded-[13px] border border-slate-200 bg-white p-3">
+    <div className="min-w-0 rounded-[13px] border border-[var(--border)] bg-[var(--surface)] p-3">
       <div className="min-w-0">
-        {href ? <CellLink href={href}>{title}</CellLink> : <div className="font-black text-slate-950">{title}</div>}
-        {meta ? <div className="mt-1 text-[11px] leading-snug text-slate-500">{meta}</div> : null}
-        {warning ? <div className="mt-2 rounded-[10px] bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-700">{warning}</div> : null}
+        {href ? <CellLink href={href}>{title}</CellLink> : <div className="font-extrabold text-[var(--text)]">{title}</div>}
+        {meta ? <div className="mt-1 text-[11px] leading-snug text-[var(--muted)]">{meta}</div> : null}
+        {warning ? <div className="mt-2 rounded-[10px] bg-[var(--warn-soft)] px-2 py-1 text-[11px] font-bold text-[var(--warn)]">{warning}</div> : null}
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
         {stats.map((s) => (
-          <div key={`${s.label}-${s.value}`} className="rounded-[10px] bg-slate-50 px-2 py-2">
-            <div className="text-[9px] font-black uppercase text-slate-400">{s.label}</div>
+          <div key={`${s.label}-${s.value}`} className="rounded-[10px] bg-[var(--surface-soft)] px-2 py-2">
+            <div className="text-[9px] font-extrabold uppercase text-[var(--muted2)]">{s.label}</div>
             <div
-              className={`mt-0.5 truncate text-[13px] font-black ${
+              className={`mt-0.5 truncate text-[13px] font-extrabold ${
                 s.tone === "green"
-                  ? "text-emerald-700"
+                  ? "text-[var(--success)]"
                   : s.tone === "red"
-                    ? "text-rose-700"
+                    ? "text-[var(--danger)]"
                     : s.tone === "amber"
-                      ? "text-amber-700"
+                      ? "text-[var(--warn)]"
                       : s.tone === "blue"
                         ? "text-sky-700"
-                        : "text-slate-950"
+                        : "text-[var(--text)]"
               }`}
             >
               {s.value}
@@ -276,6 +779,10 @@ export default async function CompanyPage({
 }) {
   const user = await requireAuth();
   if (user.role !== "director") redirect("/dashboard");
+  const locale = companyLocale(await getLocale());
+  const t = companyCopy(locale);
+  const vnd = (value: number) => compactVnd(value, locale);
+  const rLabel = (role: string) => roleName(role, locale);
 
   const sp = await searchParams;
   const rawMonth = pickFirst(sp.month);
@@ -289,106 +796,115 @@ export default async function CompanyPage({
   const toursWithMotion = data.tours.filter((t) => t.bookings > 0 || t.tourists > 0 || t.revenueVnd > 0 || t.expenseVnd > 0);
   const bestTour = toursWithMotion[0];
   const bestGuide = data.guides[0];
+  const managerRows = bestManager ? data.managers.filter((m) => m.managerId !== bestManager.managerId) : data.managers;
+  const pointRows = bestPoint ? data.salesPoints.filter((p) => p.pointId !== bestPoint.pointId) : data.salesPoints;
+  const tourRows = bestTour ? toursWithMotion.filter((tour) => tour.tourId !== bestTour.tourId) : toursWithMotion;
+  const guideRows = bestGuide ? data.guides.filter((g) => g.guideId !== bestGuide.guideId) : data.guides;
+  const prevMonthTitle = monthTitle(data.period.prevMonth, locale);
+  const nextMonthTitle = monthTitle(data.period.nextMonth, locale);
 
   return (
-    <main className="mx-auto w-full max-w-[1180px] px-3 pb-[92px] pt-3 sm:px-4 md:pb-8">
+    <main className="company-dashboard mx-auto w-full max-w-[1180px] px-3 pb-[92px] pt-3 sm:px-4 md:pb-8">
       <TopNav user={user} />
 
-      <div className="mb-4 rounded-[22px] border border-slate-200 bg-white p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] md:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="mb-4 overflow-hidden rounded-[26px] border border-[var(--border)] bg-[linear-gradient(135deg,var(--surface)_0%,var(--surface)_45%,var(--accent-soft)_100%)] p-4 shadow-[var(--shadow-lg)] ring-1 ring-white/40 md:p-5 dark:ring-white/[0.04]">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
-            <div className="text-[11px] font-black uppercase text-[#7fbf00]">EcoVoyage</div>
-            <h1 className="mt-1 text-[32px] font-black leading-tight text-slate-950 sm:text-[40px]">Моя компания</h1>
-            <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-slate-600">
-              Полная картина за {data.period.title}: деньги, продажи, точки, туры, гиды и качество базы.
+            <div className="inline-flex rounded-full border border-[var(--accent)]/35 bg-[var(--accent-soft)] px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[var(--accent-dark)]">
+              {t.brand}
+            </div>
+            <h1 className="mt-3 text-[28px] font-extrabold leading-tight text-[var(--text)] sm:text-[36px]">{t.title}</h1>
+            <p className="mt-2 max-w-2xl text-[14px] font-bold leading-relaxed text-[var(--muted)]">
+              {t.subtitle(data.period.title)}
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Link href={`/company?month=${data.period.prevMonth}`} className="btn-secondary min-h-[42px] rounded-[12px] px-3" aria-label="Предыдущий месяц">
-              ‹
+          <div className="grid w-full shrink-0 grid-cols-[52px_1fr_52px] overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--surface)]/90 shadow-[var(--shadow-md)] sm:w-[390px]">
+            <Link
+              href={`/company?month=${data.period.prevMonth}`}
+              className="flex min-h-[58px] min-w-0 flex-col items-center justify-center border-r border-[var(--border)] px-2 text-center transition-colors hover:bg-[var(--surface-elevated)]"
+              aria-label={t.prevMonth}
+              title={prevMonthTitle}
+            >
+              <span className="text-[18px] font-extrabold leading-none text-[var(--text)]">‹</span>
             </Link>
-            <div className="min-w-[154px] rounded-[12px] border border-slate-200 bg-slate-50 px-4 py-2 text-center text-[14px] font-black text-slate-950">
-              {data.period.title}
+            <div className="min-w-0 bg-[var(--surface-soft)] px-3 py-2.5 text-center">
+              <div className="text-[9px] font-extrabold uppercase tracking-wide text-[var(--muted2)]">{t.periodLabel}</div>
+              <div className="mt-1 truncate text-[16px] font-extrabold text-[var(--text)]">{data.period.title}</div>
             </div>
-            <Link href={`/company?month=${data.period.nextMonth}`} className="btn-secondary min-h-[42px] rounded-[12px] px-3" aria-label="Следующий месяц">
-              ›
+            <Link
+              href={`/company?month=${data.period.nextMonth}`}
+              className="flex min-h-[58px] min-w-0 flex-col items-center justify-center border-l border-[var(--border)] px-2 text-center transition-colors hover:bg-[var(--surface-elevated)]"
+              aria-label={t.nextMonth}
+              title={nextMonthTitle}
+            >
+              <span className="text-[18px] font-extrabold leading-none text-[var(--text)]">›</span>
             </Link>
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Metric label="Выручка" value={compactVnd(f.revenueVnd)} sub={`${f.bookingsCount} броней · ${f.touristsCount} туристов`} />
-          <Metric label="Прибыль" value={compactVnd(f.profitVnd)} sub={`Расходы ${compactVnd(f.expenseVnd)}`} tone={moneyTone(f.profitVnd)} />
-          <Metric label="Оплачено" value={compactVnd(f.paidVnd)} sub={`Долг ${compactVnd(f.dueVnd)}`} />
-          <Metric label="Средний чек" value={compactVnd(f.avgCheckVnd)} sub={`${f.avgPaxPerBooking} чел. в брони`} />
+        <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <ExecutiveMetric label={t.revenue} value={vnd(f.revenueVnd)} sub={`${f.bookingsCount} ${t.bookings} · ${f.touristsCount} ${t.tourists}`} tone="default" />
+          <ExecutiveMetric label={t.profit} value={vnd(f.profitVnd)} sub={`${t.expenses} ${vnd(f.expenseVnd)}`} tone={f.profitVnd < 0 ? "bad" : "good"} />
+          <ExecutiveMetric label={t.paid} value={vnd(f.paidVnd)} sub={`${t.debt} ${vnd(f.dueVnd)}`} tone={f.dueVnd > 0 ? "warn" : "good"} />
+          <ExecutiveMetric label={t.avgCheck} value={vnd(f.avgCheckVnd)} sub={`${f.avgPaxPerBooking} ${t.paxInBooking}`} tone="default" />
         </div>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-        <Section title="Деньги и темп" eyebrow="Финансы">
+        <Section title={t.financeTitle} eyebrow={t.financeEyebrow}>
           <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
-            <div className="min-w-0 rounded-[16px] border border-slate-200 bg-slate-50 p-3">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="text-[13px] font-black text-slate-950">Выручка по датам туров</div>
-                  <div className="text-[11px] text-slate-500">Линия показывает, где месяц реально зарабатывает.</div>
-                </div>
-                <div className="shrink-0 rounded-full bg-white px-3 py-1 text-[11px] font-bold text-slate-600">{data.trend.length} дней</div>
-              </div>
-              <SparkLine rows={data.trend} />
-            </div>
+            <MoneyChart rows={data.trend} labels={t} locale={locale} />
             <div className="grid gap-3">
-              <Ring value={paidPct} label="Собрано" sub={formatVnd(f.paidVnd)} />
-              <Ring value={Math.max(0, f.marginPct)} label="Маржа" sub={`Прибыль ${compactVnd(f.profitVnd)}`} tone="blue" />
-              <Ring value={duePct} label="Долг" sub={`${f.partialBookings + f.unpaidBookings} броней`} tone="amber" />
+              <Ring value={paidPct} label={t.collected} sub={formatVnd(f.paidVnd)} />
+              <Ring value={Math.max(0, f.marginPct)} label={t.margin} sub={`${t.profit} ${vnd(f.profitVnd)}`} tone="blue" />
+              <Ring value={duePct} label={t.debt} sub={`${f.partialBookings + f.unpaidBookings} ${t.bookings}`} tone="amber" />
             </div>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Metric label="Точные цены" value={compactVnd(f.exactRevenueVnd)} sub="Из booking_prices" />
-            <Metric label="Оценка цены" value={compactVnd(f.estimatedRevenueVnd)} sub={`${f.missingPriceBookings} броней без строки цены`} />
-            <Metric label="Возвраты" value={compactVnd(f.refundVnd)} sub="Минус к оплатам" tone="text-rose-600" />
-            <Metric label="Маржа" value={pct(f.marginPct)} sub={`${formatVnd(f.revenueVnd)} − ${formatVnd(f.expenseVnd)}`} tone={moneyTone(f.profitVnd)} />
+            <Metric label={t.exactPrices} value={vnd(f.exactRevenueVnd)} sub={t.fromBookingPrices} />
+            <Metric label={t.estimatedPrices} value={vnd(f.estimatedRevenueVnd)} sub={t.missingPriceBookings(f.missingPriceBookings)} />
+            <Metric label={t.refunds} value={vnd(f.refundVnd)} sub={t.minusPayments} tone="text-rose-600" />
+            <Metric label={t.margin} value={pct(f.marginPct)} sub={`${formatVnd(f.revenueVnd)} - ${formatVnd(f.expenseVnd)}`} tone={moneyTone(f.profitVnd)} />
           </div>
-          <DetailPanel title="Дни месяца под графиком" summary={`${data.trend.length} дней`}>
+          <DetailPanel title={t.dayDetails} summary={`${data.trend.length} ${t.days}`}>
             <DetailTable
-              headers={["Дата", "Брони", "Туристы", "Выручка", "Расходы", "Прибыль"]}
+              headers={[t.date, t.bookings, t.tourists, t.revenue, t.expenses, t.profit]}
               mobile={data.trend.map((d) => (
                 <MobileDetailCard
                   key={d.dateYmd}
                   title={d.dateYmd}
                   stats={[
-                    { label: "Брони", value: String(d.bookings) },
-                    { label: "Туристы", value: String(d.tourists) },
-                    { label: "Выручка", value: compactVnd(d.revenueVnd), tone: "green" },
-                    { label: "Прибыль", value: compactVnd(d.revenueVnd - d.expenseVnd), tone: d.revenueVnd - d.expenseVnd < 0 ? "red" : "green" },
+                    { label: t.bookings, value: String(d.bookings) },
+                    { label: t.tourists, value: String(d.tourists) },
+                    { label: t.revenue, value: vnd(d.revenueVnd), tone: "green" },
+                    { label: t.profit, value: vnd(d.revenueVnd - d.expenseVnd), tone: d.revenueVnd - d.expenseVnd < 0 ? "red" : "green" },
                   ]}
                 />
               ))}
             >
               {data.trend.map((d) => (
                 <tr key={d.dateYmd}>
-                  <td className="px-3 py-2 font-black">{d.dateYmd}</td>
+                  <td className="px-3 py-2 font-extrabold">{d.dateYmd}</td>
                   <td className="px-3 py-2 font-bold">{d.bookings}</td>
                   <td className="px-3 py-2 font-bold">{d.tourists}</td>
-                  <td className="px-3 py-2 font-bold">{compactVnd(d.revenueVnd)}</td>
-                  <td className="px-3 py-2 text-rose-700 font-bold">{compactVnd(d.expenseVnd)}</td>
-                  <td className={`px-3 py-2 font-bold ${moneyTone(d.revenueVnd - d.expenseVnd)}`}>{compactVnd(d.revenueVnd - d.expenseVnd)}</td>
+                  <td className="px-3 py-2 font-bold">{vnd(d.revenueVnd)}</td>
+                  <td className="px-3 py-2 text-rose-700 font-bold">{vnd(d.expenseVnd)}</td>
+                  <td className={`px-3 py-2 font-bold ${moneyTone(d.revenueVnd - d.expenseVnd)}`}>{vnd(d.revenueVnd - d.expenseVnd)}</td>
                 </tr>
               ))}
             </DetailTable>
           </DetailPanel>
         </Section>
 
-        <Section title="Риски месяца" eyebrow="Контроль">
+        <Section title={t.riskTitle} eyebrow={t.riskEyebrow}>
           <div className="grid gap-3">
             {data.risks.map((r) => (
-              <div key={r.title} className="flex items-center justify-between gap-3 rounded-[14px] border border-slate-200 bg-slate-50 p-3">
+              <div key={r.title} className="flex items-center justify-between gap-3 rounded-[14px] border border-[var(--border)] bg-[var(--surface-soft)] p-3">
                 <div className="min-w-0">
-                  <div className="truncate text-[13px] font-black text-slate-950">{r.title}</div>
-                  <div className="mt-1 text-[11px] text-slate-500">Показатель для быстрой проверки директором</div>
+                  <div className="truncate text-[13px] font-extrabold text-[var(--text)]">{r.title}</div>
                 </div>
                 <div
-                  className={`shrink-0 rounded-full px-3 py-1 text-[12px] font-black ${
+                  className={`shrink-0 rounded-full px-3 py-1 text-[12px] font-extrabold ${
                     r.tone === "red"
                       ? "bg-rose-50 text-rose-700"
                       : r.tone === "amber"
@@ -401,61 +917,86 @@ export default async function CompanyPage({
               </div>
             ))}
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-2 rounded-[16px] border border-slate-200 bg-white p-3 text-center">
+          <div className="mt-4 grid grid-cols-3 gap-2 rounded-[16px] border border-[var(--border)] bg-[var(--surface)] p-3 text-center">
             <div>
-              <div className="text-[20px] font-black text-emerald-700">{f.paidBookings}</div>
-              <div className="text-[10px] font-bold uppercase text-slate-400">оплачено</div>
+              <div className="text-[18px] font-extrabold text-emerald-700">{f.paidBookings}</div>
+              <div className="text-[10px] font-bold uppercase text-[var(--muted2)]">{t.paidShort}</div>
             </div>
             <div>
-              <div className="text-[20px] font-black text-amber-600">{f.partialBookings}</div>
-              <div className="text-[10px] font-bold uppercase text-slate-400">частично</div>
+              <div className="text-[18px] font-extrabold text-amber-600">{f.partialBookings}</div>
+              <div className="text-[10px] font-bold uppercase text-[var(--muted2)]">{t.partialShort}</div>
             </div>
             <div>
-              <div className="text-[20px] font-black text-rose-600">{f.unpaidBookings}</div>
-              <div className="text-[10px] font-bold uppercase text-slate-400">не оплачено</div>
+              <div className="text-[18px] font-extrabold text-rose-600">{f.unpaidBookings}</div>
+              <div className="text-[10px] font-bold uppercase text-[var(--muted2)]">{t.unpaidShort}</div>
             </div>
           </div>
         </Section>
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-2">
-        <Section title="Менеджеры" eyebrow="Кто продает">
+        <Section title={t.managersTitle} eyebrow={t.managersEyebrow}>
           <div className="grid gap-3">
             {bestManager ? (
-              <div className="rounded-[16px] border border-[#cdeb91] bg-[#f7ffe9] p-4">
-                <div className="text-[11px] font-black uppercase text-[#7fbf00]">Лидер продаж</div>
-                <div className="mt-1 text-[22px] font-black text-slate-950">{bestManager.name}</div>
-                <div className="mt-1 text-[12px] text-slate-600">
-                  {roleRu(bestManager.role)} · {bestManager.pointName} · {bestManager.bookings} броней
+              <div className="rounded-[14px] border border-[var(--accent)]/35 bg-[var(--accent-soft)] p-3">
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-extrabold uppercase tracking-wide text-[var(--accent-dark)]">{t.salesLeader}</div>
+                    <div className="mt-0.5 truncate text-[16px] font-extrabold text-[var(--text)]">{bestManager.name}</div>
+                    <div className="mt-0.5 truncate text-[11px] text-[var(--muted)]">
+                      {rLabel(bestManager.role)} · {bestManager.pointName}
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="text-[16px] font-extrabold tabular-nums text-[var(--accent-dark)]">{vnd(bestManager.revenueVnd)}</div>
+                    <div className="text-[9px] font-bold uppercase tracking-wide text-[var(--muted2)]">{t.revenue}</div>
+                  </div>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[var(--muted)]">
+                  <span>
+                    {t.paid}: <b className="font-extrabold tabular-nums text-emerald-700">{vnd(bestManager.paidVnd)}</b>
+                  </span>
+                  <span>
+                    {t.debt}:{" "}
+                    <b className={`font-extrabold tabular-nums ${bestManager.dueVnd > 0 ? "text-amber-700" : "text-emerald-700"}`}>
+                      {vnd(bestManager.dueVnd)}
+                    </b>
+                  </span>
+                  <span>
+                    {bestManager.bookings} {t.bookings}
+                  </span>
+                  <span>
+                    {bestManager.tourists} {t.tourists}
+                  </span>
                 </div>
               </div>
             ) : null}
-            {data.managers.slice(0, 8).map((m, idx) => (
+            {managerRows.slice(0, 7).map((m, idx) => (
               <BarRow
                 key={m.managerId}
-                label={`${idx + 1}. ${m.name}`}
-                value={compactVnd(m.revenueVnd)}
-                sub={`${roleRu(m.role)} · ${m.pointName} · ${m.tourists} чел. · долг ${compactVnd(m.dueVnd)}`}
+                label={`${idx + 2}. ${m.name}`}
+                value={vnd(m.revenueVnd)}
+                sub={`${rLabel(m.role)} · ${m.pointName} · ${m.tourists} ${t.tourists} · ${t.debt} ${vnd(m.dueVnd)}`}
                 percent={m.sharePct}
                 tone={idx === 0 ? "green" : idx < 3 ? "blue" : "amber"}
               />
             ))}
-            {data.managers.length === 0 ? <div className="rounded-[14px] bg-slate-50 p-4 text-[13px] text-slate-500">За период нет продаж менеджеров.</div> : null}
+            {data.managers.length === 0 ? <div className="rounded-[14px] bg-[var(--surface-soft)] p-4 text-[13px] text-[var(--muted)]">{t.noManagerSales}</div> : null}
           </div>
-          <DetailPanel title="Все менеджеры и долги" summary={`${data.managers.length} строк`}>
+          <DetailPanel title={t.allManagers} summary={`${data.managers.length} ${t.rows}`}>
             <DetailTable
-              headers={["Сотрудник", "Роль", "Точка", "Брони", "Туристы", "Выручка", "Оплачено", "Долг"]}
+              headers={[t.employee, t.role, t.point, t.bookings, t.tourists, t.revenue, t.paid, t.debt]}
               mobile={data.managers.map((m) => (
                 <MobileDetailCard
                   key={m.managerId}
                   title={m.name}
                   href={`/team/${m.managerId}`}
-                  meta={`${roleRu(m.role)} · ${m.pointName}`}
+                  meta={`${rLabel(m.role)} · ${m.pointName}`}
                   stats={[
-                    { label: "Брони", value: String(m.bookings) },
-                    { label: "Туристы", value: String(m.tourists) },
-                    { label: "Выручка", value: compactVnd(m.revenueVnd), tone: "green" },
-                    { label: "Долг", value: compactVnd(m.dueVnd), tone: m.dueVnd > 0 ? "amber" : "green" },
+                    { label: t.bookings, value: String(m.bookings) },
+                    { label: t.tourists, value: String(m.tourists) },
+                    { label: t.revenue, value: vnd(m.revenueVnd), tone: "green" },
+                    { label: t.debt, value: vnd(m.dueVnd), tone: m.dueVnd > 0 ? "amber" : "green" },
                   ]}
                 />
               ))}
@@ -463,63 +1004,63 @@ export default async function CompanyPage({
               {data.managers.map((m) => (
                 <tr key={m.managerId}>
                   <td className="px-3 py-2"><CellLink href={`/team/${m.managerId}`}>{m.name}</CellLink></td>
-                  <td className="px-3 py-2 text-slate-600">{roleRu(m.role)}</td>
-                  <td className="px-3 py-2 text-slate-600">{m.pointName}</td>
+                  <td className="px-3 py-2 text-[var(--muted)]">{rLabel(m.role)}</td>
+                  <td className="px-3 py-2 text-[var(--muted)]">{m.pointName}</td>
                   <td className="px-3 py-2 font-bold">{m.bookings}</td>
                   <td className="px-3 py-2 font-bold">{m.tourists}</td>
-                  <td className="px-3 py-2 font-bold">{compactVnd(m.revenueVnd)}</td>
-                  <td className="px-3 py-2 text-emerald-700 font-bold">{compactVnd(m.paidVnd)}</td>
-                  <td className="px-3 py-2 text-amber-700 font-bold">{compactVnd(m.dueVnd)}</td>
+                  <td className="px-3 py-2 font-bold">{vnd(m.revenueVnd)}</td>
+                  <td className="px-3 py-2 text-emerald-700 font-bold">{vnd(m.paidVnd)}</td>
+                  <td className="px-3 py-2 text-amber-700 font-bold">{vnd(m.dueVnd)}</td>
                 </tr>
               ))}
             </DetailTable>
           </DetailPanel>
         </Section>
 
-        <Section title="Точки продаж" eyebrow="Где продаем">
+        <Section title={t.pointsTitle} eyebrow={t.pointsEyebrow}>
           <div className="grid gap-3">
             {bestPoint ? (
-              <div className="grid gap-3 rounded-[16px] border border-slate-200 bg-slate-50 p-4 sm:grid-cols-[1fr_110px]">
+              <div className="grid gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--surface-soft)] p-4 sm:grid-cols-[1fr_110px]">
                 <div className="min-w-0">
-                  <div className="text-[11px] font-black uppercase text-sky-600">Топ точка</div>
-                  <div className="mt-1 truncate text-[21px] font-black text-slate-950">{bestPoint.name}</div>
-                  <div className="mt-1 text-[12px] text-slate-600">
-                    {bestPoint.staffCount} сотрудников · {bestPoint.bookings} броней · {bestPoint.tourists} чел.
+                  <div className="text-[11px] font-extrabold uppercase text-sky-600">{t.topPoint}</div>
+                  <div className="mt-1 truncate text-[21px] font-extrabold text-[var(--text)]">{bestPoint.name}</div>
+                  <div className="mt-1 text-[12px] text-[var(--muted)]">
+                    {bestPoint.staffCount} {t.staff} · {bestPoint.bookings} {t.bookings} · {bestPoint.tourists} {t.tourists}
                   </div>
                 </div>
-                <div className="rounded-[14px] bg-white p-3 text-center">
-                  <div className="text-[22px] font-black text-slate-950">{pct(bestPoint.sharePct)}</div>
-                  <div className="text-[10px] font-bold uppercase text-slate-400">доля</div>
+                <div className="rounded-[14px] bg-[var(--surface)] p-3 text-center">
+                  <div className="text-[18px] font-extrabold text-[var(--text)]">{pct(bestPoint.sharePct)}</div>
+                  <div className="text-[10px] font-bold uppercase text-[var(--muted2)]">{t.share}</div>
                 </div>
               </div>
             ) : null}
-            {data.salesPoints.slice(0, 8).map((p, idx) => (
+            {pointRows.slice(0, 7).map((p, idx) => (
               <BarRow
                 key={p.pointId}
-                label={`${idx + 1}. ${p.name}`}
-                value={compactVnd(p.revenueVnd)}
-                sub={`${p.staffCount} сотр. · ${p.bookings} броней · долг ${compactVnd(p.dueVnd)} · ${p.managerNames.slice(0, 3).join(", ") || "без назначений"}`}
+                label={`${idx + 2}. ${p.name}`}
+                value={vnd(p.revenueVnd)}
+                sub={`${p.staffCount} ${t.staff} · ${p.bookings} ${t.bookings} · ${t.debt} ${vnd(p.dueVnd)} · ${p.managerNames.slice(0, 3).join(", ") || t.noAssignments}`}
                 percent={p.sharePct}
                 tone={p.pointId === "online" ? "blue" : "green"}
               />
             ))}
-            {data.salesPoints.length === 0 ? <div className="rounded-[14px] bg-slate-50 p-4 text-[13px] text-slate-500">Нет продаж по точкам за период.</div> : null}
+            {data.salesPoints.length === 0 ? <div className="rounded-[14px] bg-[var(--surface-soft)] p-4 text-[13px] text-[var(--muted)]">{t.noSalesPoints}</div> : null}
           </div>
-          <DetailPanel title="Разбор по точкам и онлайну" summary={`${data.salesPoints.length} точек`}>
+          <DetailPanel title={t.pointDetails} summary={`${data.salesPoints.length} ${t.points}`}>
             <DetailTable
-              headers={["Точка", "Сотрудники", "Брони", "Туристы", "Выручка", "Оплачено", "Долг", "Менеджеры"]}
+              headers={[t.point, t.staff, t.bookings, t.tourists, t.revenue, t.paid, t.debt, t.managersTitle]}
               minWidth={820}
               mobile={data.salesPoints.map((p) => (
                 <MobileDetailCard
                   key={p.pointId}
                   title={p.name}
                   href={p.pointId === "online" ? undefined : `/sales-points/${p.pointId}`}
-                  meta={p.managerNames.join(", ") || "без назначений"}
+                  meta={p.managerNames.join(", ") || t.noAssignments}
                   stats={[
-                    { label: "Сотр.", value: String(p.staffCount) },
-                    { label: "Брони", value: String(p.bookings) },
-                    { label: "Выручка", value: compactVnd(p.revenueVnd), tone: "green" },
-                    { label: "Долг", value: compactVnd(p.dueVnd), tone: p.dueVnd > 0 ? "amber" : "green" },
+                    { label: t.staff, value: String(p.staffCount) },
+                    { label: t.bookings, value: String(p.bookings) },
+                    { label: t.revenue, value: vnd(p.revenueVnd), tone: "green" },
+                    { label: t.debt, value: vnd(p.dueVnd), tone: p.dueVnd > 0 ? "amber" : "green" },
                   ]}
                 />
               ))}
@@ -527,15 +1068,15 @@ export default async function CompanyPage({
               {data.salesPoints.map((p) => (
                 <tr key={p.pointId}>
                   <td className="px-3 py-2">
-                    {p.pointId === "online" ? <span className="font-black text-slate-950">{p.name}</span> : <CellLink href={`/sales-points/${p.pointId}`}>{p.name}</CellLink>}
+                    {p.pointId === "online" ? <span className="font-extrabold text-[var(--text)]">{p.name}</span> : <CellLink href={`/sales-points/${p.pointId}`}>{p.name}</CellLink>}
                   </td>
                   <td className="px-3 py-2 font-bold">{p.staffCount}</td>
                   <td className="px-3 py-2 font-bold">{p.bookings}</td>
                   <td className="px-3 py-2 font-bold">{p.tourists}</td>
-                  <td className="px-3 py-2 font-bold">{compactVnd(p.revenueVnd)}</td>
-                  <td className="px-3 py-2 text-emerald-700 font-bold">{compactVnd(p.paidVnd)}</td>
-                  <td className="px-3 py-2 text-amber-700 font-bold">{compactVnd(p.dueVnd)}</td>
-                  <td className="px-3 py-2 text-slate-600">{p.managerNames.join(", ") || "нет назначений"}</td>
+                  <td className="px-3 py-2 font-bold">{vnd(p.revenueVnd)}</td>
+                  <td className="px-3 py-2 text-emerald-700 font-bold">{vnd(p.paidVnd)}</td>
+                  <td className="px-3 py-2 text-amber-700 font-bold">{vnd(p.dueVnd)}</td>
+                  <td className="px-3 py-2 text-[var(--muted)]">{p.managerNames.join(", ") || t.noAssignments}</td>
                 </tr>
               ))}
             </DetailTable>
@@ -544,39 +1085,39 @@ export default async function CompanyPage({
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Section title="Туры" eyebrow="Что приносит деньги">
+        <Section title={t.toursTitle} eyebrow={t.toursEyebrow}>
           <div className="mb-3 grid gap-3 sm:grid-cols-3">
-            <Metric label="Туров" value={String(toursWithMotion.length)} sub={data.tours.length > toursWithMotion.length ? `С движением · всего ${data.tours.length}` : "С движением"} />
-            <Metric label="Топ тур" value={bestTour ? compactVnd(bestTour.revenueVnd) : "0 đ"} sub={bestTour?.name || "нет данных"} />
-            <Metric label="Заполняемость" value={bestTour ? pct(bestTour.loadPct) : "0%"} sub={bestTour ? `${bestTour.tourists}/${bestTour.capacity || "?"} мест` : "нет данных"} />
+            <Metric label={t.toursTitle} value={String(toursWithMotion.length)} sub={data.tours.length > toursWithMotion.length ? `${t.toursWithMotion} · ${data.tours.length}` : t.toursWithMotion} />
+            <Metric label={t.topTour} value={bestTour ? vnd(bestTour.revenueVnd) : "0 đ"} sub={bestTour?.name || t.noData} />
+            <Metric label={t.load} value={bestTour ? pct(bestTour.loadPct) : "0%"} sub={bestTour ? `${bestTour.tourists}/${bestTour.capacity || "?"} ${t.seats}` : t.noData} />
           </div>
           <div className="grid gap-3">
-            {toursWithMotion.slice(0, 12).map((t, idx) => (
+            {tourRows.slice(0, 11).map((t, idx) => (
               <BarRow
                 key={t.tourId}
-                label={`${idx + 1}. ${t.name}`}
-                value={compactVnd(t.profitVnd)}
-                sub={`${t.dateYmd} · ${t.bookings} броней · ${t.tourists} чел. · выручка ${compactVnd(t.revenueVnd)} · расходы ${compactVnd(t.expenseVnd)}`}
+                label={`${idx + 2}. ${t.name}`}
+                value={vnd(t.profitVnd)}
+                sub={`${t.dateYmd} · ${t.bookings} ${COMPANY_TEXT[locale].bookings} · ${t.tourists} ${COMPANY_TEXT[locale].tourists} · ${COMPANY_TEXT[locale].revenue} ${vnd(t.revenueVnd)} · ${COMPANY_TEXT[locale].expenses} ${vnd(t.expenseVnd)}`}
                 percent={t.loadPct || (f.revenueVnd > 0 ? (t.revenueVnd / f.revenueVnd) * 100 : 0)}
                 tone={t.profitVnd < 0 ? "red" : idx < 3 ? "green" : "blue"}
               />
             ))}
           </div>
-          <DetailPanel title="Туры с продажами или расходами" summary={`${toursWithMotion.length} строк`}>
+          <DetailPanel title={t.allToursWithMotion} summary={`${toursWithMotion.length} ${t.rows}`}>
             <DetailTable
-              headers={["Тур", "Дата", "Брони", "Туристы", "Загрузка", "Выручка", "Расходы", "Прибыль", "Долг"]}
+              headers={[t.tour, t.date, t.bookings, t.tourists, t.load, t.revenue, t.expenses, t.profit, t.debt]}
               minWidth={900}
               mobile={toursWithMotion.map((t) => (
                 <MobileDetailCard
                   key={t.tourId}
                   title={t.name}
                   href={`/tours/${t.tourId}`}
-                  meta={`${t.dateYmd} · ${t.bookings} броней · ${t.tourists} чел.`}
+                  meta={`${t.dateYmd} · ${t.bookings} ${COMPANY_TEXT[locale].bookings} · ${t.tourists} ${COMPANY_TEXT[locale].tourists}`}
                   stats={[
-                    { label: "Загрузка", value: t.capacity > 0 ? `${t.loadPct}%` : "-" },
-                    { label: "Выручка", value: compactVnd(t.revenueVnd), tone: "green" },
-                    { label: "Прибыль", value: compactVnd(t.profitVnd), tone: t.profitVnd < 0 ? "red" : "green" },
-                    { label: "Долг", value: compactVnd(t.dueVnd), tone: t.dueVnd > 0 ? "amber" : "green" },
+                    { label: COMPANY_TEXT[locale].load, value: t.capacity > 0 ? `${t.loadPct}%` : "-" },
+                    { label: COMPANY_TEXT[locale].revenue, value: vnd(t.revenueVnd), tone: "green" },
+                    { label: COMPANY_TEXT[locale].profit, value: vnd(t.profitVnd), tone: t.profitVnd < 0 ? "red" : "green" },
+                    { label: COMPANY_TEXT[locale].debt, value: vnd(t.dueVnd), tone: t.dueVnd > 0 ? "amber" : "green" },
                   ]}
                 />
               ))}
@@ -584,22 +1125,22 @@ export default async function CompanyPage({
               {toursWithMotion.map((t) => (
                 <tr key={t.tourId}>
                   <td className="px-3 py-2"><CellLink href={`/tours/${t.tourId}`}>{t.name}</CellLink></td>
-                  <td className="px-3 py-2 text-slate-600">{t.dateYmd}</td>
+                  <td className="px-3 py-2 text-[var(--muted)]">{t.dateYmd}</td>
                   <td className="px-3 py-2 font-bold">{t.bookings}</td>
                   <td className="px-3 py-2 font-bold">{t.tourists}</td>
                   <td className="px-3 py-2 font-bold">{t.capacity > 0 ? `${t.loadPct}%` : "-"}</td>
-                  <td className="px-3 py-2 font-bold">{compactVnd(t.revenueVnd)}</td>
-                  <td className="px-3 py-2 text-rose-700 font-bold">{compactVnd(t.expenseVnd)}</td>
-                  <td className={`px-3 py-2 font-bold ${moneyTone(t.profitVnd)}`}>{compactVnd(t.profitVnd)}</td>
-                  <td className="px-3 py-2 text-amber-700 font-bold">{compactVnd(t.dueVnd)}</td>
+                  <td className="px-3 py-2 font-bold">{vnd(t.revenueVnd)}</td>
+                  <td className="px-3 py-2 text-rose-700 font-bold">{vnd(t.expenseVnd)}</td>
+                  <td className={`px-3 py-2 font-bold ${moneyTone(t.profitVnd)}`}>{vnd(t.profitVnd)}</td>
+                  <td className="px-3 py-2 text-amber-700 font-bold">{vnd(t.dueVnd)}</td>
                 </tr>
               ))}
             </DetailTable>
           </DetailPanel>
-          <DetailPanel title="Что срочно проверить по турам" summary={`${data.investigations.weakTours.length} сигналов`}>
+          <DetailPanel title={t.urgentTours} summary={`${data.investigations.weakTours.length} ${t.dataIssueSignals}`}>
             {data.investigations.weakTours.length > 0 ? (
               <DetailTable
-                headers={["Тур", "Дата", "Причина", "Выручка", "Прибыль", "Загрузка", "Долг"]}
+                headers={[t.tour, t.date, t.reason, t.revenue, t.profit, t.load, t.debt]}
                 minWidth={820}
                 mobile={data.investigations.weakTours.map((t) => (
                   <MobileDetailCard
@@ -609,10 +1150,10 @@ export default async function CompanyPage({
                     meta={t.dateYmd}
                     warning={t.reason}
                     stats={[
-                      { label: "Выручка", value: compactVnd(t.revenueVnd), tone: "green" },
-                      { label: "Прибыль", value: compactVnd(t.profitVnd), tone: t.profitVnd < 0 ? "red" : "green" },
-                      { label: "Загрузка", value: `${t.loadPct}%`, tone: t.loadPct < 35 ? "amber" : "blue" },
-                      { label: "Долг", value: compactVnd(t.dueVnd), tone: t.dueVnd > 0 ? "amber" : "green" },
+                      { label: COMPANY_TEXT[locale].revenue, value: vnd(t.revenueVnd), tone: "green" },
+                      { label: COMPANY_TEXT[locale].profit, value: vnd(t.profitVnd), tone: t.profitVnd < 0 ? "red" : "green" },
+                      { label: COMPANY_TEXT[locale].load, value: `${t.loadPct}%`, tone: t.loadPct < 35 ? "amber" : "blue" },
+                      { label: COMPANY_TEXT[locale].debt, value: vnd(t.dueVnd), tone: t.dueVnd > 0 ? "amber" : "green" },
                     ]}
                   />
                 ))}
@@ -620,67 +1161,67 @@ export default async function CompanyPage({
                 {data.investigations.weakTours.map((t) => (
                   <tr key={`${t.tourId}-${t.reason}`}>
                     <td className="px-3 py-2"><CellLink href={`/tours/${t.tourId}`}>{t.name}</CellLink></td>
-                    <td className="px-3 py-2 text-slate-600">{t.dateYmd}</td>
+                    <td className="px-3 py-2 text-[var(--muted)]">{t.dateYmd}</td>
                     <td className="px-3 py-2 text-amber-700 font-bold">{t.reason}</td>
-                    <td className="px-3 py-2 font-bold">{compactVnd(t.revenueVnd)}</td>
-                    <td className={`px-3 py-2 font-bold ${moneyTone(t.profitVnd)}`}>{compactVnd(t.profitVnd)}</td>
+                    <td className="px-3 py-2 font-bold">{vnd(t.revenueVnd)}</td>
+                    <td className={`px-3 py-2 font-bold ${moneyTone(t.profitVnd)}`}>{vnd(t.profitVnd)}</td>
                     <td className="px-3 py-2 font-bold">{t.loadPct}%</td>
-                    <td className="px-3 py-2 text-amber-700 font-bold">{compactVnd(t.dueVnd)}</td>
+                    <td className="px-3 py-2 text-amber-700 font-bold">{vnd(t.dueVnd)}</td>
                   </tr>
                 ))}
               </DetailTable>
             ) : (
-              <div className="rounded-[12px] bg-emerald-50 p-3 text-[13px] font-bold text-emerald-700">Критичных сигналов по турам нет.</div>
+              <div className="rounded-[12px] bg-emerald-50 p-3 text-[13px] font-bold text-emerald-700">{t.noCriticalTours}</div>
             )}
           </DetailPanel>
         </Section>
 
-        <Section title="Тур-гиды" eyebrow="Кто ведет выезды">
-          <div className="mb-4 flex h-[180px] items-end gap-2 rounded-[16px] border border-slate-200 bg-slate-50 p-3">
+        <Section title={t.guidesTitle} eyebrow={t.guidesEyebrow}>
+          <div className="mb-4 flex h-[180px] items-end gap-2 rounded-[16px] border border-[var(--border)] bg-[var(--surface-soft)] p-3">
             {data.guides.slice(0, 8).map((g) => (
               <div key={g.guideId} className="flex min-w-0 flex-1 flex-col items-center gap-2">
                 <div
                   className="w-full rounded-t-[10px] bg-[#8fd400]"
                   style={{ height: `${Math.max(18, clampUi(g.sharePct) * 1.35)}px` }}
-                  title={`${g.name}: ${compactVnd(g.revenueVnd)}`}
+                  title={`${g.name}: ${vnd(g.revenueVnd)}`}
                 />
-                <div className="w-full truncate text-center text-[10px] font-bold text-slate-500">{g.name}</div>
+                <div className="w-full truncate text-center text-[10px] font-bold text-[var(--muted)]">{g.name}</div>
               </div>
             ))}
-            {data.guides.length === 0 ? <div className="m-auto text-[13px] text-slate-500">Нет назначенных гидов за период.</div> : null}
+            {data.guides.length === 0 ? <div className="m-auto text-[13px] text-[var(--muted)]">{t.noGuides}</div> : null}
           </div>
           <div className="grid gap-3">
             {bestGuide ? (
               <Metric
-                label="Топ-гид"
+                label={t.topGuide}
                 value={bestGuide.name}
-                sub={`${bestGuide.trips} выездов · ${bestGuide.tourists} чел. · ${compactVnd(bestGuide.revenueVnd)}`}
+                sub={`${bestGuide.trips} ${t.trips} · ${bestGuide.tourists} ${t.tourists} · ${vnd(bestGuide.revenueVnd)}`}
               />
             ) : null}
-            {data.guides.slice(0, 10).map((g, idx) => (
+            {guideRows.slice(0, 9).map((g, idx) => (
               <BarRow
                 key={g.guideId}
-                label={`${idx + 1}. ${g.name}`}
-                value={`${g.trips} тур.`}
-                sub={`${g.tourists} чел. · среднее ${g.avgTouristsPerTrip} · оборот туров ${compactVnd(g.revenueVnd)}`}
+                label={`${idx + 2}. ${g.name}`}
+                value={`${g.trips} ${t.tour}`}
+                sub={`${g.tourists} ${t.tourists} · ${t.average} ${g.avgTouristsPerTrip} · ${t.turnover} ${vnd(g.revenueVnd)}`}
                 percent={g.sharePct}
                 tone={idx === 0 ? "green" : "blue"}
               />
             ))}
           </div>
-          <DetailPanel title="Все гиды по выездам" summary={`${data.guides.length} гидов`}>
+          <DetailPanel title={t.allGuides} summary={`${data.guides.length} ${t.guides}`}>
             <DetailTable
-              headers={["Гид", "Выезды", "Туристы", "Среднее", "Оборот туров", "Доля"]}
+              headers={[t.guide, t.trips, t.tourists, t.average, t.turnover, t.share]}
               mobile={data.guides.map((g) => (
                 <MobileDetailCard
                   key={g.guideId}
                   title={g.name}
                   href={`/team/${g.guideId}`}
                   stats={[
-                    { label: "Выезды", value: String(g.trips) },
-                    { label: "Туристы", value: String(g.tourists) },
-                    { label: "Среднее", value: String(g.avgTouristsPerTrip) },
-                    { label: "Оборот", value: compactVnd(g.revenueVnd), tone: "green" },
+                    { label: t.trips, value: String(g.trips) },
+                    { label: t.tourists, value: String(g.tourists) },
+                    { label: t.average, value: String(g.avgTouristsPerTrip) },
+                    { label: t.turnover, value: vnd(g.revenueVnd), tone: "green" },
                   ]}
                 />
               ))}
@@ -691,7 +1232,7 @@ export default async function CompanyPage({
                   <td className="px-3 py-2 font-bold">{g.trips}</td>
                   <td className="px-3 py-2 font-bold">{g.tourists}</td>
                   <td className="px-3 py-2 font-bold">{g.avgTouristsPerTrip}</td>
-                  <td className="px-3 py-2 font-bold">{compactVnd(g.revenueVnd)}</td>
+                  <td className="px-3 py-2 font-bold">{vnd(g.revenueVnd)}</td>
                   <td className="px-3 py-2 font-bold">{pct(g.sharePct)}</td>
                 </tr>
               ))}
@@ -701,35 +1242,35 @@ export default async function CompanyPage({
       </div>
 
       <div className="mt-4">
-        <Section title="Туристы и база" eyebrow="Качество данных">
+        <Section title={t.touristsTitle} eyebrow={t.touristsEyebrow}>
           <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
             <div className="grid gap-3 sm:grid-cols-2">
-              <Metric label="Взрослые" value={String(data.tourists.adults)} sub="Основной поток" />
-              <Metric label="Дети" value={String(data.tourists.children)} sub={`Младенцы ${data.tourists.infants}`} />
-              <Metric label="Онлайн" value={String(data.tourists.onlineBookings)} sub="Брони с онлайн-кодом" />
-              <Metric label="Качество" value={pct(data.tourists.dataQualityPct)} sub={`Нет телефона ${data.tourists.missingPhone} · нет отеля ${data.tourists.missingHotel}`} />
-              <Metric label="Соло/пары" value={`${data.tourists.soloBookings}/${data.tourists.pairBookings}`} sub="Тип брони без детей" />
-              <Metric label="Семьи/группы" value={`${data.tourists.familyBookings}/${data.tourists.groupBookings}`} sub={`Долг в ${data.tourists.debtBookings} бронях`} />
+              <Metric label={t.adults} value={String(data.tourists.adults)} sub={t.mainFlow} />
+              <Metric label={t.children} value={String(data.tourists.children)} sub={`${t.infants} ${data.tourists.infants}`} />
+              <Metric label={t.online} value={String(data.tourists.onlineBookings)} sub={`${t.bookings} online`} />
+              <Metric label={t.quality} value={pct(data.tourists.dataQualityPct)} sub={`${t.missingPhone} ${data.tourists.missingPhone} · ${t.missingHotel} ${data.tourists.missingHotel}`} />
+              <Metric label={t.soloPairs} value={`${data.tourists.soloBookings}/${data.tourists.pairBookings}`} sub={t.noChildren} />
+              <Metric label={t.familiesGroups} value={`${data.tourists.familyBookings}/${data.tourists.groupBookings}`} sub={`${t.debtIn} ${data.tourists.debtBookings} ${t.bookings}`} />
             </div>
             <div className="grid gap-3">
-              <div className="text-[13px] font-black text-slate-950">Топ отелей по обороту</div>
+              <div className="text-[13px] font-extrabold text-[var(--text)]">{t.topHotels}</div>
               {data.tourists.topHotels.map((h, idx) => (
                 <BarRow
                   key={h.name}
                   label={`${idx + 1}. ${h.name}`}
-                  value={compactVnd(h.revenueVnd)}
-                  sub={`${h.bookings} броней · ${h.tourists} чел.`}
+                  value={vnd(h.revenueVnd)}
+                  sub={`${h.bookings} ${t.bookings} · ${h.tourists} ${t.tourists}`}
                   percent={f.revenueVnd > 0 ? (h.revenueVnd / f.revenueVnd) * 100 : 0}
                   tone="blue"
                 />
               ))}
-              {data.tourists.topHotels.length === 0 ? <div className="rounded-[14px] bg-slate-50 p-4 text-[13px] text-slate-500">Отели не заполнены в бронях периода.</div> : null}
+              {data.tourists.topHotels.length === 0 ? <div className="rounded-[14px] bg-[var(--surface-soft)] p-4 text-[13px] text-[var(--muted)]">{t.noHotels}</div> : null}
             </div>
           </div>
-          <DetailPanel title="Долги по броням" summary={`${data.investigations.debtBookings.length} строк`} open={data.investigations.debtBookings.length > 0}>
+          <DetailPanel title={t.debtsByBookings} summary={`${data.investigations.debtBookings.length} ${t.rows}`} open={data.investigations.debtBookings.length > 0}>
             {data.investigations.debtBookings.length > 0 ? (
               <DetailTable
-                headers={["Бронь", "Турист", "Тур", "Дата", "Менеджер", "Точка", "Итого", "Оплачено", "Долг"]}
+                headers={[t.bookings, t.tourists, t.tour, t.date, t.manager, t.point, t.total, t.paid, t.debt]}
                 minWidth={980}
                 mobile={data.investigations.debtBookings.map((b) => (
                   <MobileDetailCard
@@ -738,10 +1279,10 @@ export default async function CompanyPage({
                     href={`/tourists/${b.bookingId}`}
                     meta={`${b.tourName} · ${b.dateYmd} · ${b.managerName}`}
                     stats={[
-                      { label: "Итого", value: compactVnd(b.totalVnd) },
-                      { label: "Оплачено", value: compactVnd(b.paidVnd), tone: "green" },
-                      { label: "Долг", value: compactVnd(b.dueVnd), tone: "amber" },
-                      { label: "Туристы", value: String(b.tourists) },
+                      { label: t.total, value: vnd(b.totalVnd) },
+                      { label: t.paid, value: vnd(b.paidVnd), tone: "green" },
+                      { label: t.debt, value: vnd(b.dueVnd), tone: "amber" },
+                      { label: t.tourists, value: String(b.tourists) },
                     ]}
                   />
                 ))}
@@ -751,24 +1292,24 @@ export default async function CompanyPage({
                     <td className="px-3 py-2"><CellLink href={`/tourists/${b.bookingId}`}>{b.code}</CellLink></td>
                     <td className="px-3 py-2 font-bold">{b.customerName}</td>
                     <td className="px-3 py-2"><CellLink href={`/tours/${b.tourId}`}>{b.tourName}</CellLink></td>
-                    <td className="px-3 py-2 text-slate-600">{b.dateYmd}</td>
-                    <td className="px-3 py-2 text-slate-600">{b.managerName}</td>
-                    <td className="px-3 py-2 text-slate-600">{b.pointName}</td>
-                    <td className="px-3 py-2 font-bold">{compactVnd(b.totalVnd)}</td>
-                    <td className="px-3 py-2 text-emerald-700 font-bold">{compactVnd(b.paidVnd)}</td>
-                    <td className="px-3 py-2 text-amber-700 font-black">{compactVnd(b.dueVnd)}</td>
+                    <td className="px-3 py-2 text-[var(--muted)]">{b.dateYmd}</td>
+                    <td className="px-3 py-2 text-[var(--muted)]">{b.managerName}</td>
+                    <td className="px-3 py-2 text-[var(--muted)]">{b.pointName}</td>
+                    <td className="px-3 py-2 font-bold">{vnd(b.totalVnd)}</td>
+                    <td className="px-3 py-2 text-emerald-700 font-bold">{vnd(b.paidVnd)}</td>
+                    <td className="px-3 py-2 text-amber-700 font-extrabold">{vnd(b.dueVnd)}</td>
                   </tr>
                 ))}
               </DetailTable>
             ) : (
-              <div className="rounded-[12px] bg-emerald-50 p-3 text-[13px] font-bold text-emerald-700">Долгов по броням нет.</div>
+              <div className="rounded-[12px] bg-emerald-50 p-3 text-[13px] font-bold text-emerald-700">{t.noDebts}</div>
             )}
           </DetailPanel>
-          <DetailPanel title="Оценочные цены и качество базы" summary={`${data.investigations.dataIssues.length} сигналов`}>
+          <DetailPanel title={t.pricesAndQuality} summary={`${data.investigations.dataIssues.length} ${t.dataIssueSignals}`}>
             <div className="grid gap-3">
               {data.investigations.priceFallbackBookings.length > 0 ? (
                 <DetailTable
-                  headers={["Бронь", "Турист", "Тур", "Дата", "Менеджер", "Туристы", "Оценка"]}
+                  headers={[t.bookings, t.tourists, t.tour, t.date, t.manager, t.tourists, t.estimate]}
                   minWidth={820}
                   mobile={data.investigations.priceFallbackBookings.map((b) => (
                     <MobileDetailCard
@@ -776,10 +1317,10 @@ export default async function CompanyPage({
                       title={`${b.code} · ${b.customerName}`}
                       href={`/tourists/${b.bookingId}`}
                       meta={`${b.tourName} · ${b.dateYmd} · ${b.managerName}`}
-                      warning="Цена была оценочной"
+                      warning={t.fallbackWarning}
                       stats={[
-                        { label: "Оценка", value: compactVnd(b.estimatedVnd), tone: "amber" },
-                        { label: "Туристы", value: String(b.tourists) },
+                        { label: t.estimate, value: vnd(b.estimatedVnd), tone: "amber" },
+                        { label: t.tourists, value: String(b.tourists) },
                       ]}
                     />
                   ))}
@@ -789,19 +1330,19 @@ export default async function CompanyPage({
                       <td className="px-3 py-2"><CellLink href={`/tourists/${b.bookingId}`}>{b.code}</CellLink></td>
                       <td className="px-3 py-2 font-bold">{b.customerName}</td>
                       <td className="px-3 py-2"><CellLink href={`/tours/${b.tourId}`}>{b.tourName}</CellLink></td>
-                      <td className="px-3 py-2 text-slate-600">{b.dateYmd}</td>
-                      <td className="px-3 py-2 text-slate-600">{b.managerName}</td>
+                      <td className="px-3 py-2 text-[var(--muted)]">{b.dateYmd}</td>
+                      <td className="px-3 py-2 text-[var(--muted)]">{b.managerName}</td>
                       <td className="px-3 py-2 font-bold">{b.tourists}</td>
-                      <td className="px-3 py-2 text-amber-700 font-bold">{compactVnd(b.estimatedVnd)}</td>
+                      <td className="px-3 py-2 text-amber-700 font-bold">{vnd(b.estimatedVnd)}</td>
                     </tr>
                   ))}
                 </DetailTable>
               ) : (
-                <div className="rounded-[12px] bg-emerald-50 p-3 text-[13px] font-bold text-emerald-700">Все брони имеют точные строки цены.</div>
+                <div className="rounded-[12px] bg-emerald-50 p-3 text-[13px] font-bold text-emerald-700">{t.allExactPrices}</div>
               )}
               {data.investigations.dataIssues.length > 0 ? (
                 <DetailTable
-                  headers={["Бронь", "Турист", "Проблема", "Тур", "Дата", "Менеджер"]}
+                  headers={[t.bookings, t.tourists, t.issue, t.tour, t.date, t.manager]}
                   minWidth={820}
                   mobile={data.investigations.dataIssues.map((b) => (
                     <MobileDetailCard
@@ -811,7 +1352,7 @@ export default async function CompanyPage({
                       meta={`${b.tourName} · ${b.dateYmd} · ${b.managerName}`}
                       warning={b.issue}
                       stats={[
-                        { label: "Проверка", value: "открыть" },
+                        { label: t.check, value: t.open },
                       ]}
                     />
                   ))}
@@ -822,8 +1363,8 @@ export default async function CompanyPage({
                       <td className="px-3 py-2 font-bold">{b.customerName}</td>
                       <td className="px-3 py-2 text-amber-700 font-bold">{b.issue}</td>
                       <td className="px-3 py-2"><CellLink href={`/tours/${b.tourId}`}>{b.tourName}</CellLink></td>
-                      <td className="px-3 py-2 text-slate-600">{b.dateYmd}</td>
-                      <td className="px-3 py-2 text-slate-600">{b.managerName}</td>
+                      <td className="px-3 py-2 text-[var(--muted)]">{b.dateYmd}</td>
+                      <td className="px-3 py-2 text-[var(--muted)]">{b.managerName}</td>
                     </tr>
                   ))}
                 </DetailTable>

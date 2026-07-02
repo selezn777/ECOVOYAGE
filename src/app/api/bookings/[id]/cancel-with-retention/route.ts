@@ -92,7 +92,7 @@ export async function POST(
       `Удержано: ${retentionPct}% от ${totalVnd.toLocaleString("ru-RU")} ₫`,
       `Причина: ${reason.trim()}`,
       shortfallVnd > 0
-        ? `⚠️ Депозит ${depositVnd.toLocaleString("ru-RU")} ₫ не покрывает удержание — долг менеджера: ${shortfallVnd.toLocaleString("ru-RU")} ₫`
+        ? `Депозит ${depositVnd.toLocaleString("ru-RU")} ₫ не покрывает удержание — нехватка у менеджера: ${shortfallVnd.toLocaleString("ru-RU")} ₫`
         : null,
     ].filter(Boolean).join("\n");
 

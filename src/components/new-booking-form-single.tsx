@@ -362,7 +362,7 @@ export function NewBookingFormSingle({
               </div>
               {debtVnd > 0 ? (
                 <div className="flex justify-between text-[13px]">
-                  <span className="text-[var(--muted)]">Долг</span>
+                  <span className="text-[var(--muted)]">К доплате</span>
                   <span className="font-semibold tabular-nums text-[var(--warn)]">{formatVnd(debtVnd)}</span>
                 </div>
               ) : (

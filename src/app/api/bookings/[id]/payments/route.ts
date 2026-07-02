@@ -58,14 +58,14 @@ export async function POST(
     }
     const dueRow = await getBookingDueVndBreakdown(id);
     if (!dueRow) {
-      return NextResponse.json({ error: "Не удалось проверить долг" }, { status: 500 });
+      return NextResponse.json({ error: "Не удалось проверить доплату" }, { status: 500 });
     }
     if (dueRow.dueVnd <= 0) {
-      return NextResponse.json({ error: "Долга по этой брони нет" }, { status: 400 });
+      return NextResponse.json({ error: "Доплаты по этой брони нет" }, { status: 400 });
     }
     if (amountVnd > dueRow.dueVnd) {
       return NextResponse.json(
-        { error: `Сумма не больше долга: ${dueRow.dueVnd.toLocaleString("ru-RU")} ₫` },
+        { error: `Сумма не больше доплаты: ${dueRow.dueVnd.toLocaleString("ru-RU")} ₫` },
         { status: 400 },
       );
     }

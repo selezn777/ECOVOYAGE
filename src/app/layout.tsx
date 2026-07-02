@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Noto_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale } from "next-intl/server";
 import { AmxThemeInit } from "@/components/amx-theme-init";
@@ -10,9 +10,10 @@ import { EditingRefreshGuard } from "@/components/editing-refresh-guard";
 import { TelegramWebAppInit } from "@/components/telegram-webapp-init";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const notoSans = Noto_Sans({
+  variable: "--font-noto-sans",
+  subsets: ["latin", "cyrillic", "vietnamese"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -58,7 +59,7 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} translate="no" className={`notranslate ${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
+    <html lang={locale} translate="no" className={`notranslate ${notoSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
       <head>
         {/* Отключаем предложение Google Translate / Safari "перевести страницу" —
             мешает на iOS, когда системный язык отличается от языка интерфейса */}

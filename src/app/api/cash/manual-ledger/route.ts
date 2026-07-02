@@ -164,12 +164,12 @@ export async function POST(request: Request) {
     }
     const dueRow = await getBookingDueVndBreakdown(bookingIdTrim);
     if (!dueRow) {
-      return NextResponse.json({ error: "Не удалось проверить долг по брони" }, { status: 500 });
+      return NextResponse.json({ error: "Не удалось проверить доплату по брони" }, { status: 500 });
     }
     if (amountVnd > dueRow.dueVnd) {
       return NextResponse.json(
         {
-          error: `Сумма не больше долга по брони: ${dueRow.dueVnd.toLocaleString("ru-RU")} ₫`,
+          error: `Сумма не больше доплаты по брони: ${dueRow.dueVnd.toLocaleString("ru-RU")} ₫`,
         },
         { status: 400 },
       );

@@ -1490,7 +1490,7 @@ export async function getDirectorCompanyDashboard(month: string): Promise<Direct
     if (!String(b.phone_e164 || "").trim()) issueParts.push("нет телефона");
     if (!hotelName) issueParts.push("нет отеля");
     if (exact <= 0) issueParts.push("цена оценочная");
-    if (due > 0) issueParts.push("есть долг");
+    if (due > 0) issueParts.push("есть доплата");
     if (issueParts.length > 0) {
       dataIssueRows.push({
         bookingId: String(b.id),
@@ -1547,7 +1547,7 @@ export async function getDirectorCompanyDashboard(month: string): Promise<Direct
       const reasons: string[] = [];
       if (t.profitVnd < 0) reasons.push("минусовая прибыль");
       if (t.capacity > 0 && t.loadPct < 35) reasons.push("низкая заполняемость");
-      if (t.dueVnd > 0) reasons.push("долг туристов");
+      if (t.dueVnd > 0) reasons.push("к доплате туристов");
       if (t.revenueVnd === 0 && t.expenseVnd > 0) reasons.push("расходы без выручки");
       return reasons.length > 0
         ? {
@@ -1619,7 +1619,7 @@ export async function getDirectorCompanyDashboard(month: string): Promise<Direct
       tone: result.finance.profitVnd < 0 ? "red" : result.finance.marginPct < 20 ? "amber" : "green",
     },
     {
-      title: "Долг туристов",
+      title: "К доплате туристов",
       value: `${partialBookings + unpaidBookings} броней`,
       tone: partialBookings + unpaidBookings > 0 ? "amber" : "green",
     },

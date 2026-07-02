@@ -163,7 +163,7 @@ export async function buildWhiteReportWorkbook(args: {
       sumWs.addRow({ k: `Ручные проводки, ${row.currencyCode}: в кассу (экв. ₫)`, v: row.sumInVnd });
       sumWs.addRow({ k: `Ручные проводки, ${row.currencyCode}: из кассы (экв. ₫)`, v: -row.sumOutVnd });
     }
-    sumWs.addRow({ k: "Долг по броням (снимок)", v: args.recon.snapshotTotalBookingDueVnd });
+    sumWs.addRow({ k: "К доплате по броням (снимок)", v: args.recon.snapshotTotalBookingDueVnd });
     sumWs.addRow({ k: "Доплаты у гида без кассы (снимок)", v: args.recon.snapshotPendingGuideTopupVnd });
     sumWs.addRow({ k: "Выдача подотчёта", v: -args.recon.advanceIssueVnd });
     sumWs.addRow({ k: "Возврат подотчёта", v: args.recon.advanceReturnVnd });

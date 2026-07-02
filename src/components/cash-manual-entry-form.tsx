@@ -270,14 +270,14 @@ export function CashManualEntryForm({
           return;
         }
         if (line.amountVnd > opt.dueVnd) {
-          alert(`${opt.customerName}: сумма не больше долга по карточке (${opt.dueVnd.toLocaleString("ru-RU")} ₫).`);
+          alert(`${opt.customerName}: сумма не больше доплаты по карточке (${opt.dueVnd.toLocaleString("ru-RU")} ₫).`);
           return;
         }
       }
     } else if (bookingId.trim() && direction === "in") {
       const opt = officeBookingOptions.find((b) => b.id === bookingId.trim());
       if (opt && amountVnd > opt.dueVnd) {
-        alert(`Сумма не больше долга по выбранной брони: ${opt.dueVnd.toLocaleString("ru-RU")} ₫`);
+        alert(`Сумма не больше доплаты по выбранной брони: ${opt.dueVnd.toLocaleString("ru-RU")} ₫`);
         return;
       }
     }
@@ -625,7 +625,7 @@ export function CashManualEntryForm({
           </div>
 
           <div className="space-y-3 border-t border-[var(--border)]/70 pt-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">Тур и зачёт долга по брони</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">Тур и зачёт доплаты по брони</p>
 
             <div>
               <span className={labelClass}>Тур</span>
@@ -712,7 +712,7 @@ export function CashManualEntryForm({
             {direction === "in" && tourId.trim() ? (
               <div className="space-y-2">
                 <label className="block">
-                  <span className={labelClass}>Бронь (списать долг туриста)</span>
+                  <span className={labelClass}>Бронь (закрыть доплату туриста)</span>
                   <select
                     value={bookingId}
                     onChange={(e) => {
@@ -727,21 +727,21 @@ export function CashManualEntryForm({
                       {officeBookingsLoading
                         ? "Загрузка…"
                         : officeBookingOptions.length === 0
-                          ? "Нет долга по броням"
-                          : "Только тур в журнале, без списания долга"}
+                          ? "Нет доплат по броням"
+                          : "Только тур в журнале, без зачёта доплаты"}
                     </option>
                     {officeBookingOptions.map((b) => (
                       <option key={b.id} value={b.id}>
                         {b.customerName}
                         {b.hotel ? ` · ${b.hotel}` : ""}
-                        {b.onlineCode ? ` · ${b.onlineCode}` : ""} — долг {b.dueVnd.toLocaleString("ru-RU")} ₫
+                        {b.onlineCode ? ` · ${b.onlineCode}` : ""} — к доплате {b.dueVnd.toLocaleString("ru-RU")} ₫
                       </option>
                     ))}
                   </select>
                 </label>
                 {bookingId.trim() && Object.keys(officeBookingPayments).length === 0 ? (
                   <p className="text-xs text-[var(--muted)]">
-                    Укажите сумму в поле «Сумма в кассе, ₫» выше — при записи долг по этой брони уменьшится (как оплата в кассу офиса).
+                    Укажите сумму в поле «Сумма в кассе, ₫» выше — при записи доплата по этой брони уменьшится (как оплата в кассу офиса).
                   </p>
                 ) : null}
 
@@ -791,7 +791,7 @@ export function CashManualEntryForm({
                           return (
                             <li key={id} className="rounded-lg bg-[var(--surface-soft)]/70 px-2 py-2">
                               <div className="text-xs font-medium text-[var(--text)]">
-                                {row.customerName} · долг {row.dueVnd.toLocaleString("ru-RU")} ₫
+                                {row.customerName} · к доплате {row.dueVnd.toLocaleString("ru-RU")} ₫
                               </div>
                               <div className="mt-1 flex flex-wrap items-end gap-2">
                                 <label className="min-w-[8rem] flex-1">
@@ -821,7 +821,7 @@ export function CashManualEntryForm({
                                     }))
                                   }
                                 >
-                                  Весь долг
+                                  Вся доплата
                                 </button>
                                 <button
                                   type="button"

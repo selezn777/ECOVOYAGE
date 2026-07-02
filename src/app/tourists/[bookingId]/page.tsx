@@ -20,7 +20,7 @@ function payPill(s: string) {
 function payLabel(s: string) {
   if (s === "paid") return "Оплачено";
   if (s === "partial") return "Частично";
-  return "Долг";
+  return "К доплате";
 }
 
 export default async function TouristProfilePage({
@@ -128,7 +128,7 @@ export default async function TouristProfilePage({
             </span>
             {totalDue > 0 ? (
               <span className="text-amber-700 dark:text-amber-300 font-medium tabular-nums">
-                Долг: {formatVnd(totalDue)}
+                К доплате: {formatVnd(totalDue)}
               </span>
             ) : null}
           </div>

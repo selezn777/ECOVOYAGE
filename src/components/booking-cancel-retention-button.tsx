@@ -93,7 +93,7 @@ export function BookingCancelRetentionButton({ bookingId, customerName, totalVnd
                   </div>
                   {shortfallVnd > 0 ? (
                     <div className="flex justify-between">
-                      <span className="text-amber-700 dark:text-amber-300">Долг менеджера (нехватка)</span>
+                      <span className="text-amber-700 dark:text-amber-300">Нехватка у менеджера</span>
                       <span className="font-bold tabular-nums text-amber-700 dark:text-amber-300">{formatVnd(shortfallVnd)}</span>
                     </div>
                   ) : null}
@@ -157,7 +157,7 @@ export function BookingCancelRetentionButton({ bookingId, customerName, totalVnd
 
               {shortfallVnd > 0 ? (
                 <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-                  ⚠️ Депозит не покрывает удержание. Разница {formatVnd(shortfallVnd)} будет зафиксирована как долг менеджера и отражена в кассе.
+                  Депозит не покрывает удержание. Разница {formatVnd(shortfallVnd)} будет зафиксирована как нехватка у менеджера и отражена в кассе.
                 </p>
               ) : null}
 

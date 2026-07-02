@@ -165,7 +165,7 @@ export function ManagerSalesEarningsToggle({
             Касса офиса (ваши брони)
           </div>
           <div className="flex min-w-0 items-baseline justify-between gap-2 text-sm">
-            <span className="text-[var(--muted2)]">Долг офису (всего)</span>
+            <span className="text-[var(--muted2)]">К сдаче в офис</span>
             <span className="font-semibold tabular-nums text-rose-950 dark:text-rose-50">
               {stats.managerCashOutstandingAllTimeVnd > 0 ? formatVnd(stats.managerCashOutstandingAllTimeVnd) : "0 ₫"}
             </span>

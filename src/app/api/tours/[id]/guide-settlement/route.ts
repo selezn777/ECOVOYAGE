@@ -150,7 +150,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   if (wantClose && officeData.amountVnd !== oweRounded) {
     return NextResponse.json(
       {
-        error: `Чтобы закрыть расчёт по туру, сумма должна равняться долгу (${oweRounded.toLocaleString("ru-RU")} ₫). Либо снимите закрытие и запишите частичный расход.`,
+        error: `Чтобы закрыть расчёт по туру, сумма должна равняться остатку к выплате (${oweRounded.toLocaleString("ru-RU")} ₫). Либо снимите закрытие и запишите частичный расход.`,
       },
       { status: 400 },
     );
