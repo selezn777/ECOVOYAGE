@@ -134,10 +134,10 @@ export function EmployeeFinanceCard({
   const managerPerf = employee.managerModePerformance ?? null;
   const m = employee.managerCashOnHand;
 
-  const handsLabel = isMgr ? "Деньги на руках (оценка)" : "Подотчёт к сдаче (на руках)";
+  const handsLabel = isMgr ? "Деньги на руках (оценка)" : "Деньги сотрудника на руках";
   const handsVnd = isMgr && m ? m.outstandingAllTimeVnd : employee.shouldReturnVnd;
 
-  const handedLabel = isMgr ? "Деньги сдал в кассу (всего)" : "Возврат подотчёта в кассу (всего)";
+  const handedLabel = isMgr ? "Деньги сдал в кассу (всего)" : "Возвращено в кассу";
   const handedVnd = isMgr && m ? m.allTimeHandedVnd : employee.spentVnd;
 
   const earnLabel = isMgr ? "Процент с прайса (брони)" : "Начислено всего";
@@ -631,37 +631,39 @@ export function EmployeeFinanceCard({
                 </div>
                 <p className="mt-2 text-sm leading-snug text-[var(--text)]">{managerNetSettlementText}</p>
               </div>
-              <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
-                Ниже - подотчёт и начисления гиду в CRM (отдельно от денег по броням менеджера).
-              </p>
             </>
           ) : null}
 
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-3">
-              <div className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted2)]">
-                {employee.managerFullSettlement ? "Подотчёт - должен сотрудник" : "Сотрудник должен компании (подотчёт)"}
-              </div>
-              <div className="mt-1 text-xl font-semibold tabular-nums text-[var(--text)] sm:text-2xl">
-                {formatVnd(employee.shouldReturnVnd)}
-              </div>
+          {employee.shouldReturnVnd > 0 || employee.shouldReceiveVnd > 0 ? (
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {employee.shouldReturnVnd > 0 ? (
+                <div className="rounded-[var(--radius-sm)] border border-amber-200/80 bg-amber-50/90 px-3 py-3 dark:border-amber-900/50 dark:bg-amber-950/35">
+                  <div className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted2)]">
+                    Сотрудник должен компании
+                  </div>
+                  <div className="mt-1 text-xl font-semibold tabular-nums text-[var(--text)] sm:text-2xl">
+                    {formatVnd(employee.shouldReturnVnd)}
+                  </div>
+                </div>
+              ) : null}
+              {employee.shouldReceiveVnd > 0 ? (
+                <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-3">
+                  <div className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted2)]">
+                    Компания должна сотруднику
+                  </div>
+                  <div className="mt-1 text-xl font-semibold tabular-nums text-[var(--text)] sm:text-2xl">
+                    {formatVnd(employee.shouldReceiveVnd)}
+                  </div>
+                </div>
+              ) : null}
             </div>
-            <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-3">
-              <div className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted2)]">
-                {employee.managerFullSettlement
-                  ? "Начисления в CRM - компания должна"
-                  : "Компания должна сотруднику (начисления)"}
-              </div>
-              <div className="mt-1 text-xl font-semibold tabular-nums text-[var(--text)] sm:text-2xl">
-                {formatVnd(employee.shouldReceiveVnd)}
-              </div>
-            </div>
-          </div>
+          ) : null}
 
+          {netSettlementVnd !== 0 ? (
           <div className="mt-4 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 py-3">
             <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">
               {employee.managerFullSettlement
-                ? "Итог по подотчёту и начислениям в CRM"
+                ? "Итог по прочим начислениям и удержаниям"
                 : "Итог «на сегодня» по этим двум строкам"}
             </div>
             <p className="mt-2 text-sm leading-snug text-[var(--text)]">
@@ -676,9 +678,9 @@ export function EmployeeFinanceCard({
                   <span className="font-semibold tabular-nums">{formatVnd(-netSettlementVnd)}</span>
                 </>
               )}
-              {netSettlementVnd === 0 && <>По этим двум показателям взаимные требования совпадают.</>}
             </p>
           </div>
+          ) : null}
 
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" className="btn-primary px-4 py-2 text-sm font-medium" onClick={() => confirmFullSettlement()}>
