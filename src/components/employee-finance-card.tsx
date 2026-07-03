@@ -106,15 +106,13 @@ export function EmployeeFinanceCard({
     const s = employee.managerFullSettlement;
     if (!s) return "";
     const net = s.netAfterBookingsCashVsCommissionVnd;
-    const cash = s.cashToHandInFromBookingsVnd;
-    const tot = s.commissionTotalEstimateVnd;
     if (net > 0) {
-      return `После сдачи ${formatVnd(cash)} по броням в кассу по оценке компании остаётся выплатить менеджеру ${formatVnd(net)} (заработок ${formatVnd(tot)} минус эта сдача).`;
+      return `Компания должна сотруднику: ${formatVnd(net)}.`;
     }
     if (net < 0) {
-      return `Заработок по оценке ${formatVnd(tot)} меньше, чем наличные к сдаче ${formatVnd(cash)}. После сдачи по броням менеджеру может оставаться внести в кассу разницу ${formatVnd(-net)} - либо уточните уже выплаченные суммы в кассе.`;
+      return `Сотрудник должен компании: ${formatVnd(-net)}.`;
     }
-    return `По оценке заработок ${formatVnd(tot)} и сдача ${formatVnd(cash)} по броням совпадают по сумме.`;
+    return "Взаиморасчёт по этому блоку закрывается в ноль.";
   }, [employee.managerFullSettlement]);
 
   const rosterStubForCommission: RosterUser = useMemo(
