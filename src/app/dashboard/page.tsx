@@ -5,7 +5,6 @@ import { ManagerSalesEarningsToggle } from "@/components/manager-sales-earnings-
 import { TopNav } from "@/components/top-nav";
 import { requireAuth, isDemoUser } from "@/lib/auth-session";
 import {
-  getDirectorSalesPulse,
   getManagerDashboardSalesStats,
   listTours,
   listToursForDashboard,
@@ -65,18 +64,6 @@ function monthFromYmd(ymd: string): string {
 
 function validMonth(raw: string): string {
   return /^\d{4}-\d{2}$/.test(raw) ? raw : tourBusinessTodayYmd().slice(0, 7);
-}
-
-function monthShift(month: string, delta: number): string {
-  const [y, m] = month.split("-").map(Number);
-  const dt = new Date(y, (m || 1) - 1 + delta, 1);
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function monthTitleRu(month: string): string {
-  const [y, m] = month.split("-").map(Number);
-  const dt = new Date(y, (m || 1) - 1, 1);
-  return dt.toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
 }
 
 function withDashboardParams(base: {
@@ -143,7 +130,7 @@ export default async function DashboardPage({
     (user.role === "manager" || user.role === "director" || user.role === "chief_manager");
 
   const demo = isDemoUser(user);
-  const [toursRaw, managerSalesStats, directorSalesPulse] = await Promise.all([
+  const [toursRaw, managerSalesStats] = await Promise.all([
     (async () => {
       if (isGuideRole && view === "my_trips") {
         const [pastAndToday, upcoming] = await Promise.all([
@@ -165,10 +152,6 @@ export default async function DashboardPage({
     fetchManagerSalesStats
       ? getManagerDashboardSalesStats(user.id, month, day || tourBusinessTodayYmd())
       : Promise.resolve(null),
-    (user.role === "director" || user.role === "chief_manager") ? (() => {
-      const monthStart = `${month}-01`;
-      return getDirectorSalesPulse(31, monthStart);
-    })() : Promise.resolve(null),
   ]);
 
   const today = tourBusinessTodayYmd();
@@ -230,22 +213,61 @@ export default async function DashboardPage({
     "border-0 bg-[var(--accent)] text-white shadow-none";
   const filterChipMuted =
     "border-0 bg-transparent text-[var(--muted)] hover:bg-[color-mix(in_srgb,var(--surface-elevated)_65%,transparent)] hover:text-[var(--text)]";
+  const totalBooked = tours.reduce((sum, tour) => sum + (tour.booked ?? 0), 0);
+  const totalCapacity = tours.reduce((sum, tour) => sum + (tour.capacity ?? 0), 0);
+  const todayTours = tours.filter((tour) => tour.date === today).length;
+  const partnerTours = tours.filter((tour) => isPartnerTour(tour.name)).length;
+  const fillPercent = totalCapacity > 0 ? Math.round((totalBooked / totalCapacity) * 100) : 0;
   return (
     <main className="app-wrap">
       <DashboardAutoRefresh />
       <TopNav user={user} />
 
-      <section className="card mb-3 !rounded-2xl">
+      <section className="relative mb-4 overflow-hidden rounded-[28px] border border-[var(--border)] bg-[linear-gradient(135deg,var(--surface)_0%,var(--surface)_56%,var(--accent-soft)_100%)] p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] ring-1 ring-white/50 dark:ring-white/[0.04]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,var(--accent),#14b8a6,#38bdf8)]" />
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-xl font-semibold tracking-tight">{t("title")}</h1>
+          <div className="min-w-0">
+            <div className="inline-flex rounded-full bg-[var(--accent-soft)] px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-[var(--accent-dark)]">
+              EcoVoyage
+            </div>
+            <h1 className="mt-2 text-[28px] font-extrabold leading-none tracking-normal text-[var(--text)] sm:text-4xl">{t("title")}</h1>
+          </div>
           {canCreateTour(user.role) ? (
             <Link
               href="/tours/new"
-              className="btn-primary inline-flex min-h-[46px] w-full min-w-0 touch-manipulation items-center justify-center rounded-2xl px-4 py-2 text-sm font-semibold sm:min-h-[42px] sm:w-auto"
+              className="btn-primary inline-flex min-h-[48px] w-full min-w-0 touch-manipulation items-center justify-center rounded-2xl px-5 py-2 text-sm font-extrabold shadow-[0_12px_24px_rgba(134,202,0,0.22)] sm:min-h-[44px] sm:w-auto"
             >
               {t("openTour")}
             </Link>
           ) : null}
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)]/84 px-3 py-3 shadow-[var(--shadow-sm)]">
+            <div className="text-[10px] font-extrabold uppercase tracking-wide text-[var(--muted2)]">{t("allTours")}</div>
+            <div className="mt-1 text-2xl font-extrabold tabular-nums text-[var(--text)]">{tours.length}</div>
+          </div>
+          <div className="rounded-2xl border border-emerald-200/75 bg-emerald-50/75 px-3 py-3 shadow-[var(--shadow-sm)] dark:border-emerald-900/45 dark:bg-emerald-950/25">
+            <div className="text-[10px] font-extrabold uppercase tracking-wide text-emerald-700/80 dark:text-emerald-300">{t("today")}</div>
+            <div className="mt-1 text-2xl font-extrabold tabular-nums text-emerald-800 dark:text-emerald-100">{todayTours}</div>
+          </div>
+          <div className="rounded-2xl border border-cyan-200/75 bg-cyan-50/75 px-3 py-3 shadow-[var(--shadow-sm)] dark:border-cyan-900/45 dark:bg-cyan-950/25">
+            <div className="text-[10px] font-extrabold uppercase tracking-wide text-cyan-700/80 dark:text-cyan-300">{t("people")}</div>
+            <div className="mt-1 text-2xl font-extrabold tabular-nums text-cyan-800 dark:text-cyan-100">{totalBooked}</div>
+          </div>
+          <div className="rounded-2xl border border-indigo-200/75 bg-indigo-50/75 px-3 py-3 shadow-[var(--shadow-sm)] dark:border-indigo-900/45 dark:bg-indigo-950/25">
+            <div className="text-[10px] font-extrabold uppercase tracking-wide text-indigo-700/80 dark:text-indigo-300">{t("capacity")}</div>
+            <div className="mt-1 text-2xl font-extrabold tabular-nums text-indigo-800 dark:text-indigo-100">{totalCapacity}</div>
+          </div>
+          <div className="col-span-2 rounded-2xl border border-[var(--border)] bg-[var(--surface)]/84 px-3 py-3 shadow-[var(--shadow-sm)] sm:col-span-1">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[10px] font-extrabold uppercase tracking-wide text-[var(--muted2)]">{t("load")}</div>
+              <div className="text-sm font-extrabold tabular-nums text-[var(--accent-dark)]">{fillPercent}%</div>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
+              <div className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent),#14b8a6)]" style={{ width: `${Math.min(100, fillPercent)}%` }} />
+            </div>
+            <div className="mt-1 text-[10px] text-[var(--muted2)]">{t("partnerTours")}: {partnerTours}</div>
+          </div>
         </div>
 
         {allowedViews.length > 1 ? (
@@ -325,151 +347,6 @@ export default async function DashboardPage({
         ) : null}
 
       </section>
-
-      {(user.role === "director" || user.role === "chief_manager") && directorSalesPulse ? (
-        <section className="card mb-3">
-          {/* ── Навигация по месяцу ── */}
-          <div className="flex min-w-0 items-center justify-between gap-2">
-            <span className="text-[13px] font-semibold text-[var(--text)] capitalize">{monthTitleRu(month)}</span>
-            <div className="flex items-center gap-1">
-              <a
-                href={withDashboardParams({ view, q, tour: tourExact, month: monthShift(month, -1), cal, day, range })}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] text-[var(--muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text)] transition-colors text-sm"
-              >‹</a>
-              <a
-                href={monthShift(month, 1) <= tourBusinessTodayYmd().slice(0, 7)
-                  ? withDashboardParams({ view, q, tour: tourExact, month: monthShift(month, 1), cal, day, range })
-                  : "#"}
-                className={`flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] text-sm transition-colors ${
-                  monthShift(month, 1) > tourBusinessTodayYmd().slice(0, 7)
-                    ? "cursor-not-allowed bg-[var(--surface-soft)] text-[var(--muted2)] opacity-40"
-                    : "bg-[var(--surface-soft)] text-[var(--muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text)]"
-                }`}
-              >›</a>
-            </div>
-          </div>
-
-          {/* ── 5 KPI-метрик ── */}
-          {(() => {
-            const fm = directorSalesPulse.financeMonth;
-            const fmtM = (v: number) => v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v > 0 ? `${Math.round(v / 1000)}K` : "—";
-            const hasData = fm.bookingsCount > 0 || fm.revenueVnd > 0 || fm.expenseVnd > 0;
-            return (
-              <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
-                <div className="rounded-xl bg-[var(--surface-soft)] border border-[var(--border)] px-2 py-2.5 text-center">
-                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("bookings")}</div>
-                  <div className="mt-1 text-[15px] font-bold tabular-nums text-[var(--text)]">{hasData ? fm.bookingsCount : "—"}</div>
-                </div>
-                <div className="rounded-xl bg-[var(--surface-soft)] border border-[var(--border)] px-2 py-2.5 text-center">
-                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("people")}</div>
-                  <div className="mt-1 text-[15px] font-bold tabular-nums text-[var(--text)]">{hasData ? fm.totalPax : "—"}</div>
-                </div>
-                <div className="rounded-xl bg-[var(--surface-soft)] border border-[var(--border)] px-2 py-2.5 text-center">
-                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("revenue")}</div>
-                  <div className="mt-1 text-[15px] font-bold tabular-nums text-[var(--accent)]">{fmtM(fm.revenueVnd)}</div>
-                </div>
-                <div className="rounded-xl bg-[var(--surface-soft)] border border-[var(--border)] px-2 py-2.5 text-center">
-                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("expenses")}</div>
-                  <div className="mt-1 text-[15px] font-bold tabular-nums" style={{ color: "var(--danger, #ef4444)" }}>{fmtM(fm.expenseVnd)}</div>
-                </div>
-                <div className="rounded-xl bg-[var(--surface-soft)] border border-[var(--border)] px-2 py-2.5 text-center col-span-3 sm:col-span-1">
-                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("profit")}</div>
-                  <div className={`mt-1 text-[15px] font-bold tabular-nums ${fm.netVnd >= 0 ? "" : ""}`}
-                    style={{ color: hasData ? (fm.netVnd >= 0 ? "var(--success, #22c55e)" : "var(--danger, #ef4444)") : "var(--muted)" }}>
-                    {hasData ? `${fm.netVnd >= 0 ? "+" : ""}${fmtM(fm.netVnd)}` : "—"}
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* ── Рейтинги: менеджеры / туры / гиды ── */}
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-
-            {/* Топ менеджеров */}
-            {directorSalesPulse.byManager.length > 0 ? (
-              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3">
-                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("topManagers")}</div>
-                <ul className="space-y-2">
-                  {directorSalesPulse.byManager.slice(0, 8).map((r, i) => {
-                    const max = directorSalesPulse.byManager[0]?.bookings ?? 1;
-                    const pct = Math.round((r.bookings / max) * 100);
-                    return (
-                      <li key={r.managerId}>
-                        <div className="flex min-w-0 items-center gap-1.5">
-                          <span className="w-4 shrink-0 text-center text-[10px] font-semibold text-[var(--muted2)]">{i + 1}</span>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-[12px] font-semibold text-[var(--text)]">{r.managerName}</div>
-                            <div className="text-[11px] text-[var(--muted)]">{r.bookings} {t("bookings")} · {r.pax} {t("people")}</div>
-                          </div>
-                        </div>
-                        <div className="mt-1 h-1 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
-                          <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${pct}%` }} />
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ) : null}
-
-            {/* Топ туров */}
-            {directorSalesPulse.byTour.length > 0 ? (
-              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3">
-                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("topTours")}</div>
-                <ul className="space-y-2">
-                  {directorSalesPulse.byTour.slice(0, 8).map((r, i) => {
-                    const max = directorSalesPulse.byTour[0]?.bookings ?? 1;
-                    const pct = Math.round((r.bookings / max) * 100);
-                    return (
-                      <li key={r.tourId}>
-                        <div className="flex min-w-0 items-center gap-1.5">
-                          <span className="w-4 shrink-0 text-center text-[10px] font-semibold text-[var(--muted2)]">{i + 1}</span>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-[12px] font-semibold text-[var(--text)]">{r.tourName}</div>
-                            <div className="text-[11px] text-[var(--muted)]">{r.bookings} {t("bookings")} · {r.pax} {t("people")}</div>
-                          </div>
-                        </div>
-                        <div className="mt-1 h-1 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
-                          <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${pct}%` }} />
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ) : null}
-
-            {/* Топ гидов */}
-            {directorSalesPulse.byGuide.length > 0 ? (
-              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3">
-                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted2)]">{t("topGuides")}</div>
-                <ul className="space-y-2">
-                  {directorSalesPulse.byGuide.slice(0, 8).map((r, i) => {
-                    const max = directorSalesPulse.byGuide[0]?.trips ?? 1;
-                    const pct = Math.round((r.trips / max) * 100);
-                    return (
-                      <li key={r.guideId}>
-                        <div className="flex min-w-0 items-center gap-1.5">
-                          <span className="w-4 shrink-0 text-center text-[10px] font-semibold text-[var(--muted2)]">{i + 1}</span>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-[12px] font-semibold text-[var(--text)]">{r.guideName}</div>
-                            <div className="text-[11px] text-[var(--muted)]">{r.trips} {t("trips")} · {r.pax} {t("people")}</div>
-                          </div>
-                        </div>
-                        <div className="mt-1 h-1 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
-                          <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${pct}%` }} />
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ) : null}
-
-          </div>
-        </section>
-      ) : null}
 
       <section>
         <DashboardTourListClient

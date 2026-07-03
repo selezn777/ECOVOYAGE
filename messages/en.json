@@ -60,6 +60,9 @@
     "financeMonth": "Monthly Finance",
     "expenses": "Expenses",
     "profit": "Profit",
+    "capacity": "Seats",
+    "load": "Load",
+    "partnerTours": "Partner",
     "topGuides": "Top Guides",
     "trips": "trips",
     "revenue": "Revenue"

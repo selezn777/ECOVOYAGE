@@ -43,14 +43,14 @@ export function TopNav({ user }: { user?: SessionUser }) {
   }, [menuOpen]);
 
   return (
-    <header className="mb-3 relative z-[100]">
-      <div className="flex min-w-0 w-full flex-col gap-2 overflow-hidden rounded-[24px] border border-[var(--border)] bg-[linear-gradient(135deg,var(--surface)_0%,var(--surface)_58%,var(--accent-soft)_100%)] px-3.5 py-3 shadow-[var(--shadow-lg)] ring-1 ring-white/45 sm:px-4 dark:ring-white/[0.04]">
+    <header className="relative z-[100] mb-5">
+      <div className="flex min-w-0 w-full flex-col gap-2 overflow-visible rounded-[24px] border border-[var(--border)] bg-[linear-gradient(135deg,var(--surface)_0%,var(--surface)_58%,var(--accent-soft)_100%)] px-3.5 py-3 shadow-[0_10px_28px_rgba(15,23,42,0.09)] ring-1 ring-white/45 sm:px-4 dark:shadow-[0_16px_36px_rgba(0,0,0,0.45)] dark:ring-white/[0.04]">
 
         {/* Строка: лого + меню */}
         <div className="flex min-w-0 items-center justify-between gap-3">
           <Link href={homeHref} className="group flex min-w-0 items-center gap-2.5 touch-manipulation">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[17px] border border-[var(--accent)]/25 bg-white/80 shadow-[var(--shadow-sm)] ring-1 ring-white/70 dark:bg-white/10 dark:ring-white/[0.05]">
-              <AppLogo size={36} />
+            <span className="grid h-12 w-12 shrink-0 place-items-center">
+              <AppLogo size={42} />
             </span>
           </Link>
           <div className="relative shrink-0" ref={menuRef}>
@@ -74,7 +74,7 @@ export function TopNav({ user }: { user?: SessionUser }) {
 
             {/* Dropdown меню */}
             {menuOpen ? (
-              <div className="absolute right-0 top-[calc(100%+8px)] z-50 max-h-[min(78vh,480px)] w-[min(88vw,272px)] overflow-y-auto overscroll-contain rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-2 shadow-[var(--shadow-lg)] ring-1 ring-white/45 dark:ring-white/[0.04]">
+              <div className="absolute right-0 top-[calc(100%+10px)] z-[220] max-h-[min(78vh,480px)] w-[min(88vw,272px)] overflow-y-auto overscroll-contain rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-2 shadow-[var(--shadow-lg)] ring-1 ring-white/45 dark:ring-white/[0.04]">
                 <div className="button-cluster">
                   {user ? <StaffNotificationsModalTrigger user={user} /> : null}
                   <ReportIssueButton />

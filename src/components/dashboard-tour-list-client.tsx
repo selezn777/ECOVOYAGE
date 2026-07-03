@@ -113,7 +113,7 @@ export function DashboardTourListClient({ tours, initialQ = "", viewerRole }: Pr
   return (
     <div className="flex flex-col gap-3">
       {/* ── Поиск ── */}
-      <div className="relative" ref={wrapRef}>
+      <div className="relative rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-3 shadow-[var(--shadow-sm)] ring-1 ring-white/45 dark:ring-white/[0.04]" ref={wrapRef}>
         <div className="relative flex items-center">
           <svg
             viewBox="0 0 20 20"
@@ -142,7 +142,7 @@ export function DashboardTourListClient({ tours, initialQ = "", viewerRole }: Pr
             onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
             placeholder={tDashboard("search")}
             aria-label={tDashboard("search")}
-            className="min-h-[46px] w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] pl-10 pr-10 text-sm font-medium text-[var(--text)] shadow-[var(--shadow-sm)] outline-none ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted2)] focus:border-[var(--accent)]/50 focus:ring-2 focus:shadow-[var(--shadow-md)]"
+            className="min-h-[48px] w-full rounded-2xl border border-[var(--border)] bg-[linear-gradient(135deg,var(--surface-soft),var(--surface))] pl-10 pr-10 text-sm font-semibold text-[var(--text)] shadow-[var(--shadow-sm)] outline-none ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted2)] focus:border-[var(--accent)]/50 focus:ring-2 focus:shadow-[var(--shadow-md)]"
           />
           {query ? (
             <button
@@ -188,13 +188,13 @@ export function DashboardTourListClient({ tours, initialQ = "", viewerRole }: Pr
         </div>
       ) : (
         grouped.map((g) => (
-          <div key={g.date} className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)]">
+          <div key={g.date} className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_10px_28px_rgba(15,23,42,0.07)] ring-1 ring-white/45 dark:ring-white/[0.04]">
             {/* Заголовок дня */}
-            <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--accent)] px-4 py-2.5">
-              <span className="text-sm font-bold leading-snug tracking-wide text-white">
+            <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] bg-[linear-gradient(135deg,var(--accent),#14b8a6)] px-4 py-3">
+              <span className="text-sm font-extrabold leading-snug tracking-normal text-white">
                 {formatYmdWeekdayLongDmy(g.date)}
               </span>
-              <span className="rounded-lg bg-white/25 px-2 py-0.5 text-xs font-semibold tabular-nums text-white">
+              <span className="rounded-xl bg-white/25 px-2.5 py-1 text-xs font-extrabold tabular-nums text-white ring-1 ring-white/25">
                 {g.nameGroups.reduce((s, ng) => s + ng.items.length, 0)}
               </span>
             </div>
@@ -223,7 +223,7 @@ export function DashboardTourListClient({ tours, initialQ = "", viewerRole }: Pr
                       <Link
                         key={tour.id}
                         href={`/tours/${tour.id}`}
-                        className={`group flex min-h-[56px] w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--surface-soft)] active:bg-[var(--surface-elevated)]${itemIdx > 0 ? " border-t border-[var(--border)]" : ""}`}
+                        className={`group flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--accent-soft)] active:bg-[var(--surface-elevated)]${itemIdx > 0 ? " border-t border-[var(--border)]" : ""}`}
                       >
                         <div className="min-w-0 flex-1">
                           <span className="block truncate text-[13px] font-semibold leading-snug text-[var(--text)]">

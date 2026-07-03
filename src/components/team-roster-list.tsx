@@ -151,11 +151,18 @@ export function TeamRosterList({
             : g.title === "office" ? tT("groupOffice")
             : g.title;
           return g.rows.length === 0 ? null : (
-            <div key={g.title} className={tone.wrap}>
-              <h3 className={`mb-0.5 text-[11px] font-semibold uppercase tracking-wide ${tone.head}`}>{groupLabel}</h3>
-              <p className={`mb-2 text-[10px] ${tone.sub}`}>
+            <div key={g.title} className={`${tone.wrap} shadow-[0_8px_22px_rgba(15,23,42,0.05)]`}>
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className={`mb-0.5 text-[11px] font-extrabold uppercase tracking-[0.14em] ${tone.head}`}>{groupLabel}</h3>
+                  <p className={`text-[10px] ${tone.sub}`}>
                 {g.title === "leadership" ? tT("leadershipDesc") : tT("operationalDesc")}
-              </p>
+                  </p>
+                </div>
+                <span className="grid h-9 min-w-9 place-items-center rounded-2xl bg-white/75 px-2 text-sm font-extrabold tabular-nums text-[var(--text)] shadow-[var(--shadow-sm)] ring-1 ring-white/70 dark:bg-white/10 dark:ring-white/[0.05]">
+                  {g.rows.length}
+                </span>
+              </div>
               <ul className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 xl:grid-cols-3">
                 {g.rows.map((r) => {
           const isSelf = r.id === currentUserId;
@@ -164,14 +171,15 @@ export function TeamRosterList({
           return (
             <li
               key={r.id}
-              className={`flex min-h-0 flex-col gap-2 rounded-xl border px-3 py-3 sm:px-3.5 sm:py-3 ${
+              className={`relative flex min-h-0 flex-col gap-2 overflow-hidden rounded-[22px] border px-3 py-3 shadow-[0_8px_22px_rgba(15,23,42,0.055)] ring-1 ring-white/50 transition-transform duration-150 hover:-translate-y-0.5 sm:px-3.5 sm:py-3 dark:ring-white/[0.04] ${
                 cardNav ? "relative cursor-pointer " : ""
               }${
                 r.offToday
                   ? "border-zinc-200/95 bg-zinc-100/95 text-zinc-500 ring-1 ring-zinc-200/95 saturate-0 dark:border-zinc-700/85 dark:bg-zinc-900/75 dark:text-zinc-400 dark:ring-zinc-700/75"
-                  : "border-[var(--border)] bg-[var(--surface-soft)] text-[var(--text)]"
+                  : "border-[var(--border)] bg-[linear-gradient(135deg,var(--surface)_0%,var(--surface)_68%,var(--accent-soft)_100%)] text-[var(--text)]"
               }`}
             >
+              {!r.offToday ? <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,var(--accent),#14b8a6)]" /> : null}
               {cardNav ? (
                 <Link
                   href={`/team/${r.id}`}

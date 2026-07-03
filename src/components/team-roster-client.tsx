@@ -54,17 +54,35 @@ export function TeamRosterClient({
 
       {isAccountant ? <TeamAccountantRosterInsights rows={rows} salesPointsTotal={salesPointsTotal} /> : null}
 
-      <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-[var(--muted2)]">
-        {t("searchByEmployee")}
-      </label>
-      <input
-        type="search"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder={t("searchNamePlaceholder")}
-        autoComplete="off"
-        className="field-surface mb-3 w-full max-w-full rounded-xl px-3 py-2.5 text-sm sm:max-w-md"
-      />
+      <section className="mb-4 rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-3 shadow-[var(--shadow-sm)] ring-1 ring-white/45 dark:ring-white/[0.04]">
+        <label className="mb-2 block text-xs font-extrabold uppercase tracking-wide text-[var(--muted2)]">
+          {t("searchByEmployee")}
+        </label>
+        <div className="relative">
+          <svg
+            viewBox="0 0 20 20"
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--accent)]"
+            fill="none"
+            aria-hidden
+          >
+            <path
+              d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16ZM19 19l-4.35-4.35"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.8"
+            />
+          </svg>
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t("searchNamePlaceholder")}
+            autoComplete="off"
+            className="field-surface min-h-[48px] w-full rounded-2xl pl-10 pr-3 text-sm font-semibold sm:max-w-md"
+          />
+        </div>
+      </section>
       {filtered.length === 0 ? (
         <section className="card text-sm text-[var(--muted)]">{t("noEmployeesFound")}</section>
       ) : (

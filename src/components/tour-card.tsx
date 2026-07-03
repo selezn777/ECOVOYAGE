@@ -538,7 +538,8 @@ export async function TourCard({ tour, viewerRole, bookingIntentHref }: Props) {
   const canQuickAddTourist =
     viewerRole != null && canCreateBooking(viewerRole) && tour.date >= tourBusinessTodayYmd();
   return (
-    <section className="card relative mb-3 block overflow-hidden">
+    <section className="card relative mb-3 block overflow-hidden !rounded-[24px] !bg-[linear-gradient(135deg,var(--surface)_0%,var(--surface)_68%,var(--accent-soft)_100%)] !shadow-[0_10px_28px_rgba(15,23,42,0.07)] ring-1 ring-white/45 dark:ring-white/[0.04]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,var(--accent),#14b8a6,#38bdf8)]" />
       <Link
         href={bookingIntentHref || `/tours/${tour.id}`}
         prefetch={false}

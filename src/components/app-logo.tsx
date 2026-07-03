@@ -14,6 +14,7 @@ export function AppLogo({ size = 40, className = "", priority = false }: Props) 
       width={size}
       height={size}
       className={`shrink-0 object-contain ${className}`}
+      style={{ width: size, height: size }}
       priority={priority}
       unoptimized
     />
