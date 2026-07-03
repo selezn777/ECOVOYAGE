@@ -1536,6 +1536,8 @@
     "today": "Today",
     "allTime": "All time",
     "allTimeNotice": "\"All time\" mode is selected — dates are not shown.",
+    "emptyPeriodNotice": "No operations found for this period. Try a different date range.",
+    "emptyPeriodShowAllTime": "Show all time",
     "currentMonthReport": "Current month report",
     "buildFailed": "Could not build the report. Check the dates and Supabase setup.",
     "handoversByMethodTitle": "Cash handovers by method",

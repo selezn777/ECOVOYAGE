@@ -1536,6 +1536,8 @@
     "today": "Hôm nay",
     "allTime": "Toàn thời gian",
     "allTimeNotice": "Đang chọn chế độ «Toàn thời gian» — không hiển thị khoảng ngày.",
+    "emptyPeriodNotice": "Không tìm thấy giao dịch nào trong kỳ này. Hãy thử chọn khoảng thời gian khác.",
+    "emptyPeriodShowAllTime": "Xem toàn thời gian",
     "currentMonthReport": "Báo cáo tháng hiện tại",
     "buildFailed": "Không thể tạo báo cáo. Kiểm tra ngày và cấu hình Supabase.",
     "handoversByMethodTitle": "Nộp quỹ theo phương thức",

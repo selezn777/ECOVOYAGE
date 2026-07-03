@@ -3896,6 +3896,16 @@ export async function getCashBoxBalance(): Promise<CashBoxBalance> {
     }
   }
 
+  const { data: officeCashPayments } = await supabase
+    .from("payments")
+    .select("amount_vnd, kind")
+    .in("kind", ["office_cash", "refund"]);
+
+  for (const p of (officeCashPayments as { amount_vnd: unknown; kind: string }[] | null) ?? []) {
+    const vnd = Math.round(Number(p.amount_vnd || 0));
+    cashVnd += p.kind === "refund" ? -vnd : vnd;
+  }
+
   const { data: handoverRows } = await supabase
     .from("tour_office_cash_handovers")
     .select("amount_vnd, amount_usd, channel_id");
