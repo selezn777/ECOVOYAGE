@@ -443,7 +443,7 @@ export interface ManagerCashOnHandSnapshot {
   periodLabelRu: string;
   rangeFromYmd: string;
   rangeToInclusiveYmd: string;
-  /** Платежи deposit/topup − refund по броням менеджера за выбранный период */
+  /** Платежи deposit/topup/office_cash − refund по броням менеджера за выбранный период */
   receivedInPeriodVnd: number;
   /** Сумма сдач в кассу (tour_office_cash_handovers, роль менеджер) за период */
   handedToOfficeInPeriodVnd: number;

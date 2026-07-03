@@ -146,7 +146,7 @@ export function EmployeeFinanceCard({
   const earnPercentText =
     employee.managerSalesCommissionPercent != null && Number.isFinite(employee.managerSalesCommissionPercent)
       ? `${employee.managerSalesCommissionPercent}%`
-      : "-";
+      : "12%";
 
   const activityLabel = isMgr ? "Операций по платежам (месяц)" : isGuide ? "Туров с датой в этом месяце" : "Активность (месяц)";
 

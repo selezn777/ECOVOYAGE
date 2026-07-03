@@ -2924,9 +2924,9 @@ function sumManagerBookingPaymentFlow(rows: ManagerPayRow[], fromIsoInclusive: s
     const t = r.created_at;
     if (t < fromIsoInclusive || t >= toIsoExclusive) continue;
     const a = Math.round(Number(r.amount_vnd || 0));
-    const k = String(r.kind || "");
+    const k = String(r.kind || "").toLowerCase();
     if (k === "refund") s -= a;
-    else if (k === "deposit" || k === "topup") s += a;
+    else if (k === "deposit" || k === "topup" || k === "office_cash") s += a;
   }
   return s;
 }
