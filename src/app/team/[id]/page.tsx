@@ -40,7 +40,7 @@ export default async function TeamEmployeePage({
   const isManagerRole = employee.employeeRole === "manager" || employee.employeeRole === "chief_manager";
   const bookingAnalytics = isManagerRole ? await getManagerBookingAnalytics(id) : null;
 
-  const canSettle = ACCOUNTING_PANEL_ROLES.includes(user.role) || user.role === "director";
+  const canSettle = ACCOUNTING_PANEL_ROLES.includes(user.role);
   const employeeIsManager =
     employee.employeeRole === "manager" || employee.employeeRole === "chief_manager";
   const employeeIsGuide = employee.employeeRole === "guide" || employee.employeeRole === "chief_guide";
@@ -54,12 +54,20 @@ export default async function TeamEmployeePage({
         <TeamCredentialsPanel employeeId={id} employeeName={employee.employeeName} />
       ) : null}
       {canSettle && employeeIsManager ? (
-        <div className="mb-3 flex justify-end">
+        <div className="card mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--text)]">Сдача наличных менеджера</h2>
+            <p className="text-xs text-[var(--muted)]">Бухгалтерское действие: принять деньги по конкретному туру в кассу.</p>
+          </div>
           <TeamManagerSettleButton managerId={id} managerName={employee.employeeName} />
         </div>
       ) : null}
       {canSettle && employeeIsGuide ? (
-        <div className="mb-3 flex justify-end">
+        <div className="card mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--text)]">Расчёт с гидом</h2>
+            <p className="text-xs text-[var(--muted)]">Бухгалтерское действие: закрыть сдачу или выплату по туру.</p>
+          </div>
           <TeamGuideSettleButton guideId={id} guideName={employee.employeeName} />
         </div>
       ) : null}
@@ -81,4 +89,3 @@ export default async function TeamEmployeePage({
     </main>
   );
 }
-

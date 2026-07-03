@@ -149,6 +149,7 @@ export function EmployeeFinanceCard({
       : "12%";
 
   const activityLabel = isMgr ? "Операций по платежам (месяц)" : isGuide ? "Туров с датой в этом месяце" : "Активность (месяц)";
+  const payoutDueVnd = Math.max(0, employee.shouldReceiveVnd + employee.bonusPendingVnd);
 
   const cashQueryBase = useMemo(() => {
     const q = new URLSearchParams();
@@ -248,11 +249,11 @@ export function EmployeeFinanceCard({
 
   async function confirmFullSettlement() {
     const ok = await showConfirm(
-      "Открыть кассу для полного расчёта? Дальнейшие нули по деньгам фиксируйте проводками в кассе или у директора по финансам.",
+      "Открыть кассу для финального расчёта при увольнении? Используйте это только когда закрываете все взаиморасчёты с сотрудником.",
     );
     if (!ok) return;
     const q = new URLSearchParams(cashQueryBase);
-    q.set("prefillTitle", `Полный расчёт: ${employee.employeeName}`);
+    q.set("prefillTitle", `Финальный расчёт при увольнении: ${employee.employeeName}`);
     router.push(`/cash?${q.toString()}`);
   }
 
@@ -279,29 +280,70 @@ export function EmployeeFinanceCard({
         </div>
       </section>
 
-      {isMgr && (
-        <section className="card mb-3">
-          <h2 className="mb-1 text-base font-semibold">Процент от прайса (брони)</h2>
-          <p className="mb-3 text-xs text-[var(--muted)]">
-            {canEditManagerCommissionInline ? (
-              <>
-                Хранится в профиле сотрудника; от него считаются «Мои продажи», блок подотчёта и суммы на этой странице —
-                после сохранения обновите экран или откройте карточку заново.
-              </>
-            ) : (
-              <>Процент главного менеджера задают директор или бухгалтерия.</>
-            )}
-          </p>
-          {canEditManagerCommissionInline ? (
-            <ManagerSalesCommissionInline r={rosterStubForCommission} onSaved={() => router.refresh()} />
-          ) : (
-            <p className="text-sm font-medium tabular-nums text-[var(--text)]">
-              {employee.managerSalesCommissionPercent != null && Number.isFinite(employee.managerSalesCommissionPercent)
-                ? `${employee.managerSalesCommissionPercent}%`
-                : "12% (по умолчанию)"}
+      <section className="card mb-3 overflow-hidden !rounded-[24px] !bg-[linear-gradient(135deg,var(--surface)_0%,var(--surface)_64%,var(--accent-soft)_100%)]">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--text)]">Финансовая сводка</h2>
+            <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
+              Основные цифры по сотруднику без дублей: деньги на руках, сдачи, начисления и текущая активность.
             </p>
+          </div>
+          {isMgr ? (
+            <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--accent-dark)]">
+              Процент: {earnPercentText}
+            </span>
+          ) : null}
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          {isMgr && m ? (
+            <>
+              <StatTile label="На руках / к сдаче" value={m.outstandingAllTimeVnd} emphasize="amber" />
+              <StatTile label="Принято по броням" value={m.allTimeReceivedVnd} />
+              <StatTile label="Сдано в кассу" value={m.allTimeHandedVnd} />
+              <StatTileText label="Броней / туристов" value={`${managerPerf?.allBookingsCount ?? 0} / ${managerPerf?.allPaxClosed ?? 0}`} />
+            </>
+          ) : (
+            <>
+              <StatTile label={handsLabel} value={handsVnd} emphasize={handsVnd > 0 ? "amber" : undefined} />
+              <StatTile label={handedLabel} value={handedVnd} />
+              <StatTile label="Начислено" value={employee.accruedVnd + employee.bonusPendingVnd + employee.bonusPaidVnd} />
+              <StatTile label="Выплачено" value={employee.paidVnd + employee.bonusPaidVnd} />
+            </>
           )}
-        </section>
+        </div>
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <StatTileText label={activityLabel} value={String(employee.monthStats.activityMonthToDate)} />
+          <StatTileText label="Выходных с 1-го числа" value={String(employee.monthStats.daysOffMonthToDate)} />
+          <StatTile label="К выплате по начислениям" value={payoutDueVnd} />
+        </div>
+      </section>
+
+      {isMgr && (
+        <details className={DETAILS_CARD}>
+          <summary className="cursor-pointer list-none">
+            <h2 className="text-base font-semibold">Настройки процента менеджера</h2>
+          </summary>
+          <div className="mt-3 border-t border-[var(--border)]/60 pt-3">
+            <p className="mb-3 text-xs text-[var(--muted)]">
+              {canEditManagerCommissionInline ? (
+                <>
+                  Процент хранится в профиле сотрудника и влияет на продажи, кассу и расчёты этой карточки.
+                </>
+              ) : (
+                <>Процент главного менеджера задают директор или бухгалтерия.</>
+              )}
+            </p>
+            {canEditManagerCommissionInline ? (
+              <ManagerSalesCommissionInline r={rosterStubForCommission} onSaved={() => router.refresh()} />
+            ) : (
+              <p className="text-sm font-medium tabular-nums text-[var(--text)]">
+                {employee.managerSalesCommissionPercent != null && Number.isFinite(employee.managerSalesCommissionPercent)
+                  ? `${employee.managerSalesCommissionPercent}%`
+                  : "12% (по умолчанию)"}
+              </p>
+            )}
+          </div>
+        </details>
       )}
 
       {isGuideManagerMode && (
@@ -352,20 +394,6 @@ export function EmployeeFinanceCard({
         </>
       ) : null}
 
-      {m ? (
-        <section className="card mb-3">
-          <h2 className="mb-1 text-base font-semibold text-[var(--text)]">Брони и касса (всего)</h2>
-          <p className="mb-3 text-xs text-[var(--muted)]">
-            Принято по броням этого менеджера и сдачи в центральную кассу с туров; «на руках» - оценка за всё время.
-          </p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
-            <StatTile label="Принято по броням (всего)" value={m.allTimeReceivedVnd} />
-            <StatTile label="Сдано в центральную кассу (всего)" value={m.allTimeHandedVnd} />
-            <StatTile label="На руках / к сдаче" value={m.outstandingAllTimeVnd} emphasize="amber" />
-          </div>
-        </section>
-      ) : null}
-
       {m ? <ManagerCashOnHandPanel employeeId={employee.employeeId} snapshot={m} /> : null}
 
       {isGuide && employee.guideShopSnapshot ? (
@@ -373,20 +401,11 @@ export function EmployeeFinanceCard({
       ) : null}
 
       <section className="card mb-3">
-        <h2 className="mb-1 text-base font-semibold text-[var(--text)]">Деньги сотрудника по системе</h2>
+        <h2 className="mb-1 text-base font-semibold text-[var(--text)]">Начисления и выплаты</h2>
         <p className="mb-3 text-xs text-[var(--muted)]">
-          Отдельно от начислений: сколько сейчас на руках у сотрудника и сколько уже возвращено в кассу по системе.
+          Зарплата, премии и процент менеджера отдельно от наличных по броням.
         </p>
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <StatTile label={handsLabel} value={handsVnd} emphasize="amber" />
-          <StatTile label={handedLabel} value={handedVnd} />
-        </div>
-      </section>
-
-      <section className="card mb-3">
-        <h2 className="mb-1 text-base font-semibold text-[var(--text)]">Зарплата и подотчёт</h2>
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          <StatTileText label={activityLabel} value={String(employee.monthStats.activityMonthToDate)} />
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {isMgr ? (
             <StatTileText label={earnLabel} value={earnPercentText} />
           ) : (
@@ -395,10 +414,6 @@ export function EmployeeFinanceCard({
           <StatTile label="Выплачено из начисленного" value={employee.paidVnd} />
           <StatTile label="Премия к выплате (начислено)" value={employee.bonusPendingVnd} />
           <StatTile label="Премия выплачено" value={employee.bonusPaidVnd} />
-          <StatTileText
-            label="Выходных (с 1-го числа месяца)"
-            value={String(employee.monthStats.daysOffMonthToDate)}
-          />
         </div>
       </section>
 
@@ -568,14 +583,15 @@ export function EmployeeFinanceCard({
 
       <details className={DETAILS_CARD}>
         <summary className="cursor-pointer list-none">
-          <h2 className="text-base font-semibold text-[var(--text)]">Полный расчёт</h2>
+          <h2 className="text-base font-semibold text-[var(--text)]">Финальный расчёт при увольнении</h2>
         </summary>
         <div className="mt-3 border-t border-[var(--border)]/60 pt-3">
           {employee.managerFullSettlement ? (
             <>
               <p className="text-xs leading-relaxed text-[var(--muted)]">
-                Сначала сдайте в кассу наличные, принятые по броням; затем оформляется выплата процента с прайса по броням и
-                прибыли с билетов. Оценка заработка не вычитает уже выплаченное без отдельного учёта в кассе.
+                Это не ежедневный рабочий блок. Используйте его при увольнении или полном закрытии сотрудника:
+                сначала сдача наличных по броням, затем выплата процента, билетов, премий и остальных начислений.
+                Оценка не заменяет кассовые проводки.
               </p>
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="rounded-[var(--radius-sm)] border border-amber-200/80 bg-amber-50/90 px-3 py-3 dark:border-amber-900/50 dark:bg-amber-950/35">
@@ -668,7 +684,7 @@ export function EmployeeFinanceCard({
 
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" className="btn-primary px-4 py-2 text-sm font-medium" onClick={() => confirmFullSettlement()}>
-              Рассчитать
+              Открыть кассу для финального расчёта
             </button>
           </div>
 

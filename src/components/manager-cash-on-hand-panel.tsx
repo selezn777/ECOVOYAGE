@@ -16,12 +16,13 @@ export function ManagerCashOnHandPanel({
   employeeId: string;
   snapshot: ManagerCashOnHandSnapshot;
 }) {
+  const periodNetVnd = Math.max(0, snapshot.receivedInPeriodVnd - snapshot.handedToOfficeInPeriodVnd);
   return (
     <section className="card mb-3">
-      <h2 className="mb-1 text-base font-semibold">Наличные по броням и сдача в кассу</h2>
+      <h2 className="mb-1 text-base font-semibold">Движение по броням за период</h2>
       <p className="mb-3 text-xs leading-relaxed text-[var(--muted)]">
-        Сумма платежей по броням этого менеджера (предоплата и доплаты минус возвраты) и сдачи в центральную кассу по
-        туру. «К сдаче сейчас» считается за всё время: всего принято по броням минус всего сдано через форму сдачи.
+        Принятые деньги по броням менеджера и сдача в центральную кассу за выбранный период. Общая сумма на руках
+        показана выше в финансовой сводке.
       </p>
       <div
         className="mb-3 flex min-w-0 flex-nowrap overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-soft)] shadow-[var(--shadow-sm)]"
@@ -59,12 +60,12 @@ export function ManagerCashOnHandPanel({
         </div>
         <div className="rounded-xl border border-amber-200/80 bg-amber-50/90 px-3 py-3 shadow-[var(--shadow-sm)] dark:border-amber-900/50 dark:bg-amber-950/35">
           <div className="text-[10px] font-medium uppercase tracking-wide text-amber-900/80 dark:text-amber-200/90">
-            К сдаче сейчас
+            Осталось за период
           </div>
           <div className="mt-1 text-lg font-semibold tabular-nums text-amber-950 dark:text-amber-100">
-            {formatVnd(snapshot.outstandingAllTimeVnd)}
+            {formatVnd(periodNetVnd)}
           </div>
-          <p className="mt-1 text-[10px] leading-snug text-amber-900/75 dark:text-amber-200/80">Оценка за всё время</p>
+          <p className="mt-1 text-[10px] leading-snug text-amber-900/75 dark:text-amber-200/80">Период без старых долгов</p>
         </div>
       </div>
     </section>

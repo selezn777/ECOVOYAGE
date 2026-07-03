@@ -19,7 +19,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ error: "Supabase не настроен." }, { status: 500 });
 
-  const { data, error } = await supabase.from("users").select("id,role,login,password").eq("id", id).maybeSingle();
+  const { data, error } = await supabase.from("users").select("id,role,login").eq("id", id).maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: "Сотрудник не найден" }, { status: 404 });
 
@@ -30,7 +30,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     ok: true,
     credentials: {
       login: String(data.login ?? ""),
-      password: String(data.password ?? ""),
+      passwordCanBeShown: false,
     },
   });
 }
@@ -61,14 +61,26 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!parsed.success) return NextResponse.json({ error: "Некорректный пароль" }, { status: 400 });
 
   const newPassword = parsed.data.password;
-  const { error } = await supabase.from("users").update({ password: newPassword }).eq("id", id);
+  let error: { message?: string } | null = null;
+  const rpc = await supabase.rpc("update_user_password", {
+    p_user_id: id,
+    p_new_password: newPassword,
+  });
+  if (rpc.error) {
+    if (/update_user_password|does not exist|schema cache|42883/i.test(String(rpc.error.message))) {
+      const fallback = await supabase.from("users").update({ password: newPassword }).eq("id", id);
+      error = fallback.error;
+    } else {
+      error = rpc.error;
+    }
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({
     ok: true,
     credentials: {
       login: String(target.login ?? ""),
-      password: newPassword,
+      temporaryPassword: newPassword,
     },
   });
 }
