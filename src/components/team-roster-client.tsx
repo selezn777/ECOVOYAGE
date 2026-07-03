@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { TeamAccountantRosterInsights } from "@/components/team-accountant-roster-insights";
 import { TeamRosterList } from "@/components/team-roster-list";
 import { canEditUserRosterPrivacy } from "@/lib/role-policy";
 import { compareRosterUsers, groupSortedRosterUsers } from "@/lib/team-roster-sort";
@@ -10,7 +9,6 @@ import type { RosterUser, Role } from "@/lib/types";
 
 export function TeamRosterClient({
   rows,
-  salesPointsTotal = 0,
   currentUserId,
   viewerRole,
   enableManagerCommissionEdit,
@@ -18,7 +16,6 @@ export function TeamRosterClient({
   privacyListMode = false,
 }: {
   rows: RosterUser[];
-  salesPointsTotal?: number;
   currentUserId: string;
   /** Для бухгалтера - заголовок страницы и сводка (остальные роли без изменений) */
   viewerRole?: Role;
@@ -52,8 +49,6 @@ export function TeamRosterClient({
         </header>
       ) : null}
 
-      {isAccountant ? <TeamAccountantRosterInsights rows={rows} salesPointsTotal={salesPointsTotal} /> : null}
-
       <section className="mb-4 rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-3 shadow-[var(--shadow-sm)] ring-1 ring-white/45 dark:ring-white/[0.04]">
         <label className="mb-2 block text-xs font-extrabold uppercase tracking-wide text-[var(--muted2)]">
           {t("searchByEmployee")}
@@ -79,7 +74,7 @@ export function TeamRosterClient({
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("searchNamePlaceholder")}
             autoComplete="off"
-            className="field-surface min-h-[48px] w-full rounded-2xl pl-10 pr-3 text-sm font-semibold sm:max-w-md"
+            className="field-surface min-h-[48px] w-full rounded-xl pl-10 pr-3 text-sm font-semibold sm:max-w-md"
           />
         </div>
       </section>

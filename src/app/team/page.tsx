@@ -88,7 +88,6 @@ export default async function TeamPage() {
       {hasContent ? (
         <TeamRosterClient
           rows={teamRows}
-          salesPointsTotal={rentalPoints.length}
           currentUserId={user.id}
           viewerRole={user.role}
           enableManagerCommissionEdit={canEditManagerCommission && !isAccountantView}
