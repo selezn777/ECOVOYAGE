@@ -161,6 +161,7 @@ export function EmployeeFinanceCard({
     if (!q) return employee.cashPreviewRows;
     return employee.cashPreviewRows.filter((r) => r.summary.toLowerCase().includes(q));
   }, [employee.cashPreviewRows, cashSearch]);
+  const hasCashRows = employee.cashPreviewRows.length > 0;
 
   const cashInTotal = useMemo(
     () => cashRowsFiltered.filter((r) => r.direction === "in").reduce((s, r) => s + r.amountVnd, 0),
@@ -535,49 +536,51 @@ export function EmployeeFinanceCard({
         </div>
       </details>
 
-      <section className="card mb-3">
-        <h2 className="mb-1 text-base font-semibold text-[var(--text)]">Касса по сотруднику</h2>
-        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <div className="rounded-lg border border-emerald-300/40 bg-emerald-500/10 px-3 py-2 text-sm font-semibold tabular-nums text-emerald-700 dark:text-emerald-300">
-            Плюс: {formatVnd(cashInTotal)}
+      {hasCashRows ? (
+        <section className="card mb-3">
+          <h2 className="mb-1 text-base font-semibold text-[var(--text)]">Касса по сотруднику</h2>
+          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div className="rounded-lg border border-emerald-300/40 bg-emerald-500/10 px-3 py-2 text-sm font-semibold tabular-nums text-emerald-700 dark:text-emerald-300">
+              Приход: {formatVnd(cashInTotal)}
+            </div>
+            <div className="rounded-lg border border-rose-300/40 bg-rose-500/10 px-3 py-2 text-sm font-semibold tabular-nums text-rose-700 dark:text-rose-300">
+              Расход: {formatVnd(cashOutTotal)}
+            </div>
           </div>
-          <div className="rounded-lg border border-rose-300/40 bg-rose-500/10 px-3 py-2 text-sm font-semibold tabular-nums text-rose-700 dark:text-rose-300">
-            Минус: {formatVnd(cashOutTotal)}
-          </div>
-        </div>
-        <input
-          type="search"
-          value={cashSearch}
-          onChange={(e) => setCashSearch(e.target.value)}
-          placeholder="Поиск по выплатам и операциям…"
-          className="field-surface mt-3 w-full rounded-xl px-3 py-2.5 text-sm"
-        />
-        {cashRowsFiltered.length === 0 ? (
-          <p className="text-sm text-[var(--muted)]">Пока нет строк в кассе с участием сотрудника.</p>
-        ) : (
-          <ul className="mt-3 space-y-1.5">
-            {cashRowsFiltered.map((r, i) => (
-              <li
-                key={`${r.at}-${i}`}
-                className="flex flex-wrap items-baseline justify-between gap-2 px-1 py-1.5 text-sm"
-              >
-                <span className="min-w-0 flex-1 text-[var(--text)]">{r.summary}</span>
-                <span className="shrink-0 text-xs tabular-nums text-[var(--muted2)]">
-                  {new Date(r.at).toLocaleString("ru-RU", { dateStyle: "short", timeStyle: "short" })}
-                </span>
-                <span
-                  className={`shrink-0 text-right text-base font-semibold tabular-nums ${
-                    r.direction === "in" ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400"
-                  }`}
+          <input
+            type="search"
+            value={cashSearch}
+            onChange={(e) => setCashSearch(e.target.value)}
+            placeholder="Поиск по выплатам и операциям…"
+            className="field-surface mt-3 w-full rounded-xl px-3 py-2.5 text-sm"
+          />
+          {cashRowsFiltered.length === 0 ? (
+            <p className="mt-3 text-sm text-[var(--muted)]">По этому поиску ничего не найдено.</p>
+          ) : (
+            <ul className="mt-3 space-y-1.5">
+              {cashRowsFiltered.map((r, i) => (
+                <li
+                  key={`${r.at}-${i}`}
+                  className="flex flex-wrap items-baseline justify-between gap-2 px-1 py-1.5 text-sm"
                 >
-                  {r.direction === "in" ? "+" : "−"}
-                  {formatVnd(r.amountVnd)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                  <span className="min-w-0 flex-1 text-[var(--text)]">{r.summary}</span>
+                  <span className="shrink-0 text-xs tabular-nums text-[var(--muted2)]">
+                    {new Date(r.at).toLocaleString("ru-RU", { dateStyle: "short", timeStyle: "short" })}
+                  </span>
+                  <span
+                    className={`shrink-0 text-right text-base font-semibold tabular-nums ${
+                      r.direction === "in" ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400"
+                    }`}
+                  >
+                    {r.direction === "in" ? "+" : "-"}
+                    {formatVnd(r.amountVnd)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
 
       <details className={DETAILS_CARD}>
         <summary className="cursor-pointer list-none">
