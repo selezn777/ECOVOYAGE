@@ -178,11 +178,11 @@ if (CREATE_ACCOUNTS) {
     byRole[label].push(r);
   }
 
-  let doc = `ECOVOYAGE CRM — АККАУНТЫ СОТРУДНИКОВ
+  let doc = `ЦЕНТР ТУРИЗМА CRM — АККАУНТЫ СОТРУДНИКОВ
 Сгенерировано: ${new Date().toLocaleString("ru-RU")}
 ${"═".repeat(60)}
 
-АДРЕС СИСТЕМЫ: https://eco.vercel.app (уточнить после настройки Vercel)
+АДРЕС СИСТЕМЫ: https://centr-tourism.vercel.app
 ВХОД: логин + пароль (латинскими буквами)
 
 ${"═".repeat(60)}

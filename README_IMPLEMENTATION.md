@@ -1,4 +1,4 @@
-# EcoVoyage CRM - Implementation Notes
+# Центр Туризма CRM - Implementation Notes
 
 **Схема запуска и env:** см. [docs/LAUNCH.md](./docs/LAUNCH.md).
 

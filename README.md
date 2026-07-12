@@ -1,4 +1,4 @@
-# EcoVoyage CRM
+# Центр Туризма CRM
 
 Next.js (App Router) + Supabase: туры, брони, оплаты, гиды, выходные, квитанции PDF.
 
