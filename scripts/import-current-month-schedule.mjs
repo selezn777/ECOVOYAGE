@@ -30,11 +30,11 @@ const TEMPLATE_NAMES = {
   ba_ho_pagoda: "Бахо — джунгли и водопады",
   phan_rang: "Фанранг",
   lighthouse: "Маяк — земля первого рассвета",
-  yang_bay: "Янг Бэй — водопад и горячие источники",
-  asia_mix_islands: "Asia Mix Islands — 3 острова",
-  danang_1day: "Дананг — 1 день (sleep-bus)",
-  saigon_1day: "Сайгон — 1 день (sleep-bus)",
-  saigon_2day: "Сайгон — 2 дня (sleep-bus)",
+  yang_bay: "Янг Бэй",
+  asia_mix_islands: "Premium Islands — 3 острова",
+  danang_1day: "Дананг 1 день",
+  saigon_1day: "Сайгон 1 день",
+  saigon_2day: "Сайгон 2 дня",
   fishing_lake: "Рыбалка озёрная",
 };
 
@@ -136,7 +136,7 @@ function slugFromTitle(title) {
   if (t.includes("da lat light") || t.includes("далат light")) return "dalat_light";
   if (t.includes("da lat vip") || t.includes("далат vip")) return "dalat_vip";
   if (t.includes("da lat 2") || t.includes("dalat 2") || t.includes("далат 2")) return "dalat_2day";
-  if (t.includes("asia mix") || t.includes("азия микс")) return "asia_mix_islands";
+  if (t.includes("premium islands") || t.includes("asia mix") || t.includes("азия микс")) return "asia_mix_islands";
   if (t.includes("danang 1") || t.includes("дананг 1")) return "danang_1day";
   if (t.includes("hon tam") || t.includes("хон там")) return "hon_tam";
   if (t.includes("northern islands") || t.includes("северные остров")) return "northern_islands";

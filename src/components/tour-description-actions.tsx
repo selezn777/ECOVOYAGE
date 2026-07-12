@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   buildTemplateDescription,
   buildWhatsappText,
@@ -11,6 +11,7 @@ import {
   parseTemplateDescription,
   sanitizeDescriptionForDisplay,
 } from "@/lib/tour-description-share";
+import { localizeTourDescription } from "@/lib/tour-localization";
 import type { Role } from "@/lib/types";
 
 function canEditTourDescription(role?: Role): boolean {
@@ -37,10 +38,15 @@ export function TourDescriptionPanelContent({
 }) {
   const t = useTranslations("tour");
   const tC = useTranslations("common");
+  const locale = useLocale();
   const [busy, setBusy] = useState(false);
   const [locBusy, setLocBusy] = useState(false);
 
-  const parsed = useMemo(() => parseTemplateDescription(descriptionText), [descriptionText]);
+  const localizedDescriptionText = useMemo(
+    () => localizeTourDescription(descriptionText, tourName, locale),
+    [descriptionText, tourName, locale],
+  );
+  const parsed = useMemo(() => parseTemplateDescription(localizedDescriptionText), [localizedDescriptionText]);
   const urls = useMemo(
     () => parsed.locations.map((l) => ({ url: l.mapUrl, name: l.name })),
     [parsed.locations],
@@ -55,7 +61,7 @@ export function TourDescriptionPanelContent({
         tourName,
         tourDate,
         pickupWindow,
-        description: descriptionText,
+        description: localizedDescriptionText,
         urls,
         includeUrls: allowLinks,
       });

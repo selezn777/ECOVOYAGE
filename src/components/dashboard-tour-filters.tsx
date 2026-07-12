@@ -2,6 +2,8 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useLocale } from "next-intl";
+import { localizeTourName } from "@/lib/tour-localization";
 // onTourSelectHrefPattern prop kept for API compatibility but no longer used (pickTour now applies filter)
 
 export type DashboardFilterPreserved = {
@@ -50,10 +52,13 @@ type Props = {
   onTourSelectHrefPattern?: string;
 };
 
-function nextFilterFromInput(raw: string, tours: UpcomingTour[]): { q: string; tour: string } {
+function nextFilterFromInput(raw: string, tours: UpcomingTour[], locale: string): { q: string; tour: string } {
   const trimmed = raw.trim();
   if (!trimmed) return { q: "", tour: "" };
-  const exactHit = tours.find((t) => t.name.toLowerCase() === trimmed.toLowerCase());
+  const exactHit = tours.find((t) => {
+    const q = trimmed.toLowerCase();
+    return t.name.toLowerCase() === q || localizeTourName(t.name, locale).toLowerCase() === q;
+  });
   if (exactHit) return { q: "", tour: exactHit.name };
   return { q: trimmed, tour: "" };
 }
@@ -66,6 +71,7 @@ export function DashboardTourFilters({
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
+  const locale = useLocale();
   const [pending, startTransition] = useTransition();
   const appliedText = tourExact || q;
   const [draft, setDraft] = useState(appliedText);
@@ -118,29 +124,32 @@ export function DashboardTourFilters({
 
   const applyFromDraft = useCallback(
     (raw: string) => {
-      const next = nextFilterFromInput(raw, upcomingTours);
+      const next = nextFilterFromInput(raw, upcomingTours, locale);
       if (isSameAsApplied(next)) return;
       navigate({ q: next.q, tour: next.tour });
       setOpen(false);
     },
-    [navigate, upcomingTours, isSameAsApplied],
+    [navigate, upcomingTours, isSameAsApplied, locale],
   );
 
   const suggestions = useMemo(() => {
     const t = draft.trim().toLowerCase();
     const list = t
-      ? upcomingTours.filter((tour) => tour.name.toLowerCase().includes(t))
+      ? upcomingTours.filter((tour) => {
+          const localized = localizeTourName(tour.name, locale).toLowerCase();
+          return localized.includes(t) || tour.name.toLowerCase().includes(t);
+        })
       : upcomingTours;
     return list.slice(0, 15);
-  }, [draft, upcomingTours]);
+  }, [draft, upcomingTours, locale]);
 
   const pickTour = useCallback(
     (tour: UpcomingTour) => {
-      setDraft(tour.name);
+      setDraft(localizeTourName(tour.name, locale));
       setOpen(false);
       navigate({ q: "", tour: tour.name });
     },
-    [navigate],
+    [navigate, locale],
   );
 
   const clearFilters = useCallback(() => {
@@ -196,7 +205,7 @@ export function DashboardTourFilters({
                     onClick={() => pickTour(tour)}
                   >
                     <span className="min-w-0 flex-1 truncate font-medium text-[var(--text)]">
-                      {tour.dateLabel} · {tour.name}
+                      {tour.dateLabel} · {localizeTourName(tour.name, locale)}
                     </span>
                     <span className="shrink-0 text-xs font-semibold tabular-nums text-[var(--muted)]">
                       {tour.booked}/{tour.capacity || "—"}

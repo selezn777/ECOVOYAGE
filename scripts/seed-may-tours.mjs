@@ -1,5 +1,5 @@
 /**
- * Seed May 2026 tour schedule for Asia Mix CRM
+ * Seed May 2026 tour schedule for Центр Туризма CRM
  * Run: node scripts/seed-may-tours.mjs
  *
  * Rules encoded (matches API validation):
@@ -44,14 +44,14 @@ const TEMPLATE_NAMES = {
   ba_ho_pagoda:     "Бахо — джунгли и водопады",
   phan_rang:        "Фанранг",
   lighthouse:       "Маяк — земля первого рассвета",
-  yang_bay:         "Янг Бэй — водопад и горячие источники",
-  asia_mix_islands: "Asia Mix Islands — 3 острова",
-  danang_1day:      "Дананг — 1 день (sleep-bus)",
-  danang_2day:      "Дананг + Хойан — 2 дня (sleep-bus)",
-  saigon_1day:      "Сайгон — 1 день (sleep-bus)",
-  saigon_2day:      "Сайгон — 2 дня (sleep-bus)",
+  yang_bay:         "Янг Бэй",
+  asia_mix_islands: "Premium Islands — 3 острова",
+  danang_1day:      "Дананг 1 день",
+  danang_2day:      "Дананг и Хойан 2 дня",
+  saigon_1day:      "Сайгон 1 день",
+  saigon_2day:      "Сайгон 2 дня",
   fishing_lake:     "Рыбалка озёрная",
-  fishing_sea:      "Рыбалка морская",
+  fishing_sea:      "Морская рыбалка",
   emperor_cruise:   "Круиз Emperor 5★ — закат и ужин",
 };
 

@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { DEMO_LOGIN } from "@/lib/auth-session";
 
 function getSessionLogin(req: NextRequest): string | null {
-  const cookie = req.cookies.get("amx_session_v2")?.value;
+  const cookie = req.cookies.get("ct_session_v2")?.value;
   if (!cookie) return null;
   try {
     const payload = JSON.parse(Buffer.from(cookie, "base64url").toString("utf8")) as Record<string, unknown>;

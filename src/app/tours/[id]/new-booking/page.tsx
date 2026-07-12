@@ -10,6 +10,7 @@ import { formatYmdWithWeekday } from "@/lib/scheduling";
 import { canPrefillBookingForEdit, getBookingSalesPrefill } from "@/lib/booking-prefill";
 import { resolveOfferFromTemplateRow } from "@/lib/template-tour-offer";
 import { getLocale } from "next-intl/server";
+import { localizeTourName } from "@/lib/tour-localization";
 
 export default async function NewBookingPage({
   params,
@@ -136,7 +137,7 @@ export default async function NewBookingPage({
       >
         <NewBookingFormSingle
           tourId={id}
-          tourName={tour.name}
+          tourName={localizeTourName(tour.name, locale)}
           tourDate={formatYmdWithWeekday(tour.date, locale)}
           availableSeats={availableSeats}
           templatePriceVnd={templatePriceVnd}

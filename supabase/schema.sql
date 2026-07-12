@@ -1,4 +1,4 @@
--- EcoVoyage CRM core schema (MVP)
+-- Tourism Center CRM core schema (MVP)
 -- Run in Supabase SQL editor.
 
 create extension if not exists "pgcrypto";

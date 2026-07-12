@@ -2,10 +2,12 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import type { AccountingTourRow } from "@/lib/data";
 import { formatVnd } from "@/lib/format";
 import { formatYmdDmyWeekdayLongRu } from "@/lib/scheduling";
 import { AccountingGuideDepositButton } from "@/components/accounting-guide-deposit-button";
+import { localizeTourName } from "@/lib/tour-localization";
 
 function groupRowsByTourDate(rows: AccountingTourRow[]): AccountingTourRow[][] {
   const out: AccountingTourRow[][] = [];
@@ -26,6 +28,7 @@ export function AccountingToursTable({
   todayYmd: string;
 }) {
   const router = useRouter();
+  const locale = useLocale();
   const runs = useMemo(() => groupRowsByTourDate(rows), [rows]);
 
   return (
@@ -49,7 +52,7 @@ export function AccountingToursTable({
                     <div className="flex min-w-0 items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="text-[15px] font-semibold leading-snug text-[var(--text)] group-hover:text-[var(--accent)]">
-                          {t.tourName}
+                          {localizeTourName(t.tourName, locale)}
                         </p>
                         <p className="mt-0.5 text-[12px] text-[var(--muted)]">
                           {t.pax} чел.
@@ -88,7 +91,7 @@ export function AccountingToursTable({
                     <div className="mt-2">
                       <AccountingGuideDepositButton
                         tourId={t.tourId}
-                        tourName={t.tourName}
+                        tourName={localizeTourName(t.tourName, locale)}
                         currentVnd={t.guideCashDepositVnd ?? null}
                         buttonLabel="Депозит гиду"
                       />

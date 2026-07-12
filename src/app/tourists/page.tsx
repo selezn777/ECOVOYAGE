@@ -6,6 +6,7 @@ import { searchBookingsGlobal } from "@/lib/data";
 import { formatVnd } from "@/lib/format";
 import { formatYmdWeekdayLongDmy, formatYmdWithWeekday, tourBusinessTodayYmd } from "@/lib/scheduling";
 import { maskPhone } from "@/lib/tourist-sale-phone";
+import { localizeTourName } from "@/lib/tour-localization";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,7 @@ export default async function TouristsPage({
   const t = await getTranslations("touristsPage");
   const tBooking = await getTranslations("booking");
   const locale = await getLocale();
+  const lTour = (name: string | null | undefined) => localizeTourName(String(name || ""), locale);
   if (!(TOURIST_LIST_ROLES as readonly string[]).includes(user.role)) {
     return (
       <main className="app-wrap">
@@ -183,7 +185,7 @@ export default async function TouristsPage({
                         <div className="mt-0.5 flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-0 text-[11px]">
                           <div className="flex min-w-0 flex-wrap gap-x-2">
                             <span className="font-medium text-[var(--muted2)]">
-                              {r.tourName}
+                              {lTour(r.tourName)}
                               {q && r.tourDate ? <span className="ml-1 font-normal">· {formatYmdWithWeekday(r.tourDate, locale)}</span> : null}
                             </span>
                             {(isDirectorLike || isManager) && r.managerName ? (
@@ -334,7 +336,7 @@ export default async function TouristsPage({
                     <span className="tabular-nums font-medium text-[var(--text)]">{formatVnd(r.totalVnd)}</span>
                   </div>
                   <div className="mt-1.5 text-xs text-[var(--muted2)]">
-                    {r.tourName || t("noTourFallback")}
+                    {r.tourName ? lTour(r.tourName) : t("noTourFallback")}
                     {r.tourDate ? <span className="ml-1">· {formatYmdWithWeekday(r.tourDate, locale)}</span> : null}
                   </div>
                 </Link>

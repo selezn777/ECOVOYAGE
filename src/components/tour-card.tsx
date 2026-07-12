@@ -12,6 +12,7 @@ import { TourCardHeaderWithDescription } from "@/components/tour-card-header-wit
 import { GuideBusCard } from "@/components/guide-bus-card";
 import { ChiefGuideAssignModal } from "@/components/chief-guide-assign-modal";
 import { OverbookResolutionActions } from "@/components/overbook-resolution-actions";
+import { localizeTourDescription, localizeTourName } from "@/lib/tour-localization";
 
 interface Props {
   tour: Tour;
@@ -518,6 +519,8 @@ export async function TourCard({ tour, viewerRole, bookingIntentHref }: Props) {
   const t = await getTranslations("tour");
   const { getLocale } = await import("next-intl/server");
   const locale = await getLocale();
+  const displayTourName = localizeTourName(tour.name, locale);
+  const displayTourDescription = localizeTourDescription(tour.descriptionOverride, tour.name, locale);
   const free = tour.capacity - tour.booked;
   const overbook = free < 0;
   const durationDays = inclusiveCalendarDaysBetween(
@@ -544,13 +547,13 @@ export async function TourCard({ tour, viewerRole, bookingIntentHref }: Props) {
         href={bookingIntentHref || `/tours/${tour.id}`}
         prefetch={false}
         className="absolute inset-0 z-[1] rounded-[inherit]"
-        aria-label={`Открыть тур «${tour.name}»`}
+        aria-label={`Открыть тур «${displayTourName}»`}
       />
       <div className="relative z-[2] pointer-events-none">
       <TourCardHeaderWithDescription
         templateId={tour.templateId}
-        prefetchedDescriptionText={tour.descriptionOverride?.trim() ? tour.descriptionOverride : undefined}
-        tourName={tour.name}
+        prefetchedDescriptionText={displayTourDescription.trim() ? displayTourDescription : undefined}
+        tourName={displayTourName}
         tourDateLabel={formatYmdWeekdayLongDmy(tour.date, locale)}
         pickupWindow={tour.pickupWindow}
         viewerRole={viewerRole}
@@ -572,7 +575,7 @@ export async function TourCard({ tour, viewerRole, bookingIntentHref }: Props) {
             {showChiefGuideAssignmentChip ? (
               <ChiefGuideAssignModal
                 tourId={tour.id}
-                tourName={tour.name}
+                tourName={displayTourName}
                 tourDate={tour.date}
                 pickupWindow={tour.pickupWindow}
                 templateId={tour.templateId}
@@ -586,7 +589,7 @@ export async function TourCard({ tour, viewerRole, bookingIntentHref }: Props) {
         <div className="block min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <div className="line-clamp-2 min-w-0 flex-1 text-[17px] font-semibold leading-snug tracking-tight text-[var(--text)] sm:text-[18px]">
-              {tour.name}
+              {displayTourName}
             </div>
             {tour.descriptionOverride?.trim() ? (
               <span className="shrink-0 rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-950 ring-1 ring-amber-300/70 dark:bg-amber-950/45 dark:text-amber-100 dark:ring-amber-600/45">

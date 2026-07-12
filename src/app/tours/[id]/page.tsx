@@ -68,6 +68,7 @@ import {
 } from "@/lib/scheduling";
 import { isPastTourBookingEditCutoff, isTourBookingCardLockedForManager } from "@/lib/tour-booking-policies";
 import { redactBookingTouristPii } from "@/lib/booking-privacy";
+import { localizeTourDescription, localizeTourName } from "@/lib/tour-localization";
 
 export default async function TourDetailsPage({
   params,
@@ -82,6 +83,7 @@ export default async function TourDetailsPage({
   const { id } = await params;
   const tour = await getTourById(id);
   if (!tour) notFound();
+  const displayTourName = localizeTourName(tour.name, locale);
 
   const [rows, tourExpenses, tourAdvances, advanceEmployees, assignedAsGuide, manifestState, guideSalaryRecords, dispatcherBookingEntry] = await Promise.all([
     listBookingsForTour(id),
@@ -120,6 +122,7 @@ export default async function TourDetailsPage({
     getTourTemplateReviewMessage(tour.templateId),
     isManagerRole ? getManagerTourMessageOverride(id, user.id) : Promise.resolve(null),
   ]);
+  const localizedTourDescription = localizeTourDescription(tourTemplateDescription, tour.name, locale);
 
   // Менеджеры: личное override → шаблон; гиды — своё операционное
   const isGuideRole = user.role === "guide" || user.role === "chief_guide";
@@ -436,7 +439,7 @@ export default async function TourDetailsPage({
           <div className="min-w-0 flex-1">
             <p className="section-label mb-2">{t("tourDate")}</p>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="page-title mb-0">{tour.name}</h1>
+              <h1 className="page-title mb-0">{displayTourName}</h1>
               {tour.descriptionOverride?.trim() ? (
                 <span
                   className="rounded-lg bg-amber-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-950 ring-1 ring-amber-300/80 dark:bg-amber-950/50 dark:text-amber-100 dark:ring-amber-600/50"
@@ -514,10 +517,10 @@ export default async function TourDetailsPage({
           <div className="mt-4 border-b border-[var(--border)] pb-4">
             <TourDescriptionActions
               tourId={tour.id}
-              tourName={tour.name}
+              tourName={displayTourName}
               tourDate={formatYmdWithWeekday(tour.date, locale)}
               pickupWindow={tour.pickupWindow}
-              description={tourTemplateDescription}
+              description={localizedTourDescription}
               viewerRole={user.role}
               templateId={tour.templateId}
             />
@@ -765,7 +768,7 @@ export default async function TourDetailsPage({
 
       {(user.role === "director" || user.role === "chief_manager" || user.role === "dispatcher") ? (
         <div className="mt-6 border-t border-[var(--border)] pt-4">
-          <TourDeleteButton tourId={tour.id} tourName={tour.name} />
+          <TourDeleteButton tourId={tour.id} tourName={displayTourName} />
         </div>
       ) : null}
     </main>

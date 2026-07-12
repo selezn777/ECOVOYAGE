@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useLocale } from "next-intl";
 import { TourDescriptionPanelContent } from "@/components/tour-description-actions";
 import type { Role } from "@/lib/types";
 import { parseTemplateDescription } from "@/lib/tour-description-share";
+import { localizeTourDescription } from "@/lib/tour-localization";
 
 type Props = {
   children: ReactNode;
@@ -27,6 +29,7 @@ export function TourCardHeaderWithDescription({
   pickupWindow,
   viewerRole,
 }: Props) {
+  const locale = useLocale();
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [locationsBusy, setLocationsBusy] = useState(false);
@@ -38,6 +41,10 @@ export function TourCardHeaderWithDescription({
     viewerRole === "chief_guide" ||
     viewerRole === "dispatcher" ||
     viewerRole === "booking_dispatcher";
+  const localizedDescriptionText = useMemo(
+    () => localizeTourDescription(descriptionText, tourName, locale),
+    [descriptionText, tourName, locale],
+  );
 
   async function loadDescriptionForTemplate(id: string): Promise<string> {
     const cached = cacheRef.current.get(id);
@@ -178,7 +185,7 @@ export function TourCardHeaderWithDescription({
             tourName={tourName}
             tourDate={tourDateLabel}
             pickupWindow={pickupWindow}
-            descriptionText={descriptionText}
+            descriptionText={localizedDescriptionText}
             loading={loading}
             errorMessage={errorMessage}
             viewerRole={viewerRole}

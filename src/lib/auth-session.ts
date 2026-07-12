@@ -2,9 +2,9 @@ import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import type { Role, SessionUser } from "@/lib/types";
 
-const COOKIE_NAME = "amx_session_v2";
-export const MANAGER_MODE_COOKIE_NAME = "amx_manager_mode";
-export const DIRECTOR_VIEW_AS_COOKIE_NAME = "amx_director_view_as";
+const COOKIE_NAME = "ct_session_v2";
+export const MANAGER_MODE_COOKIE_NAME = "ct_manager_mode";
+export const DIRECTOR_VIEW_AS_COOKIE_NAME = "ct_director_view_as";
 
 export const DIRECTOR_VIEW_AS_ROLES: Role[] = [
   "chief_manager", "manager", "chief_guide", "guide", "dispatcher", "booking_dispatcher", "accountant",

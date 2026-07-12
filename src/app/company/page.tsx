@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/auth-session";
 import { formatVnd } from "@/lib/format";
 import { getDirectorCompanyDashboard, type DirectorCompanyDashboard } from "@/lib/data";
 import { roleLabel } from "@/lib/role-labels";
+import { localizeTourName } from "@/lib/tour-localization";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -1040,6 +1041,7 @@ export default async function CompanyPage({
   const t = companyCopy(locale);
   const vnd = (value: number) => compactVnd(value, locale);
   const rLabel = (role: string) => roleName(role, locale);
+  const lTour = (name: string | null | undefined) => localizeTourName(String(name || ""), locale);
 
   const sp = await searchParams;
   const rawMonth = pickFirst(sp.month);
@@ -1411,14 +1413,14 @@ export default async function CompanyPage({
         <Section title={t.toursTitle} eyebrow={t.toursEyebrow}>
           <div className="mb-3 grid gap-3 sm:grid-cols-3">
             <Metric label={t.toursTitle} value={String(toursWithMotion.length)} sub={data.tours.length > toursWithMotion.length ? `${t.toursWithMotion} · ${data.tours.length}` : t.toursWithMotion} />
-            <Metric label={t.topTour} value={bestTour ? vnd(bestTour.revenueVnd) : "0 đ"} sub={bestTour?.name || t.noData} />
+            <Metric label={t.topTour} value={bestTour ? vnd(bestTour.revenueVnd) : "0 đ"} sub={bestTour ? lTour(bestTour.name) : t.noData} />
             <Metric label={t.load} value={bestTour ? pct(bestTour.loadPct) : "0%"} sub={bestTour ? `${bestTour.tourists}/${bestTour.capacity || "?"} ${t.seats}` : t.noData} />
           </div>
           <div className="grid gap-3">
             {tourRows.slice(0, 11).map((t, idx) => (
               <BarRow
                 key={t.tourId}
-                label={`${idx + 2}. ${t.name}`}
+                label={`${idx + 2}. ${lTour(t.name)}`}
                 value={vnd(t.profitVnd)}
                 sub={`${t.dateYmd} · ${t.bookings} ${COMPANY_TEXT[locale].bookings} · ${t.tourists} ${COMPANY_TEXT[locale].tourists} · ${COMPANY_TEXT[locale].revenue} ${vnd(t.revenueVnd)} · ${COMPANY_TEXT[locale].expenses} ${vnd(t.expenseVnd)}`}
                 percent={t.loadPct || (f.revenueVnd > 0 ? (t.revenueVnd / f.revenueVnd) * 100 : 0)}
@@ -1433,7 +1435,7 @@ export default async function CompanyPage({
               mobile={toursWithMotion.map((t) => (
                 <MobileDetailCard
                   key={t.tourId}
-                  title={t.name}
+                  title={lTour(t.name)}
                   href={`/tours/${t.tourId}`}
                   meta={`${t.dateYmd} · ${t.bookings} ${COMPANY_TEXT[locale].bookings} · ${t.tourists} ${COMPANY_TEXT[locale].tourists}`}
                   stats={[
@@ -1447,7 +1449,7 @@ export default async function CompanyPage({
             >
               {toursWithMotion.map((t) => (
                 <tr key={t.tourId}>
-                  <td className="px-3 py-2"><CellLink href={`/tours/${t.tourId}`}>{t.name}</CellLink></td>
+                  <td className="px-3 py-2"><CellLink href={`/tours/${t.tourId}`}>{lTour(t.name)}</CellLink></td>
                   <td className="px-3 py-2 text-[var(--muted)]">{t.dateYmd}</td>
                   <td className="px-3 py-2 font-bold">{t.bookings}</td>
                   <td className="px-3 py-2 font-bold">{t.tourists}</td>
@@ -1468,7 +1470,7 @@ export default async function CompanyPage({
                 mobile={data.investigations.weakTours.map((t) => (
                   <MobileDetailCard
                     key={`${t.tourId}-${t.reason}`}
-                    title={t.name}
+                    title={lTour(t.name)}
                     href={`/tours/${t.tourId}`}
                     meta={t.dateYmd}
                     warning={t.reason}
@@ -1483,7 +1485,7 @@ export default async function CompanyPage({
               >
                 {data.investigations.weakTours.map((t) => (
                   <tr key={`${t.tourId}-${t.reason}`}>
-                    <td className="px-3 py-2"><CellLink href={`/tours/${t.tourId}`}>{t.name}</CellLink></td>
+                    <td className="px-3 py-2"><CellLink href={`/tours/${t.tourId}`}>{lTour(t.name)}</CellLink></td>
                     <td className="px-3 py-2 text-[var(--muted)]">{t.dateYmd}</td>
                     <td className="px-3 py-2 text-amber-700 font-bold">{t.reason}</td>
                     <td className="px-3 py-2 font-bold">{vnd(t.revenueVnd)}</td>
@@ -1617,7 +1619,7 @@ export default async function CompanyPage({
                     key={b.bookingId}
                     title={`${b.code} · ${b.customerName}`}
                     href={`/tourists/${b.bookingId}`}
-                    meta={`${b.tourName} · ${b.dateYmd} · ${b.managerName}`}
+                    meta={`${lTour(b.tourName)} · ${b.dateYmd} · ${b.managerName}`}
                     stats={[
                       { label: t.total, value: vnd(b.totalVnd) },
                       { label: t.paid, value: vnd(b.paidVnd), tone: "green" },
@@ -1631,7 +1633,7 @@ export default async function CompanyPage({
                   <tr key={b.bookingId}>
                     <td className="px-3 py-2"><CellLink href={`/tourists/${b.bookingId}`}>{b.code}</CellLink></td>
                     <td className="px-3 py-2 font-bold">{b.customerName}</td>
-                    <td className="px-3 py-2"><CellLink href={`/tours/${b.tourId}`}>{b.tourName}</CellLink></td>
+                    <td className="px-3 py-2"><CellLink href={`/tours/${b.tourId}`}>{lTour(b.tourName)}</CellLink></td>
                     <td className="px-3 py-2 text-[var(--muted)]">{b.dateYmd}</td>
                     <td className="px-3 py-2 text-[var(--muted)]">{b.managerName}</td>
                     <td className="px-3 py-2 text-[var(--muted)]">{b.pointName}</td>
@@ -1656,7 +1658,7 @@ export default async function CompanyPage({
                       key={b.bookingId}
                       title={`${b.code} · ${b.customerName}`}
                       href={`/tourists/${b.bookingId}`}
-                      meta={`${b.tourName} · ${b.dateYmd} · ${b.managerName}`}
+                      meta={`${lTour(b.tourName)} · ${b.dateYmd} · ${b.managerName}`}
                       warning={t.fallbackWarning}
                       stats={[
                         { label: t.estimate, value: vnd(b.estimatedVnd), tone: "amber" },
@@ -1669,7 +1671,7 @@ export default async function CompanyPage({
                     <tr key={b.bookingId}>
                       <td className="px-3 py-2"><CellLink href={`/tourists/${b.bookingId}`}>{b.code}</CellLink></td>
                       <td className="px-3 py-2 font-bold">{b.customerName}</td>
-                      <td className="px-3 py-2"><CellLink href={`/tours/${b.tourId}`}>{b.tourName}</CellLink></td>
+                      <td className="px-3 py-2"><CellLink href={`/tours/${b.tourId}`}>{lTour(b.tourName)}</CellLink></td>
                       <td className="px-3 py-2 text-[var(--muted)]">{b.dateYmd}</td>
                       <td className="px-3 py-2 text-[var(--muted)]">{b.managerName}</td>
                       <td className="px-3 py-2 font-bold">{b.tourists}</td>
@@ -1689,7 +1691,7 @@ export default async function CompanyPage({
                       key={`${b.bookingId}-${b.issue}`}
                       title={`${b.code} · ${b.customerName}`}
                       href={`/tourists/${b.bookingId}`}
-                      meta={`${b.tourName} · ${b.dateYmd} · ${b.managerName}`}
+                      meta={`${lTour(b.tourName)} · ${b.dateYmd} · ${b.managerName}`}
                       warning={b.issue}
                       stats={[
                         { label: t.check, value: t.open },
@@ -1702,7 +1704,7 @@ export default async function CompanyPage({
                       <td className="px-3 py-2"><CellLink href={`/tourists/${b.bookingId}`}>{b.code}</CellLink></td>
                       <td className="px-3 py-2 font-bold">{b.customerName}</td>
                       <td className="px-3 py-2 text-amber-700 font-bold">{b.issue}</td>
-                      <td className="px-3 py-2"><CellLink href={`/tours/${b.tourId}`}>{b.tourName}</CellLink></td>
+                      <td className="px-3 py-2"><CellLink href={`/tours/${b.tourId}`}>{lTour(b.tourName)}</CellLink></td>
                       <td className="px-3 py-2 text-[var(--muted)]">{b.dateYmd}</td>
                       <td className="px-3 py-2 text-[var(--muted)]">{b.managerName}</td>
                     </tr>

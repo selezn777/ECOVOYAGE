@@ -90,7 +90,7 @@ const TOUR_LOCATIONS = {
     { name: "Заповедник Бахо", description: "Джунгли, горная река, валуны, купание", mapUrl: gm("Ba Ho Nature Reserve Nha Trang Vietnam"), recommendedTime: "10:00" },
   ],
 
-  "Янг Бэй — водопад и горячие источники": [
+  "Янг Бэй": [
     { name: "Эко-парк Янг Бэй", description: "Водопад, термальные источники 15–50°C, шоу народа Раглай", mapUrl: gm("Yang Bay Eco Park Nha Trang Vietnam"), recommendedTime: "08:30" },
   ],
 
@@ -116,7 +116,7 @@ const TOUR_LOCATIONS = {
     { name: "Остров Обезьян (Hòn Lao)", description: "Сотни обезьян, интерактивное шоу", mapUrl: gm("Monkey Island Hon Lao Nha Trang Vietnam"), recommendedTime: "11:00" },
   ],
 
-  "Asia Mix Islands — 3 острова": [
+  "Premium Islands": [
     { name: "Снорклинг-спот (открытое море)", description: "Кораллы, тропические рыбы", mapUrl: gm("Nha Trang Bay snorkeling Vietnam") },
     { name: "Остров Хон Там", description: "Белый песок, прозрачная вода, водные развлечения", mapUrl: gm("Hon Tam Island Nha Trang Vietnam"), recommendedTime: "09:00" },
     { name: "Бухта Санхо", description: "Обед, бассейн, пенная вечеринка", mapUrl: gm("Sanho Bay Nha Trang Vietnam"), recommendedTime: "12:00" },
@@ -140,7 +140,7 @@ const TOUR_LOCATIONS = {
     { name: "Снорклинг-споты у Хон Тре", description: "Кораллы и рыбы у острова Хон Тре", mapUrl: gm("Hon Tre Island snorkeling Nha Trang Vietnam"), recommendedTime: "09:00" },
   ],
 
-  "Рыбалка морская": [
+  "Морская рыбалка": [
     { name: "Порт Нячанга (Cầu Đá)", description: "Старт маршрута", mapUrl: gm("Cau Da Port Nha Trang Vietnam"), recommendedTime: "07:30" },
     { name: "Острова Хон Мун / Хон Миеу", description: "Рыбалка, снорклинг, купание", mapUrl: gm("Hon Mun Island Marine Protected Area Nha Trang Vietnam") },
     { name: "Плавучая рыбацкая деревня", description: "Готовим ваш улов, обед", mapUrl: gm("Floating fishing village Nha Trang Bay Vietnam") },
@@ -171,13 +171,13 @@ const TOUR_LOCATIONS = {
     { name: "I-Resort Spa Нячанг", description: "Грязевые ванны, термальные источники, аквапарк", mapUrl: gm("I-Resort Spa Nha Trang Vietnam"), recommendedTime: "08:30" },
   ],
 
-  "Дананг — 1 день (sleep-bus)": [
+  "Дананг 1 день": [
     { name: "Автовокзал Нячанга (Phía Nam)", description: "Посадка на VIP sleep-bus", mapUrl: gm("Nha Trang Southern Bus Station Vietnam"), recommendedTime: "19:00" },
     { name: "Мост Дракона (Cầu Rồng)", description: "Символ Дананга, вид на реку Хан", mapUrl: gm("Dragon Bridge Da Nang Vietnam"), recommendedTime: "07:30" },
     { name: "Ba Na Hills", description: "Золотой мост, Руки Бога, Французская деревня", mapUrl: gm("Ba Na Hills Da Nang Vietnam"), recommendedTime: "08:30" },
   ],
 
-  "Дананг + Хойан — 2 дня (sleep-bus)": [
+  "Дананг и Хойан 2 дня": [
     { name: "Автовокзал Нячанга", description: "Посадка на VIP sleep-bus", mapUrl: gm("Nha Trang Southern Bus Station Vietnam"), recommendedTime: "19:00" },
     { name: "Мост Дракона", description: "Символ Дананга", mapUrl: gm("Dragon Bridge Da Nang Vietnam") },
     { name: "Ba Na Hills", description: "Золотой мост, Руки Бога, канатная дорога", mapUrl: gm("Ba Na Hills Da Nang Vietnam"), recommendedTime: "08:30" },
@@ -186,7 +186,7 @@ const TOUR_LOCATIONS = {
     { name: "Старый город Хойан", description: "ЮНЕСКО, фонарики, атмосфера", mapUrl: gm("Hoi An Ancient Town Vietnam"), recommendedTime: "19:30" },
   ],
 
-  "Сайгон — 1 день (sleep-bus)": [
+  "Сайгон 1 день": [
     { name: "Автовокзал Нячанга", description: "Посадка на VIP sleep-bus", mapUrl: gm("Nha Trang Southern Bus Station Vietnam"), recommendedTime: "20:00" },
     { name: "Главный почтамт Сайгона", description: "Французская архитектура, открыт для туристов", mapUrl: gm("Saigon Central Post Office Ho Chi Minh City Vietnam") },
     { name: "Собор Нотр-Дам де Сайгон", description: "Готика XIX века", mapUrl: gm("Notre Dame Cathedral Saigon Ho Chi Minh Vietnam") },
@@ -194,7 +194,7 @@ const TOUR_LOCATIONS = {
     { name: "Туннели Кучи", description: "Подземные ходы времён войны", mapUrl: gm("Cu Chi Tunnels Ho Chi Minh Vietnam") },
   ],
 
-  "Сайгон — 2 дня (sleep-bus)": [
+  "Сайгон 2 дня": [
     { name: "Автовокзал Нячанга", description: "Посадка на VIP sleep-bus", mapUrl: gm("Nha Trang Southern Bus Station Vietnam"), recommendedTime: "20:30" },
     { name: "Дельта Меконга (Ми Тхо)", description: "Лодки, острова, ремёсла", mapUrl: gm("My Tho Mekong Delta Vietnam") },
     { name: "Туннели Ку Чи", description: "История войны, подземные ходы", mapUrl: gm("Cu Chi Tunnels Ho Chi Minh Vietnam") },

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { AccountingActionsProvider } from "@/components/accounting-actions-context";
 import { TopNav } from "@/components/top-nav";
 import { TourAccountingAckManifestButton } from "@/components/tour-accounting-ack-manifest-button";
@@ -28,6 +28,7 @@ import { partitionDispatcherExpenses } from "@/lib/tour-expense-partition";
 import { computeTourGuideSettlementBreakdown } from "@/lib/tour-guide-settlement";
 import { formatYmdWithWeekdayRu, tourBusinessTodayYmd } from "@/lib/scheduling";
 import type { PaymentStatus } from "@/lib/types";
+import { localizeTourName } from "@/lib/tour-localization";
 
 export const dynamic = "force-dynamic";
 
@@ -87,6 +88,7 @@ export default async function TourAccountingSummaryPage({
   const tTour = await getTranslations("tour");
   const tBooking = await getTranslations("booking");
   const tCommon = await getTranslations("common");
+  const locale = await getLocale();
   const paymentStatusT = { tour: tTour, booking: tBooking };
 
   const { id } = await params;
@@ -172,7 +174,7 @@ export default async function TourAccountingSummaryPage({
 
       {/* Шапка тура */}
       <section className="card mb-3">
-        <h1 className="text-base font-semibold leading-snug text-[var(--text)]">{tour.name}</h1>
+        <h1 className="text-base font-semibold leading-snug text-[var(--text)]">{localizeTourName(tour.name, locale)}</h1>
         <p className="mt-0.5 text-xs text-[var(--muted)]">{formatYmdWithWeekdayRu(tour.date)}</p>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
           <div className="rounded-xl bg-[var(--surface-soft)] px-2 py-2 ring-1 ring-[var(--border)]">

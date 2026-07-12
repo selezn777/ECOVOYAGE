@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useState, useMemo, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { formatYmdWeekdayLongDmy } from "@/lib/scheduling";
+import { localizeTourName } from "@/lib/tour-localization";
 import type { Tour } from "@/lib/types";
 import type { Role } from "@/lib/types";
 
@@ -20,12 +21,13 @@ function isPartnerTour(name: string): boolean {
 
 type TourNameGroup = { name: string; items: Tour[]; totalBooked: number };
 
-function groupToursByName(tours: Tour[]): TourNameGroup[] {
+function groupToursByName(tours: Tour[], locale: string): TourNameGroup[] {
   const nameMap = new Map<string, Tour[]>();
   for (const t of tours) {
-    const arr = nameMap.get(t.name) ?? [];
+    const name = localizeTourName(t.name, locale);
+    const arr = nameMap.get(name) ?? [];
     arr.push(t);
-    nameMap.set(t.name, arr);
+    nameMap.set(name, arr);
   }
   return [...nameMap.entries()]
     .map(([name, items]) => ({
@@ -41,7 +43,7 @@ function groupToursByName(tours: Tour[]): TourNameGroup[] {
     });
 }
 
-function groupToursByDate(tours: Tour[]): { date: string; nameGroups: TourNameGroup[] }[] {
+function groupToursByDate(tours: Tour[], locale: string): { date: string; nameGroups: TourNameGroup[] }[] {
   const order: string[] = [];
   const map = new Map<string, Tour[]>();
   for (const t of tours) {
@@ -52,7 +54,7 @@ function groupToursByDate(tours: Tour[]): { date: string; nameGroups: TourNameGr
   }
   return order.map((date) => ({
     date,
-    nameGroups: groupToursByName(map.get(date) ?? []),
+    nameGroups: groupToursByName(map.get(date) ?? [], locale),
   }));
 }
 
@@ -88,6 +90,7 @@ type Props = {
 
 export function DashboardTourListClient({ tours, initialQ = "", viewerRole }: Props) {
   const isDispatcher = viewerRole === "dispatcher" || viewerRole === "booking_dispatcher";
+  const locale = useLocale();
   const tDashboard = useTranslations("dashboard");
   const tDispatcher = useTranslations("dispatcher");
   const [query, setQuery] = useState(initialQ);
@@ -99,16 +102,19 @@ export function DashboardTourListClient({ tours, initialQ = "", viewerRole }: Pr
 
   const filtered = useMemo(() => {
     if (!trimmed) return tours;
-    return tours.filter((t) => t.name.toLowerCase().includes(trimmed));
-  }, [tours, trimmed]);
+    return tours.filter((t) => {
+      const localized = localizeTourName(t.name, locale).toLowerCase();
+      return localized.includes(trimmed) || t.name.toLowerCase().includes(trimmed);
+    });
+  }, [tours, trimmed, locale]);
 
   const suggestions = useMemo(() => {
-    const names = [...new Set(tours.map((t) => t.name))];
+    const names = [...new Set(tours.map((t) => localizeTourName(t.name, locale)))];
     if (!trimmed) return [];
     return names.filter((n) => n.toLowerCase().includes(trimmed)).slice(0, 8);
-  }, [tours, trimmed]);
+  }, [tours, trimmed, locale]);
 
-  const grouped = useMemo(() => groupToursByDate(filtered), [filtered]);
+  const grouped = useMemo(() => groupToursByDate(filtered, locale), [filtered, locale]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -216,7 +222,8 @@ export function DashboardTourListClient({ tours, initialQ = "", viewerRole }: Pr
                         : booked > 0
                           ? "text-emerald-600 dark:text-emerald-400"
                           : "text-[var(--muted2)]";
-                    const displayName = itemIdx === 0 ? tour.name : `${tour.name} (${itemIdx + 1})`;
+                    const localizedName = localizeTourName(tour.name, locale);
+                    const displayName = itemIdx === 0 ? localizedName : `${localizedName} (${itemIdx + 1})`;
                     const fillPct = cap > 0 ? Math.min(100, Math.round((booked / cap) * 100)) : 0;
 
                     return (

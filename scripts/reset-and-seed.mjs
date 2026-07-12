@@ -38,16 +38,17 @@ const CREATE_ACCOUNTS = args.includes("--create-accounts");
 
 // ─── STAFF LIST (минимальный стартовый набор Центр Туризма) ────────────────────────
 const STAFF = [
-  { fullName: "Директор",              login: "director",       password: "CenterTourism01!", role: "director" },
-  { fullName: "Старший менеджер",      login: "chief.manager",   password: "CenterTourism02!", role: "chief_manager" },
-  { fullName: "Менеджер 1",            login: "manager1",        password: "CenterTourism03!", role: "manager" },
-  { fullName: "Менеджер 2",            login: "manager2",        password: "CenterTourism04!", role: "manager" },
-  { fullName: "Старший гид",           login: "chief.guide",     password: "CenterTourism05!", role: "chief_guide" },
-  { fullName: "Гид 1",                 login: "guide1",          password: "CenterTourism06!", role: "guide" },
-  { fullName: "Гид 2",                 login: "guide2",          password: "CenterTourism07!", role: "guide" },
-  { fullName: "Бухгалтер",             login: "accountant",      password: "CenterTourism08!", role: "accountant" },
-  { fullName: "Диспетчер",             login: "dispatcher",      password: "CenterTourism09!", role: "dispatcher" },
-  { fullName: "Диспетчер броней",      login: "booking.dispatcher", password: "CenterTourism10!", role: "booking_dispatcher" },
+  { fullName: "Алексей Орлов",         login: "director",          password: "CenterTourism01!", role: "director" },
+  { fullName: "Анна Коваль",           login: "chief.manager",     password: "CenterTourism02!", role: "chief_manager" },
+  { fullName: "Марина Соколова",       login: "manager1",          password: "CenterTourism03!", role: "manager" },
+  { fullName: "Дмитрий Лебедев",       login: "manager2",          password: "CenterTourism04!", role: "manager" },
+  { fullName: "Нгуен Тхи Лан",         login: "manager3",          password: "CenterTourism05!", role: "manager" },
+  { fullName: "Иван Петров",           login: "chief.guide",       password: "CenterTourism06!", role: "chief_guide" },
+  { fullName: "Руслан Волков",         login: "guide1",            password: "CenterTourism07!", role: "guide" },
+  { fullName: "Tran Minh Anh",         login: "guide2",            password: "CenterTourism08!", role: "guide" },
+  { fullName: "Екатерина Смирнова",    login: "accountant",        password: "CenterTourism09!", role: "accountant" },
+  { fullName: "Le Viet Hoang",         login: "dispatcher",        password: "CenterTourism10!", role: "dispatcher" },
+  { fullName: "Ольга Морозова",        login: "booking.dispatcher", password: "CenterTourism11!", role: "booking_dispatcher" },
 ];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────

@@ -85,7 +85,7 @@ export function EditingRefreshGuard() {
         return;
       }
       try {
-        const key = "__amx_chunk_reload_once__";
+        const key = "__ct_chunk_reload_once__";
         if (window.sessionStorage.getItem(key) === "1") return;
         window.sessionStorage.setItem(key, "1");
       } catch {}
@@ -198,4 +198,3 @@ export function EditingRefreshGuard() {
 
   return null;
 }
-
