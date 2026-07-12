@@ -6,11 +6,11 @@ self.addEventListener("push", (event) => {
     payload = { title: "Уведомление", body: event.data ? event.data.text() : "" };
   }
 
-  const title = payload && payload.title ? String(payload.title) : "EcoVoyage";
+  const title = payload && payload.title ? String(payload.title) : "Центр Туризма";
   const options = {
     body: payload && payload.body ? String(payload.body) : "",
-    icon: "/ecovoyage-mark.png",
-    badge: "/ecovoyage-mark.png",
+    icon: "/tourism-center-logo.png",
+    badge: "/tourism-center-logo.png",
     data: {
       url: payload && payload.url ? String(payload.url) : "/dashboard",
     },
@@ -36,4 +36,3 @@ self.addEventListener("notificationclick", (event) => {
     }),
   );
 });
-

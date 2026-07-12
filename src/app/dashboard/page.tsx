@@ -228,7 +228,7 @@ export default async function DashboardPage({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="inline-flex rounded-full bg-[var(--accent-soft)] px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-[var(--accent-dark)]">
-              EcoVoyage
+              Центр Туризма
             </div>
             <h1 className="mt-2 text-[28px] font-extrabold leading-none tracking-normal text-[var(--text)] sm:text-4xl">{t("title")}</h1>
           </div>

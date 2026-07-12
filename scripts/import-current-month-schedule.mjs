@@ -1,5 +1,5 @@
 /**
- * Import a pasted EcoVoyage tour schedule into a target month.
+ * Import a pasted Центр Туризма tour schedule into a target month.
  *
  * Example:
  *   node scripts/import-current-month-schedule.mjs --file /path/pasted-text.txt --month 2026-07

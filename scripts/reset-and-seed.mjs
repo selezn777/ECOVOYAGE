@@ -36,18 +36,18 @@ const SHOW_USERS = args.includes("--show-users");
 const DO_RESET = args.includes("--do-reset");
 const CREATE_ACCOUNTS = args.includes("--create-accounts");
 
-// ─── STAFF LIST (минимальный стартовый набор EcoVoyage) ────────────────────────
+// ─── STAFF LIST (минимальный стартовый набор Центр Туризма) ────────────────────────
 const STAFF = [
-  { fullName: "Директор",              login: "director",       password: "EcoVoyage01!", role: "director" },
-  { fullName: "Старший менеджер",      login: "chief.manager",   password: "EcoVoyage02!", role: "chief_manager" },
-  { fullName: "Менеджер 1",            login: "manager1",        password: "EcoVoyage03!", role: "manager" },
-  { fullName: "Менеджер 2",            login: "manager2",        password: "EcoVoyage04!", role: "manager" },
-  { fullName: "Старший гид",           login: "chief.guide",     password: "EcoVoyage05!", role: "chief_guide" },
-  { fullName: "Гид 1",                 login: "guide1",          password: "EcoVoyage06!", role: "guide" },
-  { fullName: "Гид 2",                 login: "guide2",          password: "EcoVoyage07!", role: "guide" },
-  { fullName: "Бухгалтер",             login: "accountant",      password: "EcoVoyage08!", role: "accountant" },
-  { fullName: "Диспетчер",             login: "dispatcher",      password: "EcoVoyage09!", role: "dispatcher" },
-  { fullName: "Диспетчер броней",      login: "booking.dispatcher", password: "EcoVoyage10!", role: "booking_dispatcher" },
+  { fullName: "Директор",              login: "director",       password: "CenterTourism01!", role: "director" },
+  { fullName: "Старший менеджер",      login: "chief.manager",   password: "CenterTourism02!", role: "chief_manager" },
+  { fullName: "Менеджер 1",            login: "manager1",        password: "CenterTourism03!", role: "manager" },
+  { fullName: "Менеджер 2",            login: "manager2",        password: "CenterTourism04!", role: "manager" },
+  { fullName: "Старший гид",           login: "chief.guide",     password: "CenterTourism05!", role: "chief_guide" },
+  { fullName: "Гид 1",                 login: "guide1",          password: "CenterTourism06!", role: "guide" },
+  { fullName: "Гид 2",                 login: "guide2",          password: "CenterTourism07!", role: "guide" },
+  { fullName: "Бухгалтер",             login: "accountant",      password: "CenterTourism08!", role: "accountant" },
+  { fullName: "Диспетчер",             login: "dispatcher",      password: "CenterTourism09!", role: "dispatcher" },
+  { fullName: "Диспетчер броней",      login: "booking.dispatcher", password: "CenterTourism10!", role: "booking_dispatcher" },
 ];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -200,7 +200,7 @@ ${"═".repeat(60)}
   doc += `ВАЖНО: После первого входа попросите сотрудников\n`;
   doc += `сменить пароль в настройках профиля.\n`;
 
-  const outPath = resolve(homedir(), "Desktop", "ecovoyage-crm-accounts.txt");
+  const outPath = resolve(homedir(), "Desktop", "tourism-center-crm-accounts.txt");
   writeFileSync(outPath, doc, "utf8");
   console.log(`\n📄 Документ с аккаунтами сохранён:\n   ${outPath}\n`);
   console.log(`✅ Создано ${results.filter((r) => r.status === "ok").length} аккаунтов\n`);

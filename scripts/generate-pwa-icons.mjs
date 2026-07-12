@@ -1,6 +1,6 @@
 /**
  * Generates PWA icons, iOS startup images, and Android launch splash bitmaps
- * from the transparent EcoVoyage mark.
+ * from the Tourism Center logo.
  *
  * Run: npm run pwa:icons
  */
@@ -14,10 +14,10 @@ const root = join(__dirname, "..");
 const publicDir = join(root, "public");
 const androidResDir = join(root, "android", "app", "src", "main", "res");
 
-const brandGreen = "#a8ce40";
+const brandRed = "#e30613";
 const splashBackground = "#ffffff";
-const markPng = readFileSync(join(publicDir, "ecovoyage-mark.png")).toString("base64");
-const markHref = `data:image/png;base64,${markPng}`;
+const logoPng = readFileSync(join(publicDir, "tourism-center-logo.png")).toString("base64");
+const logoHref = `data:image/png;base64,${logoPng}`;
 
 function renderSvgToPng(svg, dest) {
   const resvg = new Resvg(svg, {
@@ -29,34 +29,24 @@ function renderSvgToPng(svg, dest) {
   console.log("Wrote", dest);
 }
 
-function markMaskSvg({ width, height, markWidth, y, background = splashBackground, includeWordmark = false }) {
-  const markHeight = markWidth * (201 / 187);
-  const x = (width - markWidth) / 2;
-  const wordmark = includeWordmark
-    ? `<text x="${width / 2}" y="${y + markHeight + width * 0.08}" text-anchor="middle"
-        font-family="Georgia, serif" font-size="${Math.max(22, width * 0.115)}"
-        font-weight="700" letter-spacing="${Math.max(2, width * 0.012)}" fill="${brandGreen}">ECO VOYAGE</text>`
-    : "";
-
+function logoSvg({ width, height, logoWidth, y, background = splashBackground }) {
+  const logoHeight = logoWidth;
+  const x = (width - logoWidth) / 2;
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <rect width="${width}" height="${height}" fill="${background}"/>
-  <mask id="markMask" maskUnits="userSpaceOnUse" x="${x}" y="${y}" width="${markWidth}" height="${markHeight}">
-    <image href="${markHref}" x="${x}" y="${y}" width="${markWidth}" height="${markHeight}" preserveAspectRatio="xMidYMid meet"/>
-  </mask>
-  <rect x="${x}" y="${y}" width="${markWidth}" height="${markHeight}" fill="${brandGreen}" mask="url(#markMask)"/>
-  ${wordmark}
+  <circle cx="${width / 2}" cy="${y + logoHeight / 2}" r="${logoWidth * 0.43}" fill="${brandRed}" opacity="0.06"/>
+  <image href="${logoHref}" x="${x}" y="${y}" width="${logoWidth}" height="${logoHeight}" preserveAspectRatio="xMidYMid meet"/>
 </svg>`;
 }
 
 function writeIcon(size, filename) {
   renderSvgToPng(
-    markMaskSvg({
+    logoSvg({
       width: size,
       height: size,
-      markWidth: Math.round(size * 0.58),
-      y: Math.round(size * 0.18),
-      includeWordmark: size >= 180,
+      logoWidth: Math.round(size * 0.86),
+      y: Math.round(size * 0.07),
     }),
     join(publicDir, filename),
   );
@@ -64,10 +54,9 @@ function writeIcon(size, filename) {
 
 function writeSplash(width, height, filename, baseDir = publicDir) {
   const portrait = height >= width;
-  const markWidth = Math.round(width * (portrait ? 0.56 : 0.3));
-  const markHeight = markWidth * (201 / 187);
-  const y = Math.round((height - markHeight) * (portrait ? 0.45 : 0.44));
-  renderSvgToPng(markMaskSvg({ width, height, markWidth, y }), join(baseDir, filename));
+  const logoWidth = Math.round(width * (portrait ? 0.52 : 0.28));
+  const y = Math.round((height - logoWidth) * (portrait ? 0.44 : 0.42));
+  renderSvgToPng(logoSvg({ width, height, logoWidth, y }), join(baseDir, filename));
 }
 
 writeIcon(180, "pwa-icon-180.png");

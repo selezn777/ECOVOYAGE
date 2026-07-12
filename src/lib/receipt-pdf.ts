@@ -9,7 +9,7 @@ export const RECEIPT_PDF_POLICY_PARAGRAPHS: string[] = [
 ];
 
 export type ReceiptPdfInput = {
-  /** Вместо «Квитанция» и № AMX - основной заголовок, например «ON ON000010» */
+  /** Вместо «Квитанция» и внутреннего номера - основной заголовок, например «ON ON000010» */
   receiptHeaderTitle: string;
   tourName: string;
   tourDateLabel: string;

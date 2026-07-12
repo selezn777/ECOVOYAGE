@@ -14,11 +14,11 @@
   --muted2: #8fa0b8;
   --border: #e3e8f0;
   --surface: #ffffff;
-  --surface-soft: #f5f7fb;
-  --surface-elevated: #ecf0f8;
-  --accent: #a8ce40;
-  --accent-dark: #8dab3b;
-  --accent-soft: #f8fcee;
+  --surface-soft: #f7f9fc;
+  --surface-elevated: #eef4fa;
+  --accent: #e30613;
+  --accent-dark: #b90510;
+  --accent-soft: #fff1f2;
   --success: #059669;
   --success-soft: #ecfdf5;
   --warn: #d97706;
@@ -42,12 +42,12 @@ html.dark {
   --muted: #8b9dc4;
   --muted2: #566180;
   --border: rgba(139, 157, 196, 0.15);
-  --surface: #142038;
-  --surface-soft: #192848;
-  --surface-elevated: #1f3059;
-  --accent: #bbe250;
-  --accent-dark: #a7d133;
-  --accent-soft: rgba(187, 226, 80, 0.14);
+  --surface: #132033;
+  --surface-soft: #182944;
+  --surface-elevated: #213753;
+  --accent: #ff4b55;
+  --accent-dark: #ff747b;
+  --accent-soft: rgba(255, 75, 85, 0.14);
   --success: #34d399;
   --success-soft: rgba(52, 211, 153, 0.12);
   --warn: #fbbf24;
@@ -65,7 +65,7 @@ html.dark {
 
 @theme inline {
   --font-sans: var(--font-noto-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ body {
   min-height: 100dvh;
   color: var(--text);
   font-family: var(--font-noto-sans), "Noto Sans", system-ui, sans-serif;
-  background: #f5f7fb;
+  background: #f7f9fc;
   overscroll-behavior-y: none;
   overflow: visible;
 }
@@ -181,7 +181,7 @@ html.dark .card {
 .page-title {
   font-size: clamp(1.2rem, 4vw, 1.45rem);
   font-weight: 700;
-  letter-spacing: -0.035em;
+  letter-spacing: 0;
   line-height: 1.2;
   color: var(--text);
 }

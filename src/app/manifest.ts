@@ -4,8 +4,8 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "EcoVoyage — туры и CRM",
-    short_name: "EcoVoyage",
+    name: "Центр Туризма — туры и CRM",
+    short_name: "Центр Туризма",
     description: "Туры, брони, финансы и команда",
     start_url: "/",
     scope: "/",
@@ -13,7 +13,7 @@ export default function manifest(): MetadataRoute.Manifest {
     display_override: ["standalone", "browser"],
     orientation: "portrait",
     background_color: "#ffffff",
-    theme_color: "#a8ce40",
+    theme_color: "#e30613",
     lang: "ru",
     icons: [
       {

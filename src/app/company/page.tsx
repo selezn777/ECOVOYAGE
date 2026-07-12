@@ -129,7 +129,7 @@ const COMPANY_TEXT: Record<CompanyLocale, {
   dataIssueSignals: string;
 }> = {
   ru: {
-    brand: "EcoVoyage",
+    brand: "Центр Туризма",
     title: "Моя компания",
     subtitle: (period) => period,
     prevMonth: "Предыдущий месяц",
@@ -236,7 +236,7 @@ const COMPANY_TEXT: Record<CompanyLocale, {
     dataIssueSignals: "сигналов",
   },
   en: {
-    brand: "EcoVoyage",
+    brand: "Центр Туризма",
     title: "My Company",
     subtitle: (period) => period,
     prevMonth: "Previous month",
@@ -343,7 +343,7 @@ const COMPANY_TEXT: Record<CompanyLocale, {
     dataIssueSignals: "signals",
   },
   vi: {
-    brand: "EcoVoyage",
+    brand: "Центр Туризма",
     title: "Công ty",
     subtitle: (period) => period,
     prevMonth: "Tháng trước",

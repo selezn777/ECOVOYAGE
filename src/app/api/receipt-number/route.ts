@@ -16,7 +16,7 @@ export async function GET() {
   const session = await getSessionUser();
   if (!session) return NextResponse.json({ error: "Нет авторизации" }, { status: 401 });
 
-  const prefix = process.env.RECEIPT_PREFIX || "AMX";
+  const prefix = process.env.RECEIPT_PREFIX || "CT";
   const supabase = getSupabaseAdmin();
 
   if (!supabase) {

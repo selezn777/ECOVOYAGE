@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Noto_Sans } from "next/font/google";
+import { Noto_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale } from "next-intl/server";
 import { AmxThemeInit } from "@/components/amx-theme-init";
@@ -16,18 +16,13 @@ const notoSans = Noto_Sans({
   display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "EcoVoyage",
+  title: "Центр Туризма",
   description: "Туры, брони, финансы и команда",
-  applicationName: "EcoVoyage",
+  applicationName: "Центр Туризма",
   appleWebApp: {
     capable: true,
-    title: "EcoVoyage",
+    title: "Центр Туризма",
     statusBarStyle: "black-translucent",
   },
   formatDetection: {
@@ -46,7 +41,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#a8ce40",
+  themeColor: "#e30613",
   viewportFit: "cover",
 };
 
@@ -59,7 +54,7 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} translate="no" className={`notranslate ${notoSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
+    <html lang={locale} translate="no" className={`notranslate ${notoSans.variable} antialiased`} suppressHydrationWarning>
       <head>
         {/* Отключаем предложение Google Translate / Safari "перевести страницу" —
             мешает на iOS, когда системный язык отличается от языка интерфейса */}

@@ -1,5 +1,5 @@
 /**
- * Seed tour templates for EcoVoyage CRM
+ * Seed tour templates for Центр Туризма CRM
  * Run: node scripts/seed-tour-templates.mjs
  */
 import { createClient } from "@supabase/supabase-js";

@@ -192,7 +192,7 @@ export async function POST(
     // Assets (logo + fonts + optional paid stamp)
     let logoPngBytes: Uint8Array;
     try {
-      logoPngBytes = await readFile(join(process.cwd(), "public", "ecovoyage-mark.png"));
+      logoPngBytes = await readFile(join(process.cwd(), "public", "tourism-center-logo.png"));
     } catch {
       logoPngBytes = new Uint8Array();
     }
@@ -224,7 +224,7 @@ export async function POST(
       "";
 
     const receiptHeaderTitle = onlineCodePdf ? `ON ${onlineCodePdf}` : `Бронь ${bookingId.slice(0, 8)}`;
-    /** Уникальная запись в БД без префикса AMX в отображении */
+    /** Уникальная запись в БД без внутреннего префикса в отображении */
     const receiptNumber = `${onlineCodePdf || "booking"}-${randomUUID()}`;
 
     const pdfBytes = await buildReceiptPdfBytes(
