@@ -1033,6 +1033,7 @@
     "saving": "Đang lưu…",
     "noTours": "Không có tour — chi phí gắn với tour.",
     "expenseSaved": "Đã ghi chi phí",
+    "expenseSavedNoPhoto": "Đã ghi chi phí, nhưng không đính kèm được ảnh hoá đơn (xử lý ảnh thất bại) — hãy đính kèm thủ công sau.",
     "photoTooBig": "Ảnh lớn hơn 12 MB — chọn file nhỏ hơn.",
     "photoProcessError": "Không xử lý được ảnh. Hãy dùng JPEG/PNG.",
     "locationPlaceholder": "Địa điểm",

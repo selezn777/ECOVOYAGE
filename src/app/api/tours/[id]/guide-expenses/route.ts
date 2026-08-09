@@ -72,12 +72,8 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   const actorId = actorUuidOrNull(session.id);
   const { amountVnd, description, attachmentDataUrl, pendingAccountantReview } = parsed.data;
   const attachmentUrl = attachmentDataUrl ? parseExpenseImageDataUrl(attachmentDataUrl) : null;
-  if (attachmentDataUrl && !attachmentUrl) {
-    return NextResponse.json(
-      { error: "Некорректное фото: нужен JPEG, PNG или WebP до ~2 МБ." },
-      { status: 400 },
-    );
-  }
+  /** Битое/слишком большое фото не должно блокировать сохранение самого расхода - сохраняем без фото. */
+  const photoSkipped = Boolean(attachmentDataUrl && !attachmentUrl);
 
   const reviewer = canConfirmExpenseAccountantReview(session.role);
   const pending = !reviewer || pendingAccountantReview === true;
@@ -197,7 +193,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     },
   });
 
-  return NextResponse.json({ ok: true, id: (row as { id: string }).id });
+  return NextResponse.json({ ok: true, id: (row as { id: string }).id, ...(photoSkipped ? { photoSkipped: true } : {}) });
 }
 
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -263,10 +259,13 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   }
 
   let attachmentUrl: string | null | undefined = undefined;
+  let photoSkipped = false;
   if (typeof attachmentDataUrl === "string") {
     attachmentUrl = parseExpenseImageDataUrl(attachmentDataUrl);
+    /** Битое/слишком большое новое фото не должно блокировать сохранение расхода - оставляем прежнее вложение как есть. */
     if (attachmentDataUrl && !attachmentUrl) {
-      return NextResponse.json({ error: "Некорректное фото: нужен JPEG, PNG или WebP до ~2 МБ." }, { status: 400 });
+      photoSkipped = true;
+      attachmentUrl = undefined;
     }
   }
 
@@ -348,7 +347,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     },
   });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, ...(photoSkipped ? { photoSkipped: true } : {}) });
 }
 
 export async function DELETE(request: Request, ctx: { params: Promise<{ id: string }> }) {

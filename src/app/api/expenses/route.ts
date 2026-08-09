@@ -37,12 +37,8 @@ export async function POST(request: Request) {
 
   const { tourId, category, amountVnd, description, attachmentDataUrl } = parsed.data;
   const attachmentUrl = attachmentDataUrl ? parseExpenseImageDataUrl(attachmentDataUrl) : null;
-  if (attachmentDataUrl && !attachmentUrl) {
-    return NextResponse.json(
-      { error: "Некорректное фото: нужен JPEG, PNG или WebP до ~2 МБ." },
-      { status: 400 },
-    );
-  }
+  /** Битое/слишком большое фото не должно блокировать сохранение самого расхода - сохраняем без фото. */
+  const photoSkipped = Boolean(attachmentDataUrl && !attachmentUrl);
 
   const { data: tour } = await supabase.from("tours").select("id").eq("id", tourId).is("deleted_at", null).maybeSingle();
   if (!tour) return NextResponse.json({ error: "Тур не найден" }, { status: 404 });
@@ -106,5 +102,5 @@ export async function POST(request: Request) {
     after: { tour_id: tourId, category, amount_vnd: amountVnd },
   });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, ...(photoSkipped ? { photoSkipped: true } : {}) });
 }

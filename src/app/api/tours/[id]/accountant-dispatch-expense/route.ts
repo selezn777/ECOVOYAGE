@@ -38,12 +38,8 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   const actorId = actorUuidOrNull(session.id);
   const { kind, amountVnd, description, attachmentDataUrl } = parsed.data;
   const attachmentUrl = attachmentDataUrl ? parseExpenseImageDataUrl(attachmentDataUrl) : null;
-  if (attachmentDataUrl && !attachmentUrl) {
-    return NextResponse.json(
-      { error: "Некорректное фото: нужен JPEG, PNG или WebP до ~2 МБ." },
-      { status: 400 },
-    );
-  }
+  /** Битое/слишком большое фото не должно блокировать сохранение самого расхода - сохраняем без фото. */
+  const photoSkipped = Boolean(attachmentDataUrl && !attachmentUrl);
 
   const category = kind === "bus" ? "bus" : "other";
   const fullDescription =
@@ -90,5 +86,5 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     after: { tour_id: tourId, category, amount_vnd: amountVnd, accountant_dispatch: true },
   });
 
-  return NextResponse.json({ ok: true, id: (row as { id: string }).id });
+  return NextResponse.json({ ok: true, id: (row as { id: string }).id, ...(photoSkipped ? { photoSkipped: true } : {}) });
 }

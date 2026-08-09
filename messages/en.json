@@ -1033,6 +1033,7 @@
     "saving": "Saving…",
     "noTours": "No tours available — expense is tied to a tour.",
     "expenseSaved": "Expense recorded",
+    "expenseSavedNoPhoto": "Expense recorded, but the receipt photo couldn't be attached (processing failed) — attach it manually later.",
     "photoTooBig": "Photo exceeds 12 MB — please choose a smaller file.",
     "photoProcessError": "Could not process photo. Try JPEG/PNG.",
     "locationPlaceholder": "Location",

@@ -142,10 +142,15 @@ function LocationExpensePicker({
     setBusy(true);
     try {
       let attachmentDataUrl: string | undefined;
+      /** Битое/слишком большое фото не должно блокировать сохранение расхода - сохраняем без фото и предупреждаем после. */
+      let photoDropped = false;
       if (file) {
-        if (file.size > MAX_PICK_BYTES) { alert("Фото больше 12 МБ"); return; }
-        try { attachmentDataUrl = await receiptFileToJpegDataUrl(file); }
-        catch { alert("Не удалось обработать фото"); return; }
+        if (file.size > MAX_PICK_BYTES) {
+          photoDropped = true;
+        } else {
+          try { attachmentDataUrl = await receiptFileToJpegDataUrl(file); }
+          catch { photoDropped = true; }
+        }
       }
       const fromFilename = file?.name ? extractYmdFromFilename(file.name) : null;
       const dateMismatch = Boolean(tourDateYmd && fromFilename && fromFilename !== tourDateYmd);
@@ -161,9 +166,12 @@ function LocationExpensePicker({
       });
       const ct = res.headers.get("content-type") ?? "";
       const j = ct.includes("application/json")
-        ? ((await res.json().catch(() => ({}))) as { error?: string })
-        : ({} as { error?: string });
+        ? ((await res.json().catch(() => ({}))) as { error?: string; photoSkipped?: boolean })
+        : ({} as { error?: string; photoSkipped?: boolean });
       if (!res.ok) { alert(j.error || "Не удалось сохранить"); return; }
+      if (photoDropped || j.photoSkipped) {
+        alert("Расход сохранён, но фото чека не прикрепилось (не удалось обработать) - прикрепите его позже вручную.");
+      }
       reset();
       onSaved();
     } catch (e) {
@@ -558,16 +566,17 @@ export function TourExpensesPanel({
     setBusy(true);
     try {
       let attachmentDataUrl: string | undefined;
+      /** Битое/слишком большое фото не должно блокировать сохранение расхода - сохраняем без фото и предупреждаем после. */
+      let photoDropped = false;
       if (receiptFile) {
         if (receiptFile.size > MAX_PICK_BYTES) {
-          alert("Фото больше 12 МБ - выберите файл поменьше.");
-          return;
-        }
-        try {
-          attachmentDataUrl = await receiptFileToJpegDataUrl(receiptFile);
-        } catch {
-          alert("Не удалось обработать фото. Попробуйте другой снимок (JPEG/PNG) или пересохраните чек в галерее.");
-          return;
+          photoDropped = true;
+        } else {
+          try {
+            attachmentDataUrl = await receiptFileToJpegDataUrl(receiptFile);
+          } catch {
+            photoDropped = true;
+          }
         }
       }
 
@@ -583,9 +592,9 @@ export function TourExpensesPanel({
       });
 
       const ct = res.headers.get("content-type") ?? "";
-      let j: { error?: string } = {};
+      let j: { error?: string; photoSkipped?: boolean } = {};
       if (ct.includes("application/json")) {
-        j = (await res.json().catch(() => ({}))) as { error?: string };
+        j = (await res.json().catch(() => ({}))) as { error?: string; photoSkipped?: boolean };
       } else if (!res.ok) {
         const t = await res.text().catch(() => "");
         alert(t ? `Сервер (${res.status}): ${t.slice(0, 240)}` : `Ошибка сервера ${res.status}`);
@@ -595,6 +604,10 @@ export function TourExpensesPanel({
       if (!res.ok) {
         alert(typeof j.error === "string" ? j.error : "Не удалось сохранить");
         return;
+      }
+
+      if (photoDropped || j.photoSkipped) {
+        alert("Расход сохранён, но фото чека не прикрепилось (не удалось обработать). Попробуйте другой снимок (JPEG/PNG) или пересохраните чек в галерее и прикрепите позже.");
       }
 
       setAmountStr("");
@@ -643,16 +656,17 @@ export function TourExpensesPanel({
     setEditBusy(true);
     try {
       let attachmentDataUrl: string | undefined;
+      /** Битое/слишком большое фото не должно блокировать сохранение расхода - сохраняем без фото и предупреждаем после. */
+      let photoDropped = false;
       if (editReceiptFile) {
         if (editReceiptFile.size > MAX_PICK_BYTES) {
-          alert("Фото больше 12 МБ - выберите файл поменьше.");
-          return;
-        }
-        try {
-          attachmentDataUrl = await receiptFileToJpegDataUrl(editReceiptFile);
-        } catch {
-          alert("Не удалось обработать фото. Попробуйте другой снимок.");
-          return;
+          photoDropped = true;
+        } else {
+          try {
+            attachmentDataUrl = await receiptFileToJpegDataUrl(editReceiptFile);
+          } catch {
+            photoDropped = true;
+          }
         }
       }
 
@@ -671,13 +685,17 @@ export function TourExpensesPanel({
       });
 
       const ct = res.headers.get("content-type") ?? "";
-      let j: { error?: string } = {};
+      let j: { error?: string; photoSkipped?: boolean } = {};
       if (ct.includes("application/json")) {
-        j = (await res.json().catch(() => ({}))) as { error?: string };
+        j = (await res.json().catch(() => ({}))) as { error?: string; photoSkipped?: boolean };
       }
       if (!res.ok) {
         alert(typeof j.error === "string" ? j.error : `Не удалось сохранить (ошибка ${res.status})`);
         return;
+      }
+
+      if (photoDropped || j.photoSkipped) {
+        alert("Расход сохранён, но новое фото чека не прикрепилось (не удалось обработать). Попробуйте другой снимок.");
       }
 
       cancelEditExpense();

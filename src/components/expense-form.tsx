@@ -49,12 +49,17 @@ export function ExpenseForm({ tours }: { tours: TourOption[] }) {
     setBusy(true);
     try {
       let attachmentDataUrl: string | undefined;
+      /** Битое/слишком большое фото не должно блокировать сохранение расхода - сохраняем без фото и предупреждаем после. */
+      let photoDropped = false;
       if (receiptFile) {
-        if (receiptFile.size > MAX_PICK_BYTES) { alert(t("photoTooBig")); return; }
-        try {
-          attachmentDataUrl = await receiptFileToJpegDataUrl(receiptFile);
-        } catch {
-          throw new Error(t("photoProcessError"));
+        if (receiptFile.size > MAX_PICK_BYTES) {
+          photoDropped = true;
+        } else {
+          try {
+            attachmentDataUrl = await receiptFileToJpegDataUrl(receiptFile);
+          } catch {
+            photoDropped = true;
+          }
         }
       }
       const res = await fetch("/api/expenses", {
@@ -70,12 +75,12 @@ export function ExpenseForm({ tours }: { tours: TourOption[] }) {
       });
       const ct = res.headers.get("content-type") ?? "";
       const json = ct.includes("application/json")
-        ? ((await res.json()) as { error?: string })
-        : ({} as { error?: string });
+        ? ((await res.json()) as { error?: string; photoSkipped?: boolean })
+        : ({} as { error?: string; photoSkipped?: boolean });
       if (!res.ok) throw new Error(json.error || `Ошибка ${res.status}`);
       setAmountText("");
       setReceiptFile(null);
-      alert(t("expenseSaved"));
+      alert((photoDropped || json.photoSkipped) ? t("expenseSavedNoPhoto") : t("expenseSaved"));
       window.location.reload();
     } catch (err) {
       alert(err instanceof Error ? err.message : "Ошибка");
