@@ -2304,6 +2304,27 @@ export type AccountingTourRow = {
   managerTourCashOutstandingVnd: number | null;
 };
 
+/**
+ * PostgREST шлёт .in(col, ids) как query-параметры в URL: при ~300+ UUID URL превышает лимит
+ * заголовков (обычно 16KB) и запрос падает с HeadersOverflowError. Бьём ids на чанки и мержим.
+ */
+const ACCOUNTING_ID_CHUNK = 200;
+async function inChunks<T>(
+  ids: string[],
+  chunkSize: number,
+  run: (chunk: string[]) => PromiseLike<{ data: T[] | null; error: { message?: string } | null }>,
+): Promise<{ data: T[]; error: { message?: string } | null }> {
+  if (!ids.length) return { data: [], error: null };
+  const chunks: string[][] = [];
+  for (let i = 0; i < ids.length; i += chunkSize) chunks.push(ids.slice(i, i + chunkSize));
+  const results = await Promise.all(chunks.map(run));
+  const allErrored = results.every((r) => r.error);
+  return {
+    data: results.flatMap((r) => r.data ?? []),
+    error: allErrored ? results[0]?.error ?? null : null,
+  };
+}
+
 /** Список туров для бухгалтера: доход/расход/прибыль + менеджер + pax (без тяжёлых join-ов по карточкам). */
 export async function listAccountingTours(period: FinancePeriod, limit = 120): Promise<AccountingTourRow[]> {
   const supabase = getSupabaseAdmin();
@@ -2381,15 +2402,19 @@ export async function listAccountingTours(period: FinancePeriod, limit = 120): P
   const tourIds = tourRows.map((t) => t.id);
 
   const [{ data: bookingRows }, { data: guideRows }] = await Promise.all([
-    supabase
-      .from("bookings")
-      .select("id,tour_id,manager_id,adults,children,infants,users!bookings_manager_id_fkey(full_name)")
-      .in("tour_id", tourIds)
-      .is("deleted_at", null),
-    supabase
-      .from("tour_guides")
-      .select("tour_id,guide_id,is_primary,users!tour_guides_guide_id_fkey(full_name)")
-      .in("tour_id", tourIds),
+    inChunks(tourIds, ACCOUNTING_ID_CHUNK, (chunk) =>
+      supabase
+        .from("bookings")
+        .select("id,tour_id,manager_id,adults,children,infants,users!bookings_manager_id_fkey(full_name)")
+        .in("tour_id", chunk)
+        .is("deleted_at", null),
+    ),
+    inChunks(tourIds, ACCOUNTING_ID_CHUNK, (chunk) =>
+      supabase
+        .from("tour_guides")
+        .select("tour_id,guide_id,is_primary,users!tour_guides_guide_id_fkey(full_name)")
+        .in("tour_id", chunk),
+    ),
   ]);
 
   const primaryGuideByTour = new Map<string, { guideId: string; guideName: string }>();
@@ -2462,21 +2487,25 @@ export async function listAccountingTours(period: FinancePeriod, limit = 120): P
   /** Принято менеджером по броням (как getManagerCashOnHandSnapshot): депозит/доплата минус возврат. */
   const mgrRecvByTourMgr = new Map<string, Map<string, number>>();
   if (bookingIds.length) {
-    let pq = supabase.from("payments").select("booking_id,amount_vnd,kind,remitted_to_cash_at").in("booking_id", bookingIds);
-    if (period.kind === "month") {
-      const { start, end } = monthRangeUtcIso(period.year, period.month);
-      pq = pq.gte("created_at", start).lt("created_at", end);
-    }
-    const payRes = await pq;
-    let payRows = payRes.data as PaymentRowAgg[] | null;
-    if (payRes.error && /remitted_to_cash_at|column|does not exist/i.test(String(payRes.error.message))) {
-      let pq2 = supabase.from("payments").select("booking_id,amount_vnd,kind").in("booking_id", bookingIds);
+    const payRes = await inChunks<PaymentRowAgg>(bookingIds, ACCOUNTING_ID_CHUNK, (chunk) => {
+      let pq = supabase.from("payments").select("booking_id,amount_vnd,kind,remitted_to_cash_at").in("booking_id", chunk);
       if (period.kind === "month") {
         const { start, end } = monthRangeUtcIso(period.year, period.month);
-        pq2 = pq2.gte("created_at", start).lt("created_at", end);
+        pq = pq.gte("created_at", start).lt("created_at", end);
       }
-      const r2 = await pq2;
-      payRows = ((r2.data || []) as PaymentRowAgg[]).map((r) => ({ ...r, remitted_to_cash_at: undefined }));
+      return pq;
+    });
+    let payRows: PaymentRowAgg[] = payRes.data;
+    if (payRes.error && /remitted_to_cash_at|column|does not exist/i.test(String(payRes.error.message))) {
+      const r2 = await inChunks<PaymentRowAgg>(bookingIds, ACCOUNTING_ID_CHUNK, (chunk) => {
+        let pq2 = supabase.from("payments").select("booking_id,amount_vnd,kind").in("booking_id", chunk);
+        if (period.kind === "month") {
+          const { start, end } = monthRangeUtcIso(period.year, period.month);
+          pq2 = pq2.gte("created_at", start).lt("created_at", end);
+        }
+        return pq2;
+      });
+      payRows = r2.data.map((r) => ({ ...r, remitted_to_cash_at: undefined }));
     } else if (payRes.error) {
       payRows = [];
     }
@@ -2517,13 +2546,18 @@ export async function listAccountingTours(period: FinancePeriod, limit = 120): P
 
   const mgrHandedByTourMgr = new Map<string, Map<string, number>>();
   {
-    const hoRes = await supabase
-      .from("tour_office_cash_handovers")
-      .select("tour_id,employee_id,amount_vnd")
-      .in("tour_id", tourIds)
-      .eq("holder_role", "manager");
+    const hoRes = await inChunks<{ tour_id: string; employee_id: string; amount_vnd: number | string }>(
+      tourIds,
+      ACCOUNTING_ID_CHUNK,
+      (chunk) =>
+        supabase
+          .from("tour_office_cash_handovers")
+          .select("tour_id,employee_id,amount_vnd")
+          .in("tour_id", chunk)
+          .eq("holder_role", "manager"),
+    );
     if (!hoRes.error && hoRes.data) {
-      for (const h of hoRes.data as { tour_id: string; employee_id: string; amount_vnd: number | string }[]) {
+      for (const h of hoRes.data) {
         const tid = String(h.tour_id);
         const eid = String(h.employee_id);
         const v = Math.round(Number(h.amount_vnd || 0));
@@ -2549,27 +2583,27 @@ export async function listAccountingTours(period: FinancePeriod, limit = 120): P
       "tour_id,amount_vnd,description,pending_accountant_review,created_at",
       "tour_id,amount_vnd,description,created_at",
     ];
+    type ExpenseAggRow = {
+      tour_id: string;
+      category?: string | null;
+      amount_vnd: number | string;
+      description?: string;
+      pending_accountant_review?: boolean | null;
+      accountant_reviewed_at?: string | null;
+    };
     for (const select of selectsToTry) {
-      let eq = supabase.from("expenses").select(select).in("tour_id", tourIds);
-      if (period.kind === "month") {
-        const { start, end } = monthRangeUtcIso(period.year, period.month);
-        eq = eq.gte("created_at", start).lt("created_at", end);
-      }
-      const res = await eq;
+      const res = await inChunks(tourIds, ACCOUNTING_ID_CHUNK, (chunk) => {
+        let eq = supabase.from("expenses").select(select).in("tour_id", chunk);
+        if (period.kind === "month") {
+          const { start, end } = monthRangeUtcIso(period.year, period.month);
+          eq = eq.gte("created_at", start).lt("created_at", end);
+        }
+        return eq;
+      });
       if (res.error) {
         continue;
       }
-      for (const e of
-        (res.data as unknown as
-          | {
-              tour_id: string;
-              category?: string | null;
-              amount_vnd: number | string;
-              description?: string;
-              pending_accountant_review?: boolean | null;
-              accountant_reviewed_at?: string | null;
-            }[]
-          | null) || []) {
+      for (const e of res.data as unknown as ExpenseAggRow[]) {
         const tid = String(e.tour_id);
         expenseByTour.set(tid, (expenseByTour.get(tid) || 0) + Number(e.amount_vnd || 0));
         const desc = String(e.description || "");
@@ -2586,9 +2620,13 @@ export async function listAccountingTours(period: FinancePeriod, limit = 120): P
 
   const manifestPendingByTour = new Map<string, boolean>();
   {
-    const res = await supabase.from("tour_manifests").select("tour_id,needs_accountant_review").in("tour_id", tourIds);
+    const res = await inChunks<{ tour_id: string; needs_accountant_review?: boolean | null }>(
+      tourIds,
+      ACCOUNTING_ID_CHUNK,
+      (chunk) => supabase.from("tour_manifests").select("tour_id,needs_accountant_review").in("tour_id", chunk),
+    );
     if (!res.error && res.data) {
-      for (const r of (res.data as { tour_id: string; needs_accountant_review?: boolean | null }[]) || []) {
+      for (const r of res.data) {
         if (Boolean(r.needs_accountant_review)) manifestPendingByTour.set(String(r.tour_id), true);
       }
     }
@@ -2596,14 +2634,16 @@ export async function listAccountingTours(period: FinancePeriod, limit = 120): P
 
   const pendingGuideTopupTour = new Set<string>();
   if (bookingIds.length) {
-    const pr = await supabase
-      .from("payments")
-      .select("booking_id")
-      .eq("kind", "topup")
-      .is("remitted_to_cash_at", null)
-      .in("booking_id", bookingIds);
+    const pr = await inChunks<{ booking_id: string }>(bookingIds, ACCOUNTING_ID_CHUNK, (chunk) =>
+      supabase
+        .from("payments")
+        .select("booking_id")
+        .eq("kind", "topup")
+        .is("remitted_to_cash_at", null)
+        .in("booking_id", chunk),
+    );
     if (!pr.error && pr.data) {
-      for (const r of pr.data as { booking_id: string }[]) {
+      for (const r of pr.data) {
         const tid = bookingIdToTourId.get(String(r.booking_id));
         if (tid) pendingGuideTopupTour.add(tid);
       }
@@ -2626,16 +2666,20 @@ export async function listAccountingTours(period: FinancePeriod, limit = 120): P
       "tour_id,absent_adults,absent_children,absent_infants,accountant_absence_reviewed_at,refund_not_required,manager_refund_acknowledged_at,refund_vnd";
     let absenceRows: AbsPendingRow[] | null = null;
     let legacyAbsencePending = false;
-    const arFull = await supabase.from("tour_manifest_absences").select(fullSelect).in("tour_id", tourIds);
+    const arFull = await inChunks<AbsPendingRow>(tourIds, ACCOUNTING_ID_CHUNK, (chunk) =>
+      supabase.from("tour_manifest_absences").select(fullSelect).in("tour_id", chunk),
+    );
     if (!arFull.error && arFull.data) {
-      absenceRows = arFull.data as AbsPendingRow[];
+      absenceRows = arFull.data;
     } else {
-      const arLeg = await supabase
-        .from("tour_manifest_absences")
-        .select("tour_id,absent_adults,absent_children,absent_infants,accountant_absence_reviewed_at")
-        .in("tour_id", tourIds);
+      const arLeg = await inChunks<AbsPendingRow>(tourIds, ACCOUNTING_ID_CHUNK, (chunk) =>
+        supabase
+          .from("tour_manifest_absences")
+          .select("tour_id,absent_adults,absent_children,absent_infants,accountant_absence_reviewed_at")
+          .in("tour_id", chunk),
+      );
       if (!arLeg.error && arLeg.data) {
-        absenceRows = arLeg.data as AbsPendingRow[];
+        absenceRows = arLeg.data;
         legacyAbsencePending = true;
       }
     }
@@ -2669,9 +2713,11 @@ export async function listAccountingTours(period: FinancePeriod, limit = 120): P
 
   const unpaidSalaryByTour = new Map<string, boolean>();
   {
-    const res = await supabase.from("guide_salary_records").select("tour_id,status").in("tour_id", tourIds);
+    const res = await inChunks<{ tour_id: string; status: string | null }>(tourIds, ACCOUNTING_ID_CHUNK, (chunk) =>
+      supabase.from("guide_salary_records").select("tour_id,status").in("tour_id", chunk),
+    );
     if (!res.error && res.data) {
-      for (const r of (res.data as { tour_id: string; status: string | null }[]) || []) {
+      for (const r of res.data) {
         if (String(r.status || "").toLowerCase() !== "paid") unpaidSalaryByTour.set(String(r.tour_id), true);
       }
     }

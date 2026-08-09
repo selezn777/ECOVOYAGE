@@ -81,7 +81,7 @@ export default async function AccountingPage({
   const openIssuesOnly = pickSp(sp.open).trim() === "1";
 
   const period: FinancePeriod = { kind: "all" };
-  const accountingTours = await listAccountingTours(period, 500);
+  const accountingTours = await listAccountingTours(period, 3000);
 
   const todayYmd = tourBusinessTodayYmd();
   const toursToday: typeof accountingTours = [];
