@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { TourGuideSettlementBreakdown } from "@/lib/tour-guide-settlement";
 import { guideOwesOfficeVnd, officeOwesGuideVnd } from "@/lib/tour-guide-settlement";
@@ -78,6 +78,15 @@ export function TourGuideSettlementPanel({
   const oOwesRounded = Math.round(oOwes);
 
   const refresh = useCallback(() => router.refresh(), [router]);
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   const syncOfficeAmountDefault = useCallback(() => {
     if (oOwes > 0) {
@@ -218,14 +227,14 @@ export function TourGuideSettlementPanel({
 
       {open ? (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3 sm:items-center"
+          className="ui-scrim fixed inset-0 z-[200] flex items-end justify-center p-3 sm:items-center"
           role="dialog"
           aria-modal="true"
           aria-labelledby="guide-settlement-title"
           onClick={() => !busy && setOpen(false)}
         >
           <div
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-[var(--surface)] p-4 shadow-xl ring-1 ring-[var(--border)]"
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-xl bg-[var(--surface)] p-4 shadow-xl ring-1 ring-[var(--border)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3 flex items-start justify-between gap-2">
